@@ -4,6 +4,7 @@ import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
 import { useAuthStore } from '../../../application/store/authStore';
@@ -45,6 +46,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
       </TouchableOpacity>
 
       <View className="items-center mb-10">
+        <Logo size="md" style={{ marginBottom: 24 }} />
         {isSupplier ? (
           <>
             <Typography variant="h1" className="text-3xl text-center mb-2">

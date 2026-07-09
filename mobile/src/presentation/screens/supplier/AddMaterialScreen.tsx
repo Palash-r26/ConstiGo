@@ -4,6 +4,7 @@ import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -89,9 +90,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} className="w-8 h-8 rounded-full bg-primary justify-center items-center">
           <Icon name="user" size={16} color="#FFF" />
         </TouchableOpacity>
-        <View className="flex-row items-center gap-x-2">
-          <Typography variant="h2" className="text-primary font-outfit text-xl">ConstiGo</Typography>
-        </View>
+        <Logo size="sm" />
         <TouchableOpacity>
           <Icon name="bell" size={24} color="#1C1C1C" />
         </TouchableOpacity>

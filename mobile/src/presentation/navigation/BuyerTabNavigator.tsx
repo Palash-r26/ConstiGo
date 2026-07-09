@@ -8,18 +8,11 @@ import Icon from 'react-native-vector-icons/Feather';
 import { HomeDashboardScreen } from '../screens/buyer/HomeDashboardScreen';
 import { SupplierListingScreen } from '../screens/buyer/SupplierListingScreen';
 import { SupplierDetailsScreen } from '../screens/buyer/SupplierDetailsScreen';
+import { OrderSuccessScreen } from '../screens/buyer/OrderSuccessScreen';
 
 const DummyScreen = ({ navigation }: any) => (
   <View className="flex-1 bg-background justify-center items-center">
     <Icon name="info" size={40} color="#9C101A" />
-  </View>
-);
-const OrderSuccessScreen = ({ navigation }: any) => (
-  <View className="flex-1 bg-background justify-center items-center">
-    <Icon name="check-circle" size={40} color="#28A745" />
-    <View style={{ marginTop: 20 }}>
-      <Icon name="home" size={40} color="#9C101A" onPress={() => navigation.navigate('BuyerTabs', { screen: 'Home' })} />
-    </View>
   </View>
 );
 

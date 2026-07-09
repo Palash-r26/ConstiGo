@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
 import { useFocusEffect } from '@react-navigation/native';
@@ -49,16 +50,12 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        {/* Top Header */}
+        {/* Top Header: avatar left, logo centered, bell right (per Supplier.pdf) */}
         <View className="flex-row justify-between items-center px-6 py-4">
-          <View className="flex-row items-center gap-x-3">
-            <View className="w-12 h-12 rounded-full bg-gray-300 justify-center items-center overflow-hidden">
-              <Icon name="user" size={24} color="#FFF" />
-            </View>
-            <View>
-              <Typography variant="h2" className="text-primary font-outfit text-xl tracking-wide">ConstiGo</Typography>
-            </View>
+          <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
+            <Icon name="user" size={24} color="#FFF" />
           </View>
+          <Logo size="sm" />
           <TouchableOpacity>
             <Icon name="bell" size={24} color="#1C1C1C" />
           </TouchableOpacity>

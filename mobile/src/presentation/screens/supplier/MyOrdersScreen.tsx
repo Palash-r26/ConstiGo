@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 
 export const MyOrdersScreen = ({ navigation }: any) => {
@@ -17,9 +18,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
         <TouchableOpacity className="w-8 h-8 rounded-full bg-primary justify-center items-center">
           <Icon name="user" size={16} color="#FFF" />
         </TouchableOpacity>
-        <View className="flex-row items-center gap-x-2">
-          <Typography variant="h2" className="text-primary font-outfit text-xl">ConstiGo</Typography>
-        </View>
+        <Logo size="sm" />
         <TouchableOpacity>
           <Icon name="bell" size={24} color="#1C1C1C" />
         </TouchableOpacity>

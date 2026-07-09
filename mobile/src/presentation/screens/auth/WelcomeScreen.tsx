@@ -3,11 +3,13 @@ import { View } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 
 export const WelcomeScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper className="justify-center px-6">
       <View className="items-center mb-12">
+        <Logo size="md" style={{ marginBottom: 32 }} />
         <Typography variant="h1" className="text-4xl text-center mb-4">
           Welcome Back!
         </Typography>

@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { InventoryDashboardScreen } from '../screens/supplier/InventoryDashboardScreen';
+import { MyOrdersScreen } from '../screens/supplier/MyOrdersScreen';
 const DummyScreen = () => <View className="flex-1 bg-background" />;
 
 const Tab = createBottomTabNavigator();
@@ -27,7 +28,7 @@ export const SupplierTabNavigator = () => {
       })}
     >
       <Tab.Screen name="Inventory" component={InventoryDashboardScreen} />
-      <Tab.Screen name="Orders" component={DummyScreen} />
+      <Tab.Screen name="Orders" component={MyOrdersScreen} />
       <Tab.Screen name="Shop" component={DummyScreen} />
       <Tab.Screen name="Profile" component={DummyScreen} />
     </Tab.Navigator>
