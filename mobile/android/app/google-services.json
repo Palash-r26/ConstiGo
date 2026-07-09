@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "347841484330",
+    "project_id": "constigo-0",
+    "storage_bucket": "constigo-0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347841484330:android:ade9a1fb39e2fb12145553",
+        "android_client_info": {
+          "package_name": "com.constigo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "347841484330-30ahmuqkg3v4o3cjhkfeq0gflih3smie.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.constigo.app",
+            "certificate_hash": "91861d3c4ce2609329aa19b7735fc49c6cecb1c6"
+          }
+        },
+        {
+          "client_id": "347841484330-gi6eo29rcpr3mgphkob0i0is20glfqi4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhK1XJLPAbpZ3lE-YUlVip8i1JhiT9V44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "347841484330-gi6eo29rcpr3mgphkob0i0is20glfqi4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
