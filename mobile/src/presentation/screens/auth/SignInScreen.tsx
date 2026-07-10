@@ -70,7 +70,12 @@ export const SignInScreen = ({ route, navigation }: any) => {
           </>
         ) : (
           <>
-            <Typography variant="h1Black" className="text-4xl text-center mb-2 leading-tight" color="#000000">
+            <Typography
+              variant="h1Black"
+              className="text-center mb-2"
+              style={{ fontSize: 34, lineHeight: 40, letterSpacing: -0.5 }}
+              color="#000000"
+            >
               Welcome Back!
             </Typography>
             <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">

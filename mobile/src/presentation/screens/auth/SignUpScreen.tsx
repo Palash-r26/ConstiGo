@@ -91,10 +91,16 @@ export const SignUpScreen = ({ navigation, route }: any) => {
                   onPress={() => setShowPicker(true)}
                   className={`flex-row items-center justify-between rounded-2xl px-5 py-4 ${errors.dateOfBirth ? 'bg-red-50 border border-red-500' : 'bg-[#E2E5EA]'}`}
                 >
-                  <Typography className={value ? 'text-base text-text-primary' : 'text-base text-text-secondary'}>
+                  {/* Match AuthInput placeholder exactly: same font (Montserrat-Regular),
+                      same size (text-base) and same placeholder color (#8A8A8E). */}
+                  <Typography
+                    style={{ fontFamily: 'Montserrat-Regular' }}
+                    className="text-base"
+                    color={errors.dateOfBirth ? '#EF4444' : value ? '#1C1C1C' : '#8A8A8E'}
+                  >
                     {value || 'Date of Birth'}
                   </Typography>
-                  <Icon name="calendar" size={20} color="#9C101A" />
+                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#9C101A'} />
                 </TouchableOpacity>
                 {errors.dateOfBirth ? (
                   <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">{errors.dateOfBirth.message}</Typography>

@@ -49,8 +49,12 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         </View>
 
         {/* Hero Text */}
-        <View className="px-6 mb-6 mt-4">
-          <Typography variant="h1Black" className="text-4xl text-black leading-tight">
+        <View className="px-6 mb-5 mt-3">
+          <Typography
+            variant="h1Black"
+            className="text-black"
+            style={{ fontSize: 28, lineHeight: 34, letterSpacing: -0.5 }}
+          >
             Build your dream project with ease
           </Typography>
         </View>
@@ -92,9 +96,9 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         ) : (
           <>
             {/* Trending Materials */}
-            <View className="px-6 mb-4 flex-row justify-between items-center">
-              <Typography variant="h2" className="text-xl">Trending Materials</Typography>
-              <TouchableOpacity><Typography variant="bodySmall" className="text-primary">See All</Typography></TouchableOpacity>
+            <View className="px-6 mb-3 flex-row justify-between items-center">
+              <Typography variant="h2" style={{ fontSize: 18 }}>Trending Materials</Typography>
+              <TouchableOpacity><Typography variant="bodySmall" className="text-primary text-xs">See All</Typography></TouchableOpacity>
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }} className="mb-8">
@@ -123,9 +127,9 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
             </ScrollView>
 
             {/* Best In Deals */}
-            <View className="px-6 mb-4 flex-row justify-between items-center">
-              <Typography variant="h2" className="text-xl">Best In Deals</Typography>
-              <TouchableOpacity><Typography variant="bodySmall" className="text-primary">See All</Typography></TouchableOpacity>
+            <View className="px-6 mb-3 flex-row justify-between items-center">
+              <Typography variant="h2" style={{ fontSize: 18 }}>Best In Deals</Typography>
+              <TouchableOpacity><Typography variant="bodySmall" className="text-primary text-xs">See All</Typography></TouchableOpacity>
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }} className="mb-8">

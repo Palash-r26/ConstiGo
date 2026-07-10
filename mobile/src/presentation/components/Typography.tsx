@@ -14,23 +14,36 @@ interface TypographyProps extends TextProps {
 //     => We NEVER set fontWeight; the weight is baked into the font file we pick.
 //  2. NativeWind arbitrary classes like font-['Outfit-Black'] are unreliable in release
 //     builds. => We set `fontFamily` via a plain StyleSheet (always applied).
-// Size + default color stay in `className` (reliable core utilities, overridable per-screen).
+//  3. COLOR must NOT live in the StyleSheet. An inline `style` always beats a NativeWind
+//     `className`, so a baked-in color here silently kills every `text-white` / `text-primary`
+//     / `text-text-secondary` class the screens set (red buttons showing black text, etc).
+//     => We keep ONLY fontFamily + fontSize here; color comes from className, the `color`
+//        prop, or the DEFAULT_COLOR fallback below.
+const DEFAULT_COLOR = '#1C1C1C';
 const styles = StyleSheet.create({
-  h1Black: { fontFamily: 'BalooBhai2-ExtraBold', fontSize: 30, color: '#000000' },
-  h1: { fontFamily: 'BalooBhai2-Bold', fontSize: 30, color: '#000000' },
-  h2: { fontFamily: 'BalooBhai2-Bold', fontSize: 24, color: '#000000' },
-  bodyLarge: { fontFamily: 'Montserrat-Bold', fontSize: 18, color: '#000000' },
-  bodyMedium: { fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#000000' },
-  bodyDefault: { fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#000000' },
-  bodyBold: { fontFamily: 'Montserrat-Bold', fontSize: 16, color: '#000000' },
-  bodySemiBold: { fontFamily: 'Montserrat-SemiBold', fontSize: 16, color: '#000000' },
-  bodySmall: { fontFamily: 'Montserrat-Medium', fontSize: 14, color: '#1C1C1C' }, // darker than #8A8A8E
+  h1Black: { fontFamily: 'BalooBhai2-ExtraBold', fontSize: 32 },
+  h1: { fontFamily: 'BalooBhai2-Bold', fontSize: 30 },
+  h2: { fontFamily: 'BalooBhai2-Bold', fontSize: 24 },
+  bodyLarge: { fontFamily: 'Montserrat-Bold', fontSize: 18 },
+  bodyMedium: { fontFamily: 'Montserrat-SemiBold', fontSize: 16 },
+  bodyDefault: { fontFamily: 'Montserrat-Medium', fontSize: 16 },
+  bodyBold: { fontFamily: 'Montserrat-Bold', fontSize: 16 },
+  bodySemiBold: { fontFamily: 'Montserrat-SemiBold', fontSize: 16 },
+  bodySmall: { fontFamily: 'Montserrat-Medium', fontSize: 14 },
 });
 
+// Detect whether the screen already provides a text color via className (text-white,
+// text-primary, text-red-500, text-[#...] …). If so we let the class own the color and
+// don't inject a default that would fight it.
+const hasColorClass = (cn: string) => /(?:^|\s)(?:text-(?:white|black|primary|accent|success|red|gray|neutral|slate|zinc|green|blue|yellow|amber|orange)|text-text-|text-\[)/.test(cn);
+
 export const Typography = ({ variant = 'bodyDefault', className = '', style, color, children, ...props }: TypographyProps) => {
+  // Priority (low -> high): default color -> style prop -> explicit color prop.
+  // If a color class is present, we skip the default so className controls the color.
+  const defaultColor = !color && !hasColorClass(className) ? { color: DEFAULT_COLOR } : undefined;
   return (
     <Text
-      style={[styles[variant], style, color ? { color } : undefined]}
+      style={[styles[variant], defaultColor, style, color ? { color } : undefined]}
       className={className}
       {...props}
     >

@@ -82,18 +82,20 @@ export const BuyerStackNavigator = () => {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    bottom: 24,
+    // Short, centered pill (per buyer_07). Equal left/right insets keep it centered.
+    left: 60,
+    right: 60,
     backgroundColor: '#9C101A',
-    borderRadius: 30,
-    height: 70,
+    borderRadius: 32,
+    height: 60,
     paddingBottom: 0, // override default padding
+    paddingHorizontal: 8,
     borderTopWidth: 0,
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
 });

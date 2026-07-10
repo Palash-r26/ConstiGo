@@ -63,7 +63,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
 
         {/* Hero Section */}
         <View className="bg-surface mx-6 rounded-3xl p-6 shadow-sm shadow-gray-200 mb-6 mt-2">
-          <Typography variant="h1" className="text-3xl mb-2">My Inventory</Typography>
+          <Typography variant="h1" style={{ fontSize: 26 }} className="mb-2">My Inventory</Typography>
           <Typography variant="bodyDefault" className="text-text-secondary mb-6">
             Manage your material stock, pricing, and visibility
           </Typography>
@@ -109,12 +109,12 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
 
               <View className="flex-row gap-x-4 mb-4">
                 <View className="flex-1 border border-gray-200 rounded-2xl p-3">
-                  <Typography variant="bodySmall" className="text-[10px] mb-1">Price per qty.</Typography>
-                  <Typography variant="h2" className="text-lg">₹ {item.price}</Typography>
+                  <Typography variant="bodySmall" className="text-[10px] text-text-secondary mb-1">Price per qty.</Typography>
+                  <Typography variant="h2" style={{ fontSize: 18 }}>₹ {item.price}</Typography>
                 </View>
                 <View className="flex-1 border border-gray-200 rounded-2xl p-3">
-                  <Typography variant="bodySmall" className="text-[10px] mb-1">Stock qty.</Typography>
-                  <Typography variant="h2" className="text-lg">{item.stockQty}</Typography>
+                  <Typography variant="bodySmall" className="text-[10px] text-text-secondary mb-1">Stock qty.</Typography>
+                  <Typography variant="h2" style={{ fontSize: 18 }}>{item.stockQty}</Typography>
                 </View>
               </View>
 
