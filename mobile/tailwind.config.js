@@ -14,8 +14,8 @@ module.exports = {
         success: "#28A745",
       },
       fontFamily: {
-        outfit: ["Outfit", "sans-serif"],
-        inter: ["Inter", "sans-serif"],
+        baloobhai2: ["BalooBhai2", "sans-serif"],
+        montserrat: ["Montserrat", "sans-serif"],
       },
     },
   },

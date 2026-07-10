@@ -70,7 +70,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
           </>
         ) : (
           <>
-            <Typography variant="h1Black" className="text-4xl text-black text-center mb-2">
+            <Typography variant="h1Black" className="text-4xl text-center mb-2 leading-tight" color="#000000">
               Welcome Back!
             </Typography>
             <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
@@ -124,7 +124,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
           <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-          <Typography variant="bodySemiBold" className="text-xs text-accent">Forget Password ?</Typography>
+          <Typography variant="bodyBold" className="text-sm text-accent">Forget Password ?</Typography>
         </TouchableOpacity>
       </View>
 

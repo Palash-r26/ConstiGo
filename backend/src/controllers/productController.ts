@@ -122,3 +122,72 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get single product by ID
+// @route   GET /api/v1/products/:id
+// @access  Private
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('supplier', 'firstName lastName businessInfo profileImage')
+      .populate('category', 'name');
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    res.json({ success: true, data: product });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+import { Review } from '../models/Review.js';
+
+// @desc    Get reviews for a product
+// @route   GET /api/v1/products/:id/reviews
+// @access  Private
+export const getProductReviews = async (req: Request, res: Response) => {
+  try {
+    const reviews = await Review.find({ product: req.params.id })
+      .populate('user', 'firstName lastName profileImage')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, count: reviews.length, data: reviews });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Add review for a product
+// @route   POST /api/v1/products/:id/reviews
+// @access  Private/Buyer
+export const addProductReview = async (req: AuthRequest, res: Response) => {
+  try {
+    const { rating, comment } = req.body;
+    const productId = req.params.id;
+
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Check if user already reviewed
+    const existingReview = await Review.findOne({ product: productId, user: req.user?._id });
+    if (existingReview) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this product' });
+    }
+
+    const review = await Review.create({
+      product: productId,
+      user: req.user?._id,
+      rating: Number(rating),
+      comment,
+    });
+
+    res.status(201).json({ success: true, data: review });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

@@ -9,6 +9,9 @@ import { HomeDashboardScreen } from '../screens/buyer/HomeDashboardScreen';
 import { SupplierListingScreen } from '../screens/buyer/SupplierListingScreen';
 import { SupplierDetailsScreen } from '../screens/buyer/SupplierDetailsScreen';
 import { OrderSuccessScreen } from '../screens/buyer/OrderSuccessScreen';
+import { WishlistScreen } from '../screens/buyer/WishlistScreen';
+import { ProfileScreen } from '../screens/buyer/ProfileScreen';
+import { CartScreen } from '../screens/buyer/CartScreen';
 
 const DummyScreen = ({ navigation }: any) => (
   <View className="flex-1 bg-background justify-center items-center">
@@ -16,12 +19,23 @@ const DummyScreen = ({ navigation }: any) => (
   </View>
 );
 
+// Additional screens
+import { SearchScreen } from '../screens/buyer/SearchScreen';
+import { NotificationsScreen } from '../screens/buyer/NotificationsScreen';
+import { CheckoutScreen } from '../screens/buyer/CheckoutScreen';
+import { MyOrdersScreen } from '../screens/buyer/MyOrdersScreen';
+import { OrderDetailsScreen } from '../screens/buyer/OrderDetailsScreen';
+import { AddressManagerScreen } from '../screens/buyer/AddressManagerScreen';
+import { SettingsScreen } from '../screens/buyer/SettingsScreen';
+import { EditProfileScreen } from '../screens/buyer/EditProfileScreen';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export const BuyerTabNavigator = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
@@ -30,7 +44,7 @@ export const BuyerTabNavigator = () => {
           let iconName = 'home';
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Wishlist') iconName = 'heart';
-          else if (route.name === 'Cart') iconName = 'shopping-bag';
+          else if (route.name === 'CartTab') iconName = 'shopping-bag';
           else if (route.name === 'Profile') iconName = 'user';
 
           return <Icon name={iconName} size={24} color={focused ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} />;
@@ -38,9 +52,9 @@ export const BuyerTabNavigator = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeDashboardScreen} />
-      <Tab.Screen name="Wishlist" component={DummyScreen} />
-      <Tab.Screen name="Cart" component={DummyScreen} />
-      <Tab.Screen name="Profile" component={DummyScreen} />
+      <Tab.Screen name="Wishlist" component={WishlistScreen} />
+      <Tab.Screen name="CartTab" component={CartScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
@@ -49,9 +63,18 @@ export const BuyerStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="BuyerTabs" component={BuyerTabNavigator} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="SupplierListing" component={SupplierListingScreen} />
       <Stack.Screen name="SupplierDetails" component={SupplierDetailsScreen} />
       <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+      <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+      <Stack.Screen name="AddressManager" component={AddressManagerScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 };

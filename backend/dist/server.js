@@ -5,4 +5,6 @@ connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
+}).catch((err) => {
+    console.error('Failed to start server due to DB connection error:', err);
 });

@@ -155,7 +155,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
         />
 
         <View className="flex-row justify-center items-center">
-          <Typography variant="bodyBold" className="text-sm text-text-primary">Already have an account? </Typography>
+          <Typography variant="bodyBold" className="text-sm text-black">Already have an account? </Typography>
           <Button 
             variant="link" 
             title="Sign In" 

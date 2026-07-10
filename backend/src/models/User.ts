@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IUser extends Document {
   firstName: string;
@@ -7,6 +7,18 @@ export interface IUser extends Document {
   phone: string;
   password?: string;
   role: 'BUYER' | 'SUPPLIER' | 'ADMIN';
+  profileImage?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  dateOfBirth?: Date;
+  wishlist: Types.ObjectId[];
+  addresses: {
+    label?: string;
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    isDefault?: boolean;
+  }[];
   location?: {
     type: string;
     coordinates: number[];
@@ -26,6 +38,20 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, required: true, unique: true },
     password: { type: String }, // Optional for OAuth later, required for normal auth
     role: { type: String, enum: ['BUYER', 'SUPPLIER', 'ADMIN'], default: 'BUYER' },
+    profileImage: { type: String },
+    gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
+    dateOfBirth: { type: Date },
+    wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    addresses: [
+      {
+        label: { type: String, default: 'Home' },
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        zipCode: { type: String, required: true },
+        isDefault: { type: Boolean, default: false },
+      }
+    ],
     location: {
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: { type: [Number], default: [0, 0] },

@@ -13,7 +13,7 @@ import { ChangePasswordScreen } from '../screens/auth/ChangePasswordScreen';
 
 // Navigators
 import { BuyerStackNavigator } from './BuyerTabNavigator';
-import { SupplierTabNavigator } from './SupplierTabNavigator';
+import { SupplierStackNavigator } from './SupplierTabNavigator';
 import { View, ActivityIndicator } from 'react-native';
 
 const AuthStack = createNativeStackNavigator();
@@ -47,7 +47,7 @@ export const RootNavigator = () => {
     <NavigationContainer>
       {token && user ? (
         user.role === 'SUPPLIER' ? (
-          <SupplierTabNavigator />
+          <SupplierStackNavigator />
         ) : (
           <BuyerStackNavigator />
         )

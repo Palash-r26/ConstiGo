@@ -17,13 +17,13 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
   return (
     <ScreenWrapper>
       {/* Top Header */}
-      <View className="flex-row justify-between items-center px-6 py-4 mb-2">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="chevron-left" size={28} color="#1C1C1C" />
-        </TouchableOpacity>
+      <View className="flex-row justify-between items-center px-6 py-4 mt-2 mb-2">
+        <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
+          <Icon name="user" size={24} color="#FFF" />
+        </View>
         <Logo size="sm" />
-        <TouchableOpacity>
-          <Icon name="bell" size={24} color="#1C1C1C" />
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          <Icon name="bell" size={24} color="#F5A623" />
         </TouchableOpacity>
       </View>
 
@@ -78,7 +78,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
                 <Typography variant="bodyMedium" className="text-primary">Skyline Tower Project</Typography>
                 <View className="flex-row">
                   {[...Array(5)].map((_, idx) => (
-                    <Icon key={idx} name="star" size={12} color="#FFC107" solid />
+                    <Icon key={idx} name="star" size={12} color="#FFC107" />
                   ))}
                 </View>
               </View>

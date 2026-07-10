@@ -5,21 +5,33 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
+import { useCartStore } from '../../../application/store/cartStore';
 
 export const SupplierListingScreen = ({ route, navigation }: any) => {
   const { product } = route.params || {};
   const [suppliers, setSuppliers] = React.useState<any[]>([]);
+  const { addToCart } = useCartStore();
 
   React.useEffect(() => {
     const fetchSuppliers = async () => {
-      try {
-        const response = await apiClient.get(`/products${product ? `?keyword=${product.name}` : ''}`);
-        if (response.data.success) {
-          setSuppliers(response.data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch suppliers:', error);
-      }
+      // Inject demo supplier data as requested
+      const mockSuppliers = [
+        { 
+          _id: '1', 
+          name: 'UltraTech Cement', 
+          price: 350.00, 
+          unit: 'bag',
+          supplier: { businessInfo: { companyName: 'BuildCorp Supplies' }, firstName: 'Raj', lastName: 'Kumar' }
+        },
+        { 
+          _id: '2', 
+          name: 'Tata TMT Steel', 
+          price: 5500.00, 
+          unit: 'ton',
+          supplier: { businessInfo: { companyName: 'Metro Steel Distributors' }, firstName: 'Amit', lastName: 'Singh' }
+        },
+      ];
+      setSuppliers(mockSuppliers);
     };
     fetchSuppliers();
   }, [product]);
@@ -27,13 +39,13 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
   return (
     <ScreenWrapper>
       {/* Top Header */}
-      <View className="flex-row justify-between items-center px-6 py-4 mb-2">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="chevron-left" size={28} color="#1C1C1C" />
-        </TouchableOpacity>
+      <View className="flex-row justify-between items-center px-6 py-4 mt-2 mb-2">
+        <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
+          <Icon name="user" size={24} color="#FFF" />
+        </View>
         <Logo size="sm" />
-        <TouchableOpacity>
-          <Icon name="bell" size={24} color="#1C1C1C" />
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          <Icon name="bell" size={24} color="#F5A623" />
         </TouchableOpacity>
       </View>
 
@@ -74,7 +86,13 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                 <Typography variant="h1" className="text-2xl text-[#28A745]">₹ {item.price}</Typography>
                 <Typography variant="bodySmall" className="text-[10px]">Product: {item.name}</Typography>
               </View>
-              <TouchableOpacity className="bg-primary rounded-full px-6 py-2">
+              <TouchableOpacity 
+                className="bg-primary rounded-full px-6 py-2"
+                onPress={() => {
+                  addToCart(item._id, 1);
+                  // Optional: show a toast or feedback
+                }}
+              >
                 <Typography variant="bodyMedium" className="text-white">Add to Cart</Typography>
               </TouchableOpacity>
             </View>

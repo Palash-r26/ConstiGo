@@ -10,8 +10,8 @@ export const WelcomeScreen = ({ navigation }: any) => {
     <ScreenWrapper className="justify-center px-6 bg-white">
       <View className="items-center mb-12">
         <Logo size="lg" style={{ marginBottom: 40 }} />
-        <Typography variant="h1Black" className="text-4xl text-black text-center mb-2 leading-tight">
-          Welcome{'\n'}Back!
+        <Typography variant="h1Black" className="text-4xl text-center mb-2 leading-tight" color="#000000">
+          Welcome Back!
         </Typography>
         <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
           Enter your credentials to access your{'\n'}buyer dashboard

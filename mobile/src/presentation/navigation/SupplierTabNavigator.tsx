@@ -5,9 +5,15 @@ import Icon from 'react-native-vector-icons/Feather';
 
 import { InventoryDashboardScreen } from '../screens/supplier/InventoryDashboardScreen';
 import { MyOrdersScreen } from '../screens/supplier/MyOrdersScreen';
+import { SupplierProfileScreen } from '../screens/supplier/SupplierProfileScreen';
+import { OrderDetailsScreen } from '../screens/supplier/OrderDetailsScreen';
+import { AddMaterialScreen } from '../screens/supplier/AddMaterialScreen';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 const DummyScreen = () => <View className="flex-1 bg-background" />;
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 export const SupplierTabNavigator = () => {
   return (
@@ -30,8 +36,18 @@ export const SupplierTabNavigator = () => {
       <Tab.Screen name="Inventory" component={InventoryDashboardScreen} />
       <Tab.Screen name="Orders" component={MyOrdersScreen} />
       <Tab.Screen name="Shop" component={DummyScreen} />
-      <Tab.Screen name="Profile" component={DummyScreen} />
+      <Tab.Screen name="Profile" component={SupplierProfileScreen} />
     </Tab.Navigator>
+  );
+};
+
+export const SupplierStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="SupplierTabs" component={SupplierTabNavigator} />
+      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+      <Stack.Screen name="AddMaterial" component={AddMaterialScreen} />
+    </Stack.Navigator>
   );
 };
 

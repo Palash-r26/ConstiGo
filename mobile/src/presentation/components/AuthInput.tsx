@@ -21,7 +21,8 @@ export const AuthInput = ({ placeholder, isPassword = false, leftIcon, className
       <View className={`flex-row items-center rounded-2xl px-5 py-4 ${bgClass} ${className}`}>
         {leftIcon && <Icon name={leftIcon} size={20} color={error ? "#EF4444" : "#9C101A"} style={{ marginRight: 10 }} />}
         <TextInput
-          className="flex-1 text-base text-text-primary font-outfit"
+          className="flex-1 text-base text-text-primary"
+          style={{ fontFamily: 'Outfit-Regular' }}
           placeholder={placeholder}
           placeholderTextColor={error ? "#EF4444" : "#8A8A8E"}
           secureTextEntry={isSecure}

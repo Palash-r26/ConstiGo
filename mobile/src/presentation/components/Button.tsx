@@ -20,21 +20,28 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   let baseContainerStyle = 'items-center justify-center ';
-  // Use exact font file name — Android ignores fontWeight on custom fontFamily.
-  let baseTextStyle = "font-['Outfit-Medium'] ";
+  let baseTextStyle = '';
+  let textVariant: any = 'bodyMedium';
+  let explicitColor = '';
 
   switch (variant) {
     case 'primary':
       baseContainerStyle += 'bg-primary rounded-full py-4 px-6 ';
-      baseTextStyle += 'text-white text-lg ';
+      baseTextStyle += 'text-lg ';
+      textVariant = 'bodyLarge';
+      explicitColor = '#FFFFFF';
       break;
     case 'link':
       baseContainerStyle += 'py-2 ';
-      baseTextStyle = "font-['Outfit-Bold'] text-accent text-base ";
+      baseTextStyle += 'text-base ';
+      textVariant = 'bodyBold';
+      explicitColor = '#FF4B3A'; // text-accent
       break;
     case 'outline':
       baseContainerStyle += 'bg-transparent border border-primary rounded-full py-4 px-6 ';
-      baseTextStyle += 'text-primary text-lg ';
+      baseTextStyle += 'text-lg ';
+      textVariant = 'bodyLarge';
+      explicitColor = '#9C101A'; // text-primary
       break;
   }
 
@@ -50,7 +57,13 @@ export const Button = ({
       {isLoading ? (
         <ActivityIndicator color={variant === 'primary' ? '#FFF' : '#9C101A'} />
       ) : (
-        <Typography className={`${baseTextStyle} ${textClassName}`}>{title}</Typography>
+        <Typography 
+          variant={textVariant} 
+          className={`${baseTextStyle} ${textClassName}`}
+          color={explicitColor || undefined}
+        >
+          {title}
+        </Typography>
       )}
     </TouchableOpacity>
   );
