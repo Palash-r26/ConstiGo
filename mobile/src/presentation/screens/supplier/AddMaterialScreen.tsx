@@ -111,7 +111,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
             {imageUri ? (
               <Image source={{ uri: imageUri }} className="w-full h-32 absolute top-0 left-0 opacity-50 rounded-2xl" resizeMode="cover" />
             ) : null}
-            <Typography variant="bodyDefault" className={imageUri ? "text-primary font-bold z-10" : "text-text-secondary z-10"}>
+            <Typography variant={imageUri ? "bodyBold" : "bodyDefault"} className={imageUri ? "text-primary z-10" : "text-text-secondary z-10"}>
               {imageUri ? 'Image Selected (Tap to change)' : 'Upload Image'}
             </Typography>
             <Icon name="upload" size={20} color="#9C101A" className="z-10" />

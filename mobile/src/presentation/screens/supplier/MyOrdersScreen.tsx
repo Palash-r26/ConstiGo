@@ -37,7 +37,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
             <View className="flex-row gap-x-4 mb-5">
               <View className="w-20 h-20 bg-primary rounded-2xl opacity-80" />
               <View className="flex-1 justify-center">
-                <Typography variant="bodyLarge" className="font-bold mb-1">{order.buyerName}</Typography>
+                <Typography variant="bodyBold" className="mb-1 text-lg">{order.buyerName}</Typography>
                 <Typography variant="bodySmall" className="text-[11px] leading-relaxed text-text-secondary">{order.grade}</Typography>
               </View>
             </View>

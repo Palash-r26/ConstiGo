@@ -73,7 +73,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                 key={cat} 
                 className={`px-6 py-2 rounded-full ${isActive ? 'bg-primary' : 'bg-surface shadow-sm shadow-gray-100'}`}
               >
-                <Typography className={isActive ? 'text-white font-medium' : 'text-text-secondary font-medium'}>
+                <Typography variant="bodyMedium" className={isActive ? "text-white" : "text-text-secondary"}>
                   {cat}
                 </Typography>
               </TouchableOpacity>
@@ -100,13 +100,13 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
               <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
                  <Icon name="box" size={40} color="#8A8A8E" />
               </View>
-              <Typography variant="bodyDefault" className="font-semibold mb-1" numberOfLines={1}>{item.name}</Typography>
+              <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
               <View className="flex-row items-end mb-3">
-                <Typography variant="bodyDefault" className="text-primary font-bold">₹ {item.price} </Typography>
+                <Typography variant="bodyBold" className="text-primary">₹ {item.price} </Typography>
                 <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
               </View>
               <View className="bg-primary rounded-full py-2 items-center">
-                <Typography variant="bodySmall" className="text-white font-medium text-xs">Get Quotation</Typography>
+                <Typography variant="bodyMedium" className="text-white text-xs">Get Quotation</Typography>
               </View>
             </TouchableOpacity>
           ))}
@@ -116,32 +116,32 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         {/* Geospatial Search Map */}
         <View className="px-6 mb-4">
           <Typography variant="h2" className="text-xl mb-4">Suppliers Near You</Typography>
-          <View className="h-64 rounded-3xl overflow-hidden shadow-sm shadow-gray-200 border border-gray-100">
-            <MapboxGL.MapView style={{ flex: 1 }} logoEnabled={false} attributionEnabled={false}>
-              <MapboxGL.Camera
-                zoomLevel={12}
-                centerCoordinate={[72.8777, 19.0760]} // Default to Mumbai
-                animationMode="flyTo"
-                animationDuration={2000}
-              />
-              <MapboxGL.RasterSource 
-                id="ola-maps-source" 
-                tileUrlTemplates={[
-                  `https://api.olamaps.io/tiles/vector/v1/data/{z}/{x}/{y}.pbf?api_key=${OLA_MAPS_API_KEY}`
-                ]}
-                tileSize={256}
+          <View className="h-64 rounded-3xl overflow-hidden shadow-sm shadow-gray-200 border border-gray-100 bg-surface justify-center items-center">
+            {OLA_MAPS_API_KEY ? (
+              <MapboxGL.MapView 
+                style={{ flex: 1, width: '100%', height: '100%' }} 
+                styleURL={`https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${OLA_MAPS_API_KEY}`}
+                logoEnabled={false} 
+                attributionEnabled={false}
               >
-                <MapboxGL.RasterLayer id="ola-maps-layer" sourceID="ola-maps-source" />
-              </MapboxGL.RasterSource>
+                <MapboxGL.Camera
+                  zoomLevel={12}
+                  centerCoordinate={[72.8777, 19.0760]} // Default to Mumbai
+                  animationMode="flyTo"
+                  animationDuration={2000}
+                />
 
-              {/* Sample Supplier Marker */}
-              <MapboxGL.PointAnnotation id="supplier-1" coordinate={[72.8777, 19.0760]}>
-                <View className="w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-white">
-                  <Icon name="map-pin" size={16} color="white" />
-                </View>
-              </MapboxGL.PointAnnotation>
+                {/* Sample Supplier Marker */}
+                <MapboxGL.PointAnnotation id="supplier-1" coordinate={[72.8777, 19.0760]}>
+                  <View className="w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-white">
+                    <Icon name="map-pin" size={16} color="white" />
+                  </View>
+                </MapboxGL.PointAnnotation>
 
-            </MapboxGL.MapView>
+              </MapboxGL.MapView>
+            ) : (
+              <Typography variant="bodyMedium" className="text-text-secondary">Map is currently unavailable</Typography>
+            )}
           </View>
         </View>
 

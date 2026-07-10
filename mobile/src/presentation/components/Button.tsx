@@ -20,7 +20,8 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   let baseContainerStyle = 'items-center justify-center ';
-  let baseTextStyle = 'font-medium ';
+  // Use exact font file name — Android ignores fontWeight on custom fontFamily.
+  let baseTextStyle = "font-['Outfit-Medium'] ";
 
   switch (variant) {
     case 'primary':
@@ -29,7 +30,7 @@ export const Button = ({
       break;
     case 'link':
       baseContainerStyle += 'py-2 ';
-      baseTextStyle += 'text-accent text-base ';
+      baseTextStyle = "font-['Outfit-Bold'] text-accent text-base ";
       break;
     case 'outline':
       baseContainerStyle += 'bg-transparent border border-primary rounded-full py-4 px-6 ';

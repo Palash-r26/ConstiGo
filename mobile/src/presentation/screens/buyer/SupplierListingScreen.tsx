@@ -48,7 +48,7 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
               <View className="w-20 h-20 bg-primary rounded-2xl" />
               <View className="flex-1 justify-center">
                 <View className="flex-row items-start">
-                  <Typography variant="bodyLarge" className="font-bold flex-1 leading-tight">
+                  <Typography variant="bodyBold" className="text-lg flex-1 leading-tight">
                     {item.supplier?.businessInfo?.companyName || `${item.supplier?.firstName} ${item.supplier?.lastName}`}
                   </Typography>
                   <Icon name="check-circle" size={16} color="#28A745" className="ml-2 mt-1" />
@@ -75,16 +75,16 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                 <Typography variant="bodySmall" className="text-[10px]">Product: {item.name}</Typography>
               </View>
               <TouchableOpacity className="bg-primary rounded-full px-6 py-2">
-                <Typography className="text-white font-medium">Add to Cart</Typography>
+                <Typography variant="bodyMedium" className="text-white">Add to Cart</Typography>
               </TouchableOpacity>
             </View>
 
             <View className="flex-row gap-x-4">
               <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-3 items-center">
-                <Typography variant="bodySmall" className="font-medium text-[#1C1C1C]">More Details</Typography>
+                <Typography variant="bodyMedium" className="text-text-primary text-sm">More Details</Typography>
               </TouchableOpacity>
               <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-3 items-center">
-                <Typography variant="bodySmall" className="font-medium text-[#1C1C1C]">Compare</Typography>
+                <Typography variant="bodyMedium" className="text-text-primary text-sm">Compare</Typography>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

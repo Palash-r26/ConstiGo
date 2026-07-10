@@ -8,6 +8,8 @@ import { SplashScreen } from '../screens/auth/SplashScreen';
 import { WelcomeScreen } from '../screens/auth/WelcomeScreen';
 import { SignInScreen } from '../screens/auth/SignInScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
+import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
+import { ChangePasswordScreen } from '../screens/auth/ChangePasswordScreen';
 
 // Navigators
 import { BuyerStackNavigator } from './BuyerTabNavigator';
@@ -21,6 +23,8 @@ const AuthNavigator = () => (
     <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
     <AuthStack.Screen name="SignIn" component={SignInScreen} />
     <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+    <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+    <AuthStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
   </AuthStack.Navigator>
 );
 
@@ -34,7 +38,7 @@ export const RootNavigator = () => {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#FF3A44" />
+        <ActivityIndicator size="large" color="#9C101A" />
       </View>
     );
   }

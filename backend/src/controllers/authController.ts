@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.js';
 import { generateToken, hashPassword, comparePassword } from '../utils/auth.js';
+import { registerSchema, loginSchema } from '../utils/validators.js';
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, phone, password, role } = req.body;
+    const validatedData = registerSchema.parse(req.body);
+    const { firstName, lastName, email, phone, password, role } = validatedData;
 
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
@@ -37,13 +39,18 @@ export const registerUser = async (req: Request, res: Response) => {
       });
     }
   } catch (error: any) {
+    if (error.name === 'ZodError') {
+      res.status(400).json({ success: false, message: error.errors[0].message });
+      return;
+    }
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
-    const { identity, password, role } = req.body; // identity can be email or phone
+    const validatedData = loginSchema.parse(req.body);
+    const { identity, password, role } = validatedData; // identity can be email or phone
 
     const user = await User.findOne({ $or: [{ email: identity }, { phone: identity }] });
 
@@ -69,6 +76,10 @@ export const loginUser = async (req: Request, res: Response) => {
       throw new Error('Invalid credentials');
     }
   } catch (error: any) {
+    if (error.name === 'ZodError') {
+      res.status(400).json({ success: false, message: error.errors[0].message });
+      return;
+    }
     res.status(401).json({ success: false, message: error.message });
   }
 };

@@ -81,13 +81,13 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           </View>
           <View className="flex-row justify-between gap-x-2">
             <TouchableOpacity className="flex-1 bg-primary rounded-full py-2 items-center">
-              <Typography className="text-white font-medium">All Items</Typography>
+              <Typography variant="bodyMedium" className="text-white">All Items</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-2 items-center">
-              <Typography className="text-text-secondary font-medium">In stock</Typography>
+              <Typography variant="bodyMedium" className="text-text-secondary">In stock</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-2 items-center">
-              <Typography className="text-text-secondary font-medium">out of stock</Typography>
+              <Typography variant="bodyMedium" className="text-text-secondary">out of stock</Typography>
             </TouchableOpacity>
           </View>
         </View>
@@ -100,7 +100,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
                 <View className="w-20 h-20 bg-primary rounded-2xl opacity-80" />
                 <View className="flex-1">
                   <View className="flex-row justify-between items-start">
-                    <Typography variant="bodyLarge" className="font-bold flex-1 leading-tight mb-1">{item.name}</Typography>
+                    <Typography variant="bodyBold" className="text-lg flex-1 leading-tight mb-1">{item.name}</Typography>
                     <Icon name="check-circle" size={18} color="#28A745" className="ml-2" />
                   </View>
                   <Typography variant="bodySmall" className="text-xs">Grade : {item.grade || 'Standard'}</Typography>
@@ -126,12 +126,12 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
                     trackColor={{ false: "#D1D1D6", true: "#82C341" }}
                     thumbColor="#FFFFFF"
                   />
-                  <Typography variant="bodySmall" className="ml-2 text-[#1C1C1C] font-medium text-xs">
+                  <Typography variant="bodyMedium" className="ml-2 text-text-primary text-xs">
                     Available in Market
                   </Typography>
                 </View>
                 <TouchableOpacity className="bg-primary rounded-full px-6 py-2">
-                  <Typography className="text-white font-medium text-xs">Update</Typography>
+                  <Typography variant="bodyMedium" className="text-white text-xs">Update</Typography>
                 </TouchableOpacity>
               </View>
             </View>

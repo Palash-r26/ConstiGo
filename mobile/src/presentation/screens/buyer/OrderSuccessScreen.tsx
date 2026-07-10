@@ -18,10 +18,10 @@ export const OrderSuccessScreen = ({ navigation }: any) => {
           <Typography variant="h1" className="text-3xl mb-4 text-center">
             Order Successful !
           </Typography>
-          <Typography variant="bodyDefault" className="text-center text-[#1C1C1C] mb-4">
+          <Typography variant="bodyDefault" className="text-center text-text-primary mb-4">
             Your order will be successfully placed.
           </Typography>
-          <Typography variant="bodyDefault" className="text-center text-primary font-bold">
+          <Typography variant="bodyBold" className="text-center text-primary">
             Thank you!
           </Typography>
         </View>

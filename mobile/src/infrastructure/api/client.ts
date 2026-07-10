@@ -10,7 +10,9 @@ const API_URL = ENV_API_URL || LOCAL_API_URL;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  // Render free-tier services spin down when idle and take 20-50s to cold-start.
+  // A short timeout made the first request (register/login) fail every time.
+  timeout: 60000,
 });
 
 apiClient.interceptors.request.use(
@@ -22,6 +24,23 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Retry once on timeout / network error to survive backend cold starts.
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    const isTimeout =
+      error.code === 'ECONNABORTED' ||
+      error.message?.includes('timeout') ||
+      error.message === 'Network Error';
+    if (config && isTimeout && !config._retried) {
+      config._retried = true;
+      return apiClient(config);
+    }
     return Promise.reject(error);
   }
 );

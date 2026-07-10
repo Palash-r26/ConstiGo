@@ -35,7 +35,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
             <View className="w-20 h-20 bg-primary rounded-2xl" />
             <View className="flex-1 justify-center">
               <View className="flex-row items-start">
-                <Typography variant="bodyLarge" className="font-bold flex-1 leading-tight">{supplierName}</Typography>
+                <Typography variant="bodyBold" className="text-lg flex-1 leading-tight">{supplierName}</Typography>
                 <Icon name="check-circle" size={16} color="#28A745" className="ml-2 mt-1" />
               </View>
               <View className="flex-row items-center mt-2 gap-x-4">
@@ -44,7 +44,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
                   <Typography variant="bodySmall" className="ml-1 text-xs">3.5 km</Typography>
                 </View>
                 <View className="flex-row items-center">
-                  <Icon name="star" size={12} color="#FFC107" />
+                  <Icon name="star" size={16} color="#FFD700" />
                   <Typography variant="bodySmall" className="ml-1 text-xs">4.8 (140)</Typography>
                 </View>
               </View>
@@ -56,15 +56,15 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           <View className="flex-row justify-between gap-x-2">
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
               <Icon name="phone" size={16} color="#9C101A" className="mr-2" />
-              <Typography variant="bodySmall" className="text-primary font-medium">Call</Typography>
+              <Typography variant="bodyMedium" className="text-primary text-sm">Call</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
               <Icon name="message-circle" size={16} color="#9C101A" className="mr-2" />
-              <Typography variant="bodySmall" className="text-primary font-medium">Message</Typography>
+              <Typography variant="bodyMedium" className="text-primary text-sm">Message</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
               <Icon name="map" size={16} color="#9C101A" className="mr-2" />
-              <Typography variant="bodySmall" className="text-primary font-medium">Map</Typography>
+              <Typography variant="bodyMedium" className="text-primary text-sm">Map</Typography>
             </TouchableOpacity>
           </View>
         </View>
@@ -75,7 +75,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           {[1, 2].map((i) => (
             <View key={i} className="mb-4">
               <View className="flex-row justify-between items-center mb-1">
-                <Typography variant="bodyDefault" className="text-primary font-medium">Skyline Tower Project</Typography>
+                <Typography variant="bodyMedium" className="text-primary">Skyline Tower Project</Typography>
                 <View className="flex-row">
                   {[...Array(5)].map((_, idx) => (
                     <Icon key={idx} name="star" size={12} color="#FFC107" solid />
@@ -93,16 +93,16 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
         <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 mb-4">
           <Typography variant="h2" className="text-xl mb-6">Logistics</Typography>
           <View className="flex-row justify-between mb-4">
-            <Typography variant="bodyDefault" className="text-primary font-medium">Estimated Delivery :</Typography>
-            <Typography variant="bodyDefault" className="font-medium">3-5 Business Days</Typography>
+            <Typography variant="bodyMedium" className="text-primary">Estimated Delivery :</Typography>
+            <Typography variant="bodyMedium">3-5 Business Days</Typography>
           </View>
           <View className="flex-row justify-between mb-4">
-            <Typography variant="bodyDefault" className="text-primary font-medium">Delivery Method :</Typography>
-            <Typography variant="bodyDefault" className="font-medium">Flatbed Truck (Site Req.)</Typography>
+            <Typography variant="bodyMedium" className="text-primary">Delivery Method :</Typography>
+            <Typography variant="bodyMedium">Flatbed Truck (Site Req.)</Typography>
           </View>
           <View className="flex-row justify-between">
-            <Typography variant="bodyDefault" className="text-primary font-medium">Shipping Cost :</Typography>
-            <Typography variant="bodyDefault" className="font-medium">Included in Unit Price</Typography>
+            <Typography variant="bodyMedium" className="text-primary">Shipping Cost :</Typography>
+            <Typography variant="bodyMedium">Included in Unit Price</Typography>
           </View>
         </View>
 
@@ -176,7 +176,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
             title="Download PDF" 
             variant="outline"
             className="flex-1 border-gray-300"
-            textClassName="text-[#1C1C1C]"
+            textClassName="text-text-primary"
           />
         </View>
       </ScrollView>

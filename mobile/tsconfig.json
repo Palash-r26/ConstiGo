@@ -3,7 +3,9 @@
   "compilerOptions": {
     "types": [
       "jest"
-    ]
+    ],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "**/*.ts",
