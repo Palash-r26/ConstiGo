@@ -40,7 +40,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         {/* Top Header: avatar left, logo centered, notifications right */}
         <View className="flex-row justify-between items-center px-6 py-4 mt-2">
           <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
-            <Icon name="user" size={24} color="#12294A" />
+            <Icon name="user" size={24} color="#182F4B" />
           </View>
           <Logo size="sm" />
           <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
@@ -52,7 +52,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         <View className="px-6 mb-5 mt-3">
           <Typography
             variant="h1Black"
-            className="text-black"
+            className="text-[#182F4B]"
             style={{ fontSize: 28, lineHeight: 34, letterSpacing: -0.5 }}
           >
             Build your dream project with ease
@@ -69,7 +69,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
             <Typography variant="bodyDefault" className="text-text-secondary flex-1">Search</Typography>
           </TouchableOpacity>
           <TouchableOpacity className="w-12 h-12 bg-primary rounded-full justify-center items-center shadow-sm">
-            <Icon name="sliders" size={20} color="#12294A" />
+            <Icon name="sliders" size={20} color="#182F4B" />
           </TouchableOpacity>
         </View>
 
@@ -83,7 +83,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                 onPress={() => setActiveCategory(cat)}
                 className={`px-6 py-2 rounded-full ${isActive ? 'bg-primary' : 'bg-surface shadow-sm shadow-gray-100'}`}
               >
-                <Typography variant="bodyMedium" className={isActive ? "text-[#12294A]" : "text-text-secondary"}>
+                <Typography variant="bodyMedium" className={isActive ? "text-[#182F4B]" : "text-text-secondary"}>
                   {cat}
                 </Typography>
               </TouchableOpacity>
@@ -92,7 +92,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
         </ScrollView>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color="#DFA128" />
+          <ActivityIndicator size="large" color="#C89338" />
         ) : (
           <>
             {/* Trending Materials */}
@@ -109,7 +109,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                   className="bg-surface rounded-3xl p-4 w-44 shadow-sm shadow-gray-200"
                 >
                   <TouchableOpacity className="absolute right-4 top-4 z-10" onPress={() => toggleWishlist(item._id)}>
-                    <Icon name="heart" size={16} color={isFavorited(item._id) ? "#DFA128" : "#8A8A8E"} />
+                    <Icon name="heart" size={16} color={isFavorited(item._id) ? "#C89338" : "#8A8A8E"} />
                   </TouchableOpacity>
                   <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
                     <Icon name="box" size={40} color="#8A8A8E" />
@@ -120,7 +120,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
                   </View>
                   <View className="bg-primary rounded-full py-2 items-center">
-                    <Typography variant="bodyMedium" className="text-[#12294A] text-xs">Get Quotation</Typography>
+                    <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -140,7 +140,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                   className="bg-surface rounded-3xl p-4 w-44 shadow-sm shadow-gray-200"
                 >
                   <TouchableOpacity className="absolute right-4 top-4 z-10" onPress={() => toggleWishlist(item._id)}>
-                    <Icon name="heart" size={16} color={isFavorited(item._id) ? "#DFA128" : "#8A8A8E"} />
+                    <Icon name="heart" size={16} color={isFavorited(item._id) ? "#C89338" : "#8A8A8E"} />
                   </TouchableOpacity>
                   <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
                     <Icon name="box" size={40} color="#8A8A8E" />
@@ -151,7 +151,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
                   </View>
                   <View className="bg-primary rounded-full py-2 items-center">
-                    <Typography variant="bodyMedium" className="text-[#12294A] text-xs">Get Quotation</Typography>
+                    <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
                   </View>
                 </TouchableOpacity>
               ))}

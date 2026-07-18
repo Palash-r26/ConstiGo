@@ -50,10 +50,10 @@ export const SignInScreen = ({ route, navigation }: any) => {
       {/* Custom Header Back Button */}
       <View className="flex-row items-center mt-4 mb-8">
         <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10 py-2">
-          <Icon name="chevron-left" size={28} color="#1C1C1C" />
+          <Icon name="chevron-left" size={28} color="#182F4B" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Typography variant="bodyBold" className="text-center text-xl text-black">Sign In</Typography>
+          <Typography variant="bodyBold" className="text-center text-xl text-[#182F4B]">Sign In</Typography>
         </View>
       </View>
 
@@ -61,7 +61,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
         <Logo size="md" style={{ marginBottom: 24 }} />
         {isSupplier ? (
           <>
-            <Typography variant="h1Black" className="text-3xl text-black text-center mb-2">
+            <Typography variant="h1Black" className="text-3xl text-[#182F4B] text-center mb-2">
               SUPPLIER PORTAL
             </Typography>
             <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
@@ -74,7 +74,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
               variant="h1Black"
               className="text-center mb-2"
               style={{ fontSize: 34, lineHeight: 40, letterSpacing: -0.5 }}
-              color="#000000"
+              color="#182F4B"
             >
               Welcome Back!
             </Typography>
@@ -124,7 +124,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
         <View className="flex-row items-center">
           {/* Checkbox Placeholder */}
           <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
-            <Icon name="check" size={12} color="#12294A" />
+            <Icon name="check" size={12} color="#182F4B" />
           </TouchableOpacity>
           <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
         </View>
@@ -141,7 +141,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
       />
 
       <View className="flex-row justify-center items-center">
-        <Typography variant="bodyBold" className="text-black text-sm mr-1">Don't have an account?</Typography>
+        <Typography variant="bodyBold" className="text-[#182F4B] text-sm mr-1">Don't have an account?</Typography>
         <Button 
           variant="link" 
           title="Sign Up" 

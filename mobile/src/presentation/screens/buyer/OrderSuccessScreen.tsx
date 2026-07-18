@@ -11,7 +11,7 @@ export const OrderSuccessScreen = ({ navigation }: any) => {
       <View className="items-center mb-12">
         {/* Placeholder for confetti animation */}
         <View className="w-32 h-32 bg-primary rounded-full justify-center items-center mb-8 relative">
-          <Icon name="check" size={60} color="#12294A" />
+          <Icon name="check" size={60} color="#182F4B" />
         </View>
 
         <View className="bg-input-bg rounded-3xl p-8 w-full items-center">

@@ -27,7 +27,7 @@ export const WishlistScreen = ({ navigation }: any) => {
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#DFA128" />
+          <ActivityIndicator size="large" color="#C89338" />
         </View>
       ) : wishlistItems.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -44,7 +44,7 @@ export const WishlistScreen = ({ navigation }: any) => {
               className="bg-surface rounded-3xl p-4 w-[48%] shadow-sm shadow-gray-200"
             >
               <View className="absolute right-4 top-4 z-10">
-                <Icon name="heart" size={16} color="#DFA128" />
+                <Icon name="heart" size={16} color="#C89338" />
               </View>
               <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
                  <Icon name="box" size={40} color="#8A8A8E" />
@@ -55,7 +55,7 @@ export const WishlistScreen = ({ navigation }: any) => {
                 <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
               </View>
               <View className="bg-primary rounded-full py-2 items-center">
-                <Typography variant="bodyMedium" className="text-[#12294A] text-xs">Get Quotation</Typography>
+                <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
               </View>
               </TouchableOpacity>
             ))}

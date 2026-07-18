@@ -19,7 +19,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row justify-between items-center px-6 py-4 mt-2 mb-2">
         <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
-          <Icon name="user" size={24} color="#12294A" />
+          <Icon name="user" size={24} color="#182F4B" />
         </View>
         <Logo size="sm" />
         <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
@@ -40,7 +40,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
               </View>
               <View className="flex-row items-center mt-2 gap-x-4">
                 <View className="flex-row items-center">
-                  <Icon name="map-pin" size={12} color="#DFA128" />
+                  <Icon name="map-pin" size={12} color="#C89338" />
                   <Typography variant="bodySmall" className="ml-1 text-xs">3.5 km</Typography>
                 </View>
                 <View className="flex-row items-center">
@@ -55,15 +55,15 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           {/* Action Buttons */}
           <View className="flex-row justify-between gap-x-2">
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
-              <Icon name="phone" size={16} color="#DFA128" className="mr-2" />
+              <Icon name="phone" size={16} color="#C89338" className="mr-2" />
               <Typography variant="bodyMedium" className="text-primary text-sm">Call</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
-              <Icon name="message-circle" size={16} color="#DFA128" className="mr-2" />
+              <Icon name="message-circle" size={16} color="#C89338" className="mr-2" />
               <Typography variant="bodyMedium" className="text-primary text-sm">Message</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 flex-row items-center justify-center py-3 border border-primary rounded-2xl">
-              <Icon name="map" size={16} color="#DFA128" className="mr-2" />
+              <Icon name="map" size={16} color="#C89338" className="mr-2" />
               <Typography variant="bodyMedium" className="text-primary text-sm">Map</Typography>
             </TouchableOpacity>
           </View>
@@ -154,7 +154,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
                     contact: '9999999999',
                     name: 'Buyer Name'
                   },
-                  theme: { color: '#DFA128' }
+                  theme: { color: '#C89338' }
                 };
 
                 RazorpayCheckout.open(options).then(async (data: any) => {

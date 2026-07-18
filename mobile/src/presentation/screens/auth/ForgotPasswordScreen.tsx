@@ -14,10 +14,10 @@ export const ForgotPasswordScreen = ({ navigation }: any) => {
       {/* Header */}
       <View className="flex-row items-center mt-4 mb-16">
         <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10 py-2">
-          <Icon name="chevron-left" size={28} color="#1C1C1C" />
+          <Icon name="chevron-left" size={28} color="#182F4B" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Typography variant="bodyBold" className="text-center text-xl text-black">Forgot Password</Typography>
+          <Typography variant="bodyBold" className="text-center text-xl text-[#182F4B]">Forgot Password</Typography>
         </View>
       </View>
 

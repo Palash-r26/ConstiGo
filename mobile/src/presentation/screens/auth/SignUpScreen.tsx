@@ -56,7 +56,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
         {/* Header */}
         <View className="flex-row items-center mt-4 mb-8">
           <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10">
-            <Icon name="chevron-left" size={28} color="#1C1C1C" />
+            <Icon name="chevron-left" size={28} color="#182F4B" />
           </TouchableOpacity>
           <View className="flex-1">
             <Typography variant="h2" className="text-center text-xl">Sign Up</Typography>
@@ -96,11 +96,11 @@ export const SignUpScreen = ({ navigation, route }: any) => {
                   <Typography
                     style={{ fontFamily: 'Montserrat-Regular' }}
                     className="text-base"
-                    color={errors.dateOfBirth ? '#EF4444' : value ? '#1C1C1C' : '#8A8A8E'}
+                    color={errors.dateOfBirth ? '#EF4444' : value ? '#182F4B' : '#8A8A8E'}
                   >
                     {value || 'Date of Birth'}
                   </Typography>
-                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#DFA128'} />
+                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#C89338'} />
                 </TouchableOpacity>
                 {errors.dateOfBirth ? (
                   <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">{errors.dateOfBirth.message}</Typography>
@@ -161,7 +161,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
         />
 
         <View className="flex-row justify-center items-center">
-          <Typography variant="bodyBold" className="text-sm text-black">Already have an account? </Typography>
+          <Typography variant="bodyBold" className="text-sm text-[#182F4B]">Already have an account? </Typography>
           <Button 
             variant="link" 
             title="Sign In" 

@@ -34,14 +34,14 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     <ScreenWrapper className="bg-white">
       <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#1C1C1C" />
+          <Icon name="arrow-left" size={24} color="#182F4B" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-2xl text-black">Track Order</Typography>
+        <Typography variant="h1Black" className="text-2xl text-[#182F4B]">Track Order</Typography>
       </View>
 
       {isLoading || !order ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#DFA128" />
+          <ActivityIndicator size="large" color="#C89338" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 24 }} showsVerticalScrollIndicator={false}>
@@ -68,7 +68,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                       {/* Line & Dot */}
                       <View className="items-center mr-4">
                         <View className={`w-6 h-6 rounded-full justify-center items-center ${isCompleted ? 'bg-primary' : 'bg-gray-200'}`}>
-                          {isCompleted && <Icon name="check" size={12} color="#12294A" />}
+                          {isCompleted && <Icon name="check" size={12} color="#182F4B" />}
                         </View>
                         {!isLast && (
                           <View className={`w-[2px] h-12 ${isCompleted && index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'}`} />
@@ -88,7 +88,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
           ) : (
             <View className="bg-red-50 rounded-3xl p-6 border border-red-200 items-center">
-               <Icon name="x-circle" size={48} color="#DFA128" className="mb-2" />
+               <Icon name="x-circle" size={48} color="#C89338" className="mb-2" />
                <Typography variant="h2" className="text-xl text-red-500">Order Cancelled</Typography>
             </View>
           )}

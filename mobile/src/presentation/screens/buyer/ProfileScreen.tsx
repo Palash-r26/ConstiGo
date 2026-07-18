@@ -33,10 +33,10 @@ export const ProfileScreen = ({ navigation }: any) => {
         {/* Profile Card */}
         <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200 mb-8 items-center border border-gray-100">
           <View className="w-24 h-24 rounded-full bg-primary justify-center items-center overflow-hidden mb-4">
-            <Icon name="user" size={48} color="#12294A" />
+            <Icon name="user" size={48} color="#182F4B" />
           </View>
           {isLoading ? (
-            <ActivityIndicator size="small" color="#DFA128" />
+            <ActivityIndicator size="small" color="#C89338" />
           ) : (
             <>
               <View className="items-center">
@@ -58,7 +58,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100"
           >
             <View className="flex-row items-center">
-              <Icon name="settings" size={24} color="#1C1C1C" className="mr-4" />
+              <Icon name="settings" size={24} color="#182F4B" className="mr-4" />
               <Typography variant="bodyMedium">Account Settings</Typography>
             </View>
             <Icon name="chevron-right" size={20} color="#8A8A8E" />
@@ -69,7 +69,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100"
           >
             <View className="flex-row items-center">
-              <Icon name="map-pin" size={24} color="#1C1C1C" className="mr-4" />
+              <Icon name="map-pin" size={24} color="#182F4B" className="mr-4" />
               <Typography variant="bodyMedium">Delivery Addresses</Typography>
             </View>
             <Icon name="chevron-right" size={20} color="#8A8A8E" />
@@ -80,7 +80,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100"
           >
             <View className="flex-row items-center">
-              <Icon name="file-text" size={24} color="#1C1C1C" className="mr-4" />
+              <Icon name="file-text" size={24} color="#182F4B" className="mr-4" />
               <Typography variant="bodyMedium">My Orders</Typography>
             </View>
             <Icon name="chevron-right" size={20} color="#8A8A8E" />

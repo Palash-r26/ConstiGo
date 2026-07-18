@@ -41,7 +41,7 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row justify-between items-center px-6 py-4 mt-2 mb-2">
         <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
-          <Icon name="user" size={24} color="#12294A" />
+          <Icon name="user" size={24} color="#182F4B" />
         </View>
         <Logo size="sm" />
         <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
@@ -67,7 +67,7 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                 </View>
                 <View className="flex-row items-center mt-2 gap-x-4">
                   <View className="flex-row items-center">
-                    <Icon name="map-pin" size={12} color="#DFA128" />
+                    <Icon name="map-pin" size={12} color="#C89338" />
                     <Typography variant="bodySmall" className="ml-1 text-xs">2.5 km</Typography>
                   </View>
                   <View className="flex-row items-center">
@@ -93,7 +93,7 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                   // Optional: show a toast or feedback
                 }}
               >
-                <Typography variant="bodyMedium" className="text-[#12294A]">Add to Cart</Typography>
+                <Typography variant="bodyMedium" className="text-[#182F4B]">Add to Cart</Typography>
               </TouchableOpacity>
             </View>
 

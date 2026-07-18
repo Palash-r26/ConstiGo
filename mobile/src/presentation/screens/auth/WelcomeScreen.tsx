@@ -10,7 +10,7 @@ export const WelcomeScreen = ({ navigation }: any) => {
     <ScreenWrapper className="justify-center px-6 bg-white">
       <View className="items-center mb-12">
         <Logo size="lg" style={{ marginBottom: 40 }} />
-        <Typography variant="h1Black" className="text-4xl text-center mb-2 leading-tight" color="#000000">
+        <Typography variant="h1Black" className="text-4xl text-center mb-2 leading-tight" color="#182F4B">
           Welcome Back!
         </Typography>
         <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
@@ -32,7 +32,7 @@ export const WelcomeScreen = ({ navigation }: any) => {
       </View>
 
       <View className="flex-row justify-center items-center">
-        <Typography variant="bodyBold" className="text-black text-sm mr-1">Don't have an account?</Typography>
+        <Typography variant="bodyBold" className="text-[#182F4B] text-sm mr-1">Don't have an account?</Typography>
         <Button 
           variant="link" 
           title="Sign Up" 

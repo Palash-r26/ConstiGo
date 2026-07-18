@@ -17,9 +17,9 @@ export const SettingsScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-white">
       <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#1C1C1C" />
+          <Icon name="arrow-left" size={24} color="#182F4B" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-3xl text-black">Settings</Typography>
+        <Typography variant="h1Black" className="text-3xl text-[#182F4B]">Settings</Typography>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 16 }} showsVerticalScrollIndicator={false}>
@@ -31,7 +31,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               className={`flex-row items-center py-4 ${index !== settingsOptions.length - 1 ? 'border-b border-gray-100' : ''}`}
             >
               <View className="w-10 h-10 bg-input-bg rounded-full justify-center items-center mr-4">
-                <Icon name={item.icon} size={20} color="#1C1C1C" />
+                <Icon name={item.icon} size={20} color="#182F4B" />
               </View>
               <Typography variant="bodyBold" className="flex-1 text-lg">{item.title}</Typography>
               <Icon name="chevron-right" size={20} color="#8A8A8E" />

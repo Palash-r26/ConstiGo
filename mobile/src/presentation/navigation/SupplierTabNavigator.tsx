@@ -22,6 +22,7 @@ export const SupplierTabNavigator = () => {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: styles.tabBar,
+        tabBarItemStyle: { justifyContent: 'center', alignItems: 'center', paddingTop: 0, paddingBottom: 0, height: '100%' },
         tabBarIcon: ({ focused }) => {
           let iconName = 'home';
           if (route.name === 'Inventory') iconName = 'home';
@@ -29,7 +30,7 @@ export const SupplierTabNavigator = () => {
           else if (route.name === 'Shop') iconName = 'shopping-bag';
           else if (route.name === 'Profile') iconName = 'user';
 
-          return <Icon name={iconName} size={24} color={focused ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} />;
+          return <Icon name={iconName} size={24} color={focused ? '#182F4B' : 'rgba(24, 47, 75, 0.5)'} />;
         },
       })}
     >
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     // Short, centered pill (per supplier_07). Equal left/right insets keep it centered.
     left: 60,
     right: 60,
-    backgroundColor: '#DFA128',
+    backgroundColor: '#C89338',
     borderRadius: 32,
     height: 60,
     paddingBottom: 0,

@@ -16,11 +16,11 @@ export const MyOrdersScreen = ({ navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row justify-between items-center px-6 py-4 mb-2">
         <TouchableOpacity className="w-8 h-8 rounded-full bg-primary justify-center items-center">
-          <Icon name="user" size={16} color="#12294A" />
+          <Icon name="user" size={16} color="#182F4B" />
         </TouchableOpacity>
         <Logo size="sm" />
         <TouchableOpacity>
-          <Icon name="bell" size={24} color="#1C1C1C" />
+          <Icon name="bell" size={24} color="#182F4B" />
         </TouchableOpacity>
       </View>
 

@@ -23,7 +23,7 @@ export const SearchScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper className="bg-white">
       <View className="px-6 py-4 mt-4">
-        <Typography variant="h1Black" className="text-3xl text-black mb-4">Search</Typography>
+        <Typography variant="h1Black" className="text-3xl text-[#182F4B] mb-4">Search</Typography>
         <View className="flex-row items-center bg-surface rounded-full px-5 py-3 shadow-sm shadow-gray-200">
           <Icon name="search" size={20} color="#8A8A8E" className="mr-2" />
           <TextInput
@@ -35,7 +35,7 @@ export const SearchScreen = ({ navigation }: any) => {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Icon name="x" size={20} color="#1C1C1C" />
+              <Icon name="x" size={20} color="#182F4B" />
             </TouchableOpacity>
           )}
         </View>
@@ -43,7 +43,7 @@ export const SearchScreen = ({ navigation }: any) => {
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#DFA128" />
+          <ActivityIndicator size="large" color="#C89338" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 16 }} showsVerticalScrollIndicator={false}>

@@ -23,7 +23,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row items-center px-6 py-4 mb-2 mt-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="chevron-left" size={28} color="#1C1C1C" />
+          <Icon name="chevron-left" size={28} color="#182F4B" />
         </TouchableOpacity>
         <Typography variant="h2" className="text-xl">Order #{order._id}</Typography>
       </View>

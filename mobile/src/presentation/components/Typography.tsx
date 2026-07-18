@@ -19,7 +19,7 @@ interface TypographyProps extends TextProps {
 //     / `text-text-secondary` class the screens set (red buttons showing black text, etc).
 //     => We keep ONLY fontFamily + fontSize here; color comes from className, the `color`
 //        prop, or the DEFAULT_COLOR fallback below.
-const DEFAULT_COLOR = '#1C1C1C';
+const DEFAULT_COLOR = '#182F4B';
 const styles = StyleSheet.create({
   h1Black: { fontFamily: 'BalooBhai2-ExtraBold', fontSize: 32 },
   h1: { fontFamily: 'BalooBhai2-Bold', fontSize: 30 },

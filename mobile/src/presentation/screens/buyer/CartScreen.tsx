@@ -24,12 +24,12 @@ export const CartScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-white">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4 mt-4 mb-4">
-        <Typography variant="h1Black" className="text-3xl text-black">My Cart</Typography>
+        <Typography variant="h1Black" className="text-3xl text-[#182F4B]">My Cart</Typography>
       </View>
 
       {isLoading && cartItems.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#DFA128" />
+          <ActivityIndicator size="large" color="#C89338" />
         </View>
       ) : cartItems.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -50,18 +50,18 @@ export const CartScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-text-secondary text-xs">by {item.product.supplier?.businessInfo?.companyName || 'ConstiGo Supplies'}</Typography>
                   </View>
                   <TouchableOpacity onPress={() => removeItem(item.product._id)} className="p-1">
-                    <Icon name="trash-2" size={18} color="#DFA128" />
+                    <Icon name="trash-2" size={18} color="#C89338" />
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row justify-between items-end mt-2">
                   <Typography variant="bodyBold" className="text-primary text-lg">₹ {item.product.price}</Typography>
                   <View className="flex-row items-center bg-input-bg rounded-full px-3 py-1">
                     <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity - 1)}>
-                      <Icon name="minus" size={16} color="#1C1C1C" />
+                      <Icon name="minus" size={16} color="#182F4B" />
                     </TouchableOpacity>
                     <Typography variant="bodyBold" className="mx-4">{item.quantity}</Typography>
                     <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity + 1)}>
-                      <Icon name="plus" size={16} color="#1C1C1C" />
+                      <Icon name="plus" size={16} color="#182F4B" />
                     </TouchableOpacity>
                   </View>
                 </View>

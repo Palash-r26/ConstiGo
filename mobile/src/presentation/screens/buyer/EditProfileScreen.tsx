@@ -52,20 +52,20 @@ export const EditProfileScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-white">
       <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#1C1C1C" />
+          <Icon name="arrow-left" size={24} color="#182F4B" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-2xl text-black">Edit Profile</Typography>
+        <Typography variant="h1Black" className="text-2xl text-[#182F4B]">Edit Profile</Typography>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 20 }} showsVerticalScrollIndicator={false}>
         <View className="items-center mt-4 mb-2">
           <View className="w-24 h-24 rounded-full bg-primary justify-center items-center relative mb-4">
-            <Icon name="user" size={48} color="#12294A" />
+            <Icon name="user" size={48} color="#182F4B" />
             <TouchableOpacity 
               onPress={handlePickImage}
               className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-sm shadow-gray-400"
             >
-              <Icon name="camera" size={16} color="#DFA128" />
+              <Icon name="camera" size={16} color="#C89338" />
             </TouchableOpacity>
           </View>
         </View>

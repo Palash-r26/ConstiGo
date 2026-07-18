@@ -88,11 +88,11 @@ export const AddMaterialScreen = ({ navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row justify-between items-center px-6 py-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="w-8 h-8 rounded-full bg-primary justify-center items-center">
-          <Icon name="user" size={16} color="#12294A" />
+          <Icon name="user" size={16} color="#182F4B" />
         </TouchableOpacity>
         <Logo size="sm" />
         <TouchableOpacity>
-          <Icon name="bell" size={24} color="#1C1C1C" />
+          <Icon name="bell" size={24} color="#182F4B" />
         </TouchableOpacity>
       </View>
 
@@ -114,7 +114,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
             <Typography variant={imageUri ? "bodyBold" : "bodyDefault"} className={imageUri ? "text-primary z-10" : "text-text-secondary z-10"}>
               {imageUri ? 'Image Selected (Tap to change)' : 'Upload Image'}
             </Typography>
-            <Icon name="upload" size={20} color="#DFA128" className="z-10" />
+            <Icon name="upload" size={20} color="#C89338" className="z-10" />
           </TouchableOpacity>
 
           <View className="bg-input-bg rounded-2xl px-5 py-4 h-32">
