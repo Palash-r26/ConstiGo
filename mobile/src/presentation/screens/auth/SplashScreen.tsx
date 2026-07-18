@@ -13,7 +13,7 @@ export const SplashScreen = ({ navigation }: any) => {
 
   return (
     <View className="flex-1 bg-primary justify-center items-center">
-      <StatusBar barStyle="light-content" backgroundColor="#9C101A" />
+      <StatusBar barStyle="light-content" backgroundColor="#DFA128" />
       <Logo variant="white" size="lg" />
     </View>
   );

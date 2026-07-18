@@ -87,7 +87,7 @@ export const CheckoutScreen = ({ navigation }: any) => {
           {selectedAddress ? (
             <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center">
               <View className="w-12 h-12 bg-primary/10 rounded-full justify-center items-center mr-4">
-                <Icon name="map-pin" size={20} color="#9C101A" />
+                <Icon name="map-pin" size={20} color="#DFA128" />
               </View>
               <View className="flex-1">
                 <Typography variant="bodyBold" className="text-base mb-1">{selectedAddress.label || 'Home'}</Typography>
@@ -101,7 +101,7 @@ export const CheckoutScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate('AddressManager')}
               className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center justify-center border border-dashed border-gray-300"
             >
-              <Icon name="plus" size={20} color="#9C101A" className="mr-2" />
+              <Icon name="plus" size={20} color="#DFA128" className="mr-2" />
               <Typography variant="bodyBold" className="text-primary">Add New Address</Typography>
             </TouchableOpacity>
           )}
@@ -127,12 +127,12 @@ export const CheckoutScreen = ({ navigation }: any) => {
         <View className="mb-4">
           <Typography variant="h2" className="text-xl mb-3">Payment Method</Typography>
           <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center border border-primary/20">
-             <Icon name="credit-card" size={24} color="#9C101A" className="mr-4" />
+             <Icon name="credit-card" size={24} color="#DFA128" className="mr-4" />
              <View className="flex-1">
                 <Typography variant="bodyBold" className="text-base">Pay via Razorpay</Typography>
                 <Typography variant="bodySmall" className="text-text-secondary">Credit/Debit Card, UPI</Typography>
              </View>
-             <Icon name="check-circle" size={20} color="#9C101A" />
+             <Icon name="check-circle" size={20} color="#DFA128" />
           </View>
         </View>
 

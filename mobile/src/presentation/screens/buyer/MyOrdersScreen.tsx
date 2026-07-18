@@ -51,7 +51,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#9C101A" />
+          <ActivityIndicator size="large" color="#DFA128" />
         </View>
       ) : orders.length === 0 ? (
         <View className="flex-1 justify-center items-center">

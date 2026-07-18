@@ -32,7 +32,7 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
         {/* Profile Card */}
         <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200 mb-8 items-center border border-gray-100">
           <View className="w-24 h-24 rounded-full bg-primary justify-center items-center overflow-hidden mb-4">
-            <Icon name="briefcase" size={48} color="#FFF" />
+            <Icon name="briefcase" size={48} color="#12294A" />
           </View>
           <Typography variant="h2" className="mb-1 text-center">{supplier.companyName}</Typography>
           <Typography variant="bodyMedium" className="text-text-secondary">{supplier.owner}</Typography>

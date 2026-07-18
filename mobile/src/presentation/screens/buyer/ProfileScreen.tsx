@@ -33,10 +33,10 @@ export const ProfileScreen = ({ navigation }: any) => {
         {/* Profile Card */}
         <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200 mb-8 items-center border border-gray-100">
           <View className="w-24 h-24 rounded-full bg-primary justify-center items-center overflow-hidden mb-4">
-            <Icon name="user" size={48} color="#FFF" />
+            <Icon name="user" size={48} color="#12294A" />
           </View>
           {isLoading ? (
-            <ActivityIndicator size="small" color="#9C101A" />
+            <ActivityIndicator size="small" color="#DFA128" />
           ) : (
             <>
               <View className="items-center">

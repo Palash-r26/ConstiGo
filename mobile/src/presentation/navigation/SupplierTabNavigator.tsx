@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     // Short, centered pill (per supplier_07). Equal left/right insets keep it centered.
     left: 60,
     right: 60,
-    backgroundColor: '#9C101A',
+    backgroundColor: '#DFA128',
     borderRadius: 32,
     height: 60,
     paddingBottom: 0,

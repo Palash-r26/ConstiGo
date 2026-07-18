@@ -53,7 +53,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
         {/* Top Header: avatar left, logo centered, bell right (per Supplier.pdf) */}
         <View className="flex-row justify-between items-center px-6 py-4">
           <View className="w-12 h-12 rounded-full bg-primary justify-center items-center overflow-hidden">
-            <Icon name="user" size={24} color="#FFF" />
+            <Icon name="user" size={24} color="#12294A" />
           </View>
           <Logo size="sm" />
           <TouchableOpacity>
@@ -81,7 +81,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           </View>
           <View className="flex-row justify-between gap-x-2">
             <TouchableOpacity className="flex-1 bg-primary rounded-full py-2 items-center">
-              <Typography variant="bodyMedium" className="text-white">All Items</Typography>
+              <Typography variant="bodyMedium" className="text-[#12294A]">All Items</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-2 items-center">
               <Typography variant="bodyMedium" className="text-text-secondary">In stock</Typography>
@@ -131,7 +131,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
                   </Typography>
                 </View>
                 <TouchableOpacity className="bg-primary rounded-full px-6 py-2">
-                  <Typography variant="bodyMedium" className="text-white text-xs">Update</Typography>
+                  <Typography variant="bodyMedium" className="text-[#12294A] text-xs">Update</Typography>
                 </TouchableOpacity>
               </View>
             </View>

@@ -100,7 +100,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
                   >
                     {value || 'Date of Birth'}
                   </Typography>
-                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#9C101A'} />
+                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#DFA128'} />
                 </TouchableOpacity>
                 {errors.dateOfBirth ? (
                   <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">{errors.dateOfBirth.message}</Typography>

@@ -41,7 +41,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
       {isLoading || !order ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#9C101A" />
+          <ActivityIndicator size="large" color="#DFA128" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 24 }} showsVerticalScrollIndicator={false}>
@@ -68,7 +68,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                       {/* Line & Dot */}
                       <View className="items-center mr-4">
                         <View className={`w-6 h-6 rounded-full justify-center items-center ${isCompleted ? 'bg-primary' : 'bg-gray-200'}`}>
-                          {isCompleted && <Icon name="check" size={12} color="#FFF" />}
+                          {isCompleted && <Icon name="check" size={12} color="#12294A" />}
                         </View>
                         {!isLast && (
                           <View className={`w-[2px] h-12 ${isCompleted && index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'}`} />
@@ -88,7 +88,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
           ) : (
             <View className="bg-red-50 rounded-3xl p-6 border border-red-200 items-center">
-               <Icon name="x-circle" size={48} color="#FF4B3A" className="mb-2" />
+               <Icon name="x-circle" size={48} color="#DFA128" className="mb-2" />
                <Typography variant="h2" className="text-xl text-red-500">Order Cancelled</Typography>
             </View>
           )}

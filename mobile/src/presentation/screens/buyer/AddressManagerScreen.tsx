@@ -80,7 +80,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
             
             <TouchableOpacity onPress={() => setIsDefault(!isDefault)} className="flex-row items-center mb-6">
                <View className={`w-6 h-6 rounded border items-center justify-center mr-3 ${isDefault ? 'bg-primary border-primary' : 'border-gray-300'}`}>
-                 {isDefault && <Icon name="check" size={16} color="#FFF" />}
+                 {isDefault && <Icon name="check" size={16} color="#12294A" />}
                </View>
                <Typography variant="bodyMedium">Set as default address</Typography>
             </TouchableOpacity>
@@ -95,7 +95,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
             onPress={() => setIsAdding(true)}
             className="bg-[#FFF5F5] rounded-3xl p-5 border border-primary border-dashed flex-row items-center justify-center mb-4"
           >
-            <Icon name="plus" size={20} color="#9C101A" className="mr-2" />
+            <Icon name="plus" size={20} color="#DFA128" className="mr-2" />
             <Typography variant="bodyBold" className="text-primary">Add New Address</Typography>
           </TouchableOpacity>
         )}
@@ -113,7 +113,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
                 </View>
               </View>
               <TouchableOpacity onPress={() => handleDelete(addr._id)} className="p-2">
-                 <Icon name="trash-2" size={18} color="#FF4B3A" />
+                 <Icon name="trash-2" size={18} color="#DFA128" />
               </TouchableOpacity>
             </View>
             <Typography variant="bodyMedium" className="text-text-secondary mt-2 pl-[52px]">

@@ -124,7 +124,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
         <View className="flex-row items-center">
           {/* Checkbox Placeholder */}
           <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
-            <Icon name="check" size={12} color="#FFF" />
+            <Icon name="check" size={12} color="#12294A" />
           </TouchableOpacity>
           <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
         </View>

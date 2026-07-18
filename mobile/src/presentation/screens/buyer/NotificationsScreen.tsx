@@ -21,7 +21,7 @@ export const NotificationsScreen = ({ navigation }: any) => {
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#9C101A" />
+          <ActivityIndicator size="large" color="#DFA128" />
         </View>
       ) : notifications.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -36,7 +36,7 @@ export const NotificationsScreen = ({ navigation }: any) => {
               className={`rounded-3xl p-4 flex-row shadow-sm shadow-gray-200 ${item.isRead ? 'bg-surface' : 'bg-[#FFF5F5] border border-primary/20'}`}
             >
               <View className={`w-12 h-12 rounded-full justify-center items-center mr-4 ${item.isRead ? 'bg-input-bg' : 'bg-primary/10'}`}>
-                 <Icon name={item.type === 'ORDER' ? 'package' : item.type === 'PROMO' ? 'tag' : 'info'} size={20} color={item.isRead ? "#8A8A8E" : "#9C101A"} />
+                 <Icon name={item.type === 'ORDER' ? 'package' : item.type === 'PROMO' ? 'tag' : 'info'} size={20} color={item.isRead ? "#8A8A8E" : "#DFA128"} />
               </View>
               <View className="flex-1 justify-center">
                 <Typography variant="bodyBold" className={`text-base mb-1 ${item.isRead ? 'text-text-primary' : 'text-primary'}`}>{item.title}</Typography>

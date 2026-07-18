@@ -29,19 +29,19 @@ export const Button = ({
       baseContainerStyle += 'bg-primary rounded-full py-4 px-6 ';
       baseTextStyle += 'text-lg ';
       textVariant = 'bodyLarge';
-      explicitColor = '#FFFFFF';
+      explicitColor = '#12294A';
       break;
     case 'link':
       baseContainerStyle += 'py-2 ';
       baseTextStyle += 'text-base ';
       textVariant = 'bodyBold';
-      explicitColor = '#FF4B3A'; // text-accent
+      explicitColor = '#12294A'; // text-accent
       break;
     case 'outline':
       baseContainerStyle += 'bg-transparent border border-primary rounded-full py-4 px-6 ';
       baseTextStyle += 'text-lg ';
       textVariant = 'bodyLarge';
-      explicitColor = '#9C101A'; // text-primary
+      explicitColor = '#DFA128'; // text-primary
       break;
   }
 
@@ -55,7 +55,7 @@ export const Button = ({
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#FFF' : '#9C101A'} />
+        <ActivityIndicator color={variant === 'primary' ? '#12294A' : '#DFA128'} />
       ) : (
         <Typography 
           variant={textVariant} 

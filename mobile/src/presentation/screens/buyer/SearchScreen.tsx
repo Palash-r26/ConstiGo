@@ -43,7 +43,7 @@ export const SearchScreen = ({ navigation }: any) => {
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#9C101A" />
+          <ActivityIndicator size="large" color="#DFA128" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 16 }} showsVerticalScrollIndicator={false}>

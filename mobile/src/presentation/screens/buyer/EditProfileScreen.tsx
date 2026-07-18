@@ -60,12 +60,12 @@ export const EditProfileScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 20 }} showsVerticalScrollIndicator={false}>
         <View className="items-center mt-4 mb-2">
           <View className="w-24 h-24 rounded-full bg-primary justify-center items-center relative mb-4">
-            <Icon name="user" size={48} color="#FFF" />
+            <Icon name="user" size={48} color="#12294A" />
             <TouchableOpacity 
               onPress={handlePickImage}
               className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-sm shadow-gray-400"
             >
-              <Icon name="camera" size={16} color="#9C101A" />
+              <Icon name="camera" size={16} color="#DFA128" />
             </TouchableOpacity>
           </View>
         </View>

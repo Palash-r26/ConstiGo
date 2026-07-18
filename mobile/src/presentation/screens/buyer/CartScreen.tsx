@@ -29,7 +29,7 @@ export const CartScreen = ({ navigation }: any) => {
 
       {isLoading && cartItems.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#9C101A" />
+          <ActivityIndicator size="large" color="#DFA128" />
         </View>
       ) : cartItems.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -50,7 +50,7 @@ export const CartScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-text-secondary text-xs">by {item.product.supplier?.businessInfo?.companyName || 'ConstiGo Supplies'}</Typography>
                   </View>
                   <TouchableOpacity onPress={() => removeItem(item.product._id)} className="p-1">
-                    <Icon name="trash-2" size={18} color="#FF4B3A" />
+                    <Icon name="trash-2" size={18} color="#DFA128" />
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row justify-between items-end mt-2">

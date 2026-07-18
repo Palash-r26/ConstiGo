@@ -4,8 +4,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#9C101A",
-        accent: "#FF4B3A",
+        primary: "#DFA128",
+        accent: "#DFA128",
         background: "#F4F6F8",
         surface: "#FFFFFF",
         "input-bg": "#F2F4F7",

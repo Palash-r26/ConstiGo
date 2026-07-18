@@ -15,7 +15,7 @@ import { CartScreen } from '../screens/buyer/CartScreen';
 
 const DummyScreen = ({ navigation }: any) => (
   <View className="flex-1 bg-background justify-center items-center">
-    <Icon name="info" size={40} color="#9C101A" />
+    <Icon name="info" size={40} color="#DFA128" />
   </View>
 );
 
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     // Short, centered pill (per buyer_07). Equal left/right insets keep it centered.
     left: 60,
     right: 60,
-    backgroundColor: '#9C101A',
+    backgroundColor: '#DFA128',
     borderRadius: 32,
     height: 60,
     paddingBottom: 0, // override default padding
