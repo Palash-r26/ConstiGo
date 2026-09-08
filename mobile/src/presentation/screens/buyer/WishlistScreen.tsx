@@ -55,7 +55,7 @@ export const WishlistScreen = ({ navigation }: any) => {
                 <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
               </View>
               <View className="bg-primary rounded-full py-2 items-center">
-                <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
+                <Typography variant="bodyMedium" className="text-white text-xs">Get Quotation</Typography>
               </View>
               </TouchableOpacity>
             ))}

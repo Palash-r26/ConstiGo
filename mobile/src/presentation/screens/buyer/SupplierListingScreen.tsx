@@ -93,7 +93,7 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                   // Optional: show a toast or feedback
                 }}
               >
-                <Typography variant="bodyMedium" className="text-[#182F4B]">Add to Cart</Typography>
+                <Typography variant="bodyMedium" className="text-white">Add to Cart</Typography>
               </TouchableOpacity>
             </View>
 

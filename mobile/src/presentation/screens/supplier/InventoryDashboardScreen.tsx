@@ -81,7 +81,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           </View>
           <View className="flex-row justify-between gap-x-2">
             <TouchableOpacity className="flex-1 bg-primary rounded-full py-2 items-center">
-              <Typography variant="bodyMedium" className="text-[#182F4B]">All Items</Typography>
+              <Typography variant="bodyMedium" className="text-white">All Items</Typography>
             </TouchableOpacity>
             <TouchableOpacity className="flex-1 bg-input-bg rounded-full py-2 items-center">
               <Typography variant="bodyMedium" className="text-text-secondary">In stock</Typography>
@@ -131,7 +131,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
                   </Typography>
                 </View>
                 <TouchableOpacity className="bg-primary rounded-full px-6 py-2">
-                  <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Update</Typography>
+                  <Typography variant="bodyMedium" className="text-white text-xs">Update</Typography>
                 </TouchableOpacity>
               </View>
             </View>

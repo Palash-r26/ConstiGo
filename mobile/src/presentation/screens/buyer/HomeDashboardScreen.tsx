@@ -83,7 +83,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                 onPress={() => setActiveCategory(cat)}
                 className={`px-6 py-2 rounded-full ${isActive ? 'bg-primary' : 'bg-surface shadow-sm shadow-gray-100'}`}
               >
-                <Typography variant="bodyMedium" className={isActive ? "text-[#182F4B]" : "text-text-secondary"}>
+                <Typography variant="bodyMedium" className={isActive ? "text-white" : "text-text-secondary"}>
                   {cat}
                 </Typography>
               </TouchableOpacity>
@@ -120,7 +120,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
                   </View>
                   <View className="bg-primary rounded-full py-2 items-center">
-                    <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
+                    <Typography variant="bodyMedium" className="text-white text-xs">Get Quotation</Typography>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -151,7 +151,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" className="text-[10px]">per {item.unit}</Typography>
                   </View>
                   <View className="bg-primary rounded-full py-2 items-center">
-                    <Typography variant="bodyMedium" className="text-[#182F4B] text-xs">Get Quotation</Typography>
+                    <Typography variant="bodyMedium" className="text-white text-xs">Get Quotation</Typography>
                   </View>
                 </TouchableOpacity>
               ))}

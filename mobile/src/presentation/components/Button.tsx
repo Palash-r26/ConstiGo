@@ -29,7 +29,7 @@ export const Button = ({
       baseContainerStyle += 'bg-primary rounded-full py-4 px-6 ';
       baseTextStyle += 'text-lg ';
       textVariant = 'bodyLarge';
-      explicitColor = '#182F4B';
+      explicitColor = '#FFFFFF';
       break;
     case 'link':
       baseContainerStyle += 'py-2 ';
@@ -55,7 +55,7 @@ export const Button = ({
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#182F4B' : '#C89338'} />
+        <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#C89338'} />
       ) : (
         <Typography 
           variant={textVariant} 
