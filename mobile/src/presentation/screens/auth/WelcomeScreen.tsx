@@ -14,7 +14,7 @@ export const WelcomeScreen = ({ navigation }: any) => {
           Welcome Back!
         </Typography>
         <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
-          Enter your credentials to access your{'\n'}buyer dashboard
+          Enter your credentials to access your{'\n'}account and dashboard
         </Typography>
       </View>
 

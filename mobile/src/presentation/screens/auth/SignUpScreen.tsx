@@ -16,8 +16,10 @@ export const SignUpScreen = ({ navigation, route }: any) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [showPicker, setShowPicker] = React.useState(false);
+  const [selectedRole, setSelectedRole] = React.useState<'BUYER' | 'SUPPLIER'>(
+    (route?.params?.role?.toUpperCase() === 'SUPPLIER') ? 'SUPPLIER' : 'BUYER'
+  );
   const login = useAuthStore((state) => state.login);
-  const { role } = route?.params || { role: 'BUYER' };
 
   const { control, handleSubmit, formState: { errors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -38,7 +40,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
       setError('');
       const response = await apiClient.post('/auth/register', {
         ...data,
-        role
+        role: selectedRole
       });
       if (response.data.success) {
         await login(response.data.data, response.data.data.token);
@@ -54,13 +56,42 @@ export const SignUpScreen = ({ navigation, route }: any) => {
     <ScreenWrapper>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="flex-row items-center mt-4 mb-8">
+        <View className="flex-row items-center mt-4 mb-6">
           <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10">
             <Icon name="chevron-left" size={28} color="#182F4B" />
           </TouchableOpacity>
           <View className="flex-1">
             <Typography variant="h2" className="text-center text-xl">Sign Up</Typography>
           </View>
+        </View>
+
+        {/* Role Selector */}
+        <View className="flex-row bg-[#E2E5EA] rounded-full p-1 mb-6">
+          <TouchableOpacity
+            onPress={() => setSelectedRole('BUYER')}
+            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'BUYER' ? 'bg-[#182F4B]' : ''}`}
+          >
+            <Typography
+              variant="bodyBold"
+              className="text-sm"
+              color={selectedRole === 'BUYER' ? '#FFFFFF' : '#182F4B'}
+            >
+              Buyer Account
+            </Typography>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setSelectedRole('SUPPLIER')}
+            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'SUPPLIER' ? 'bg-[#C89338]' : ''}`}
+          >
+            <Typography
+              variant="bodyBold"
+              className="text-sm"
+              color={selectedRole === 'SUPPLIER' ? '#FFFFFF' : '#182F4B'}
+            >
+              Supplier Account
+            </Typography>
+          </TouchableOpacity>
         </View>
 
         <View className="gap-y-4 mb-10">

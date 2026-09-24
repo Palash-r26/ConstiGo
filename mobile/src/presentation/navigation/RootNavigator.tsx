@@ -46,7 +46,7 @@ export const RootNavigator = () => {
   return (
     <NavigationContainer>
       {token && user ? (
-        user.role === 'SUPPLIER' ? (
+        user?.role?.toUpperCase() === 'SUPPLIER' ? (
           <SupplierStackNavigator />
         ) : (
           <BuyerStackNavigator />

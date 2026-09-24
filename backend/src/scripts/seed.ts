@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { Product } from '../models/Product.js';
 import { Category } from '../models/Category.js';
 import { User } from '../models/User.js';
+import { hashPassword } from '../utils/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,8 @@ const seedDatabase = async () => {
     console.log('Connected!');
 
     let supplier = await User.findOne({ role: 'SUPPLIER' });
+    const hashedPassword = await hashPassword('password123');
+
     if (!supplier) {
       console.log('No supplier found. Creating dummy supplier...');
       supplier = await User.create({
@@ -30,9 +33,13 @@ const seedDatabase = async () => {
         email: 'dummy@supplier.com',
         phone: '+910000000000',
         role: 'SUPPLIER',
-        password: 'password123',
+        password: hashedPassword,
         businessInfo: { companyName: 'ConstiGo Supplies' }
       });
+    } else {
+      // Ensure password is valid hashed password
+      supplier.password = hashedPassword;
+      await supplier.save();
     }
 
     console.log('Clearing old categories and products...');

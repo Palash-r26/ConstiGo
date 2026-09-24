@@ -145,7 +145,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
         <Button 
           variant="link" 
           title="Sign Up" 
-          onPress={() => navigation.navigate('SignUp')} 
+          onPress={() => navigation.navigate('SignUp', { role })} 
           textClassName="text-sm"
           className="py-0"
         />
