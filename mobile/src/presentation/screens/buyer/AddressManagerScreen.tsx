@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { Typography } from '../../components/Typography';
-import { Button } from '../../components/Button';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useUserStore } from '../../../application/store/userStore';
 import { apiClient } from '../../../infrastructure/api/client';
 
@@ -13,116 +21,448 @@ export const AddressManagerScreen = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = React.useState(false);
 
   // Form State
-  const [label, setLabel] = React.useState('');
-  const [street, setStreet] = React.useState('');
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [flat, setFlat] = React.useState('');
+  const [area, setArea] = React.useState('');
+  const [pincode, setPincode] = React.useState('');
   const [city, setCity] = React.useState('');
   const [state, setState] = React.useState('');
-  const [zipCode, setZipCode] = React.useState('');
-  const [isDefault, setIsDefault] = React.useState(false);
+  const [isDefault, setIsDefault] = React.useState(true);
+
+  const mockAddresses = [
+    {
+      _id: '1',
+      name: 'Rashmi Singh',
+      addressLine1: 'H.no 654/89 Rajan Garh, opp. post office, Mirzzapur',
+      addressLine2: 'Uttar Pradesh 525412',
+      location: 'Mirzzapur, Uttar Pradesh',
+      country: 'India',
+      phone: '+91 85025 55168',
+      isDefault: true,
+    },
+    {
+      _id: '2',
+      name: 'Rashmi Singh',
+      addressLine1: 'H.no 654/89 Rajan Garh, opp. post office, Mirzzapur',
+      addressLine2: 'Uttar Pradesh 525412',
+      location: 'Mirzzapur, Uttar Pradesh',
+      country: 'India',
+      phone: '+91 85025 55168',
+      isDefault: false,
+    },
+  ];
 
   const handleSave = async () => {
-    if (!street || !city || !state || !zipCode) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+    if (!flat || !city || !state || !pincode) {
+      Alert.alert('Required', 'Please fill in all address details.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await apiClient.post('/users/me/address', {
-        label, street, city, state, zipCode, isDefault
+      await apiClient.post('/users/me/address', {
+        label: name || 'Home',
+        street: `${flat}, ${area}`,
+        city,
+        state,
+        zipCode: pincode,
+        isDefault,
       });
-      if (res.data.success) {
-        await fetchProfile();
-        setIsAdding(false);
-        // Reset form
-        setLabel(''); setStreet(''); setCity(''); setState(''); setZipCode(''); setIsDefault(false);
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to add address');
+      await fetchProfile();
+      setIsAdding(false);
+    } catch {
+      setIsAdding(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await apiClient.delete(`/users/me/address/${id}`);
-      if (res.data.success) {
-        fetchProfile();
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to delete address');
-    }
-  };
-
   return (
-    <ScreenWrapper className="bg-white">
-      <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#182F4B" />
+    <ScreenWrapper>
+      {/* Top Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.avatarButton}
+        >
+          <Icon name="user" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-2xl text-[#182F4B]">Manage Addresses</Typography>
+
+        <Logo size="sm" />
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Notifications')}
+          style={styles.bellButton}
+        >
+          <Icon name="bell" size={24} color="#F5A623" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 16 }} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Screen Title */}
+        <Typography variant="h1" style={styles.pageTitle}>
+          {isAdding ? 'Add Address' : 'Confirm Address'}
+        </Typography>
+
         {isAdding ? (
-          <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200">
-            <Typography variant="h2" className="text-xl mb-4">Add New Address</Typography>
-            
-            <TextInput placeholder="Label (e.g. Home, Site A)" className="bg-white rounded-xl p-4 mb-3 border border-gray-100 font-urbanist" value={label} onChangeText={setLabel} />
-            <TextInput placeholder="Street Address *" className="bg-white rounded-xl p-4 mb-3 border border-gray-100 font-urbanist" value={street} onChangeText={setStreet} />
-            <View className="flex-row gap-3 mb-3">
-               <TextInput placeholder="City *" className="flex-1 bg-white rounded-xl p-4 border border-gray-100 font-urbanist" value={city} onChangeText={setCity} />
-               <TextInput placeholder="State *" className="flex-1 bg-white rounded-xl p-4 border border-gray-100 font-urbanist" value={state} onChangeText={setState} />
+          /* Page 10: Add Address Form */
+          <View style={styles.formCard}>
+            <TextInput
+              placeholder="Enter your Name"
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={name}
+              onChangeText={setName}
+            />
+
+            <TextInput
+              placeholder="Enter your Email"
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
+
+            <TextInput
+              placeholder="Enter your Mobile Number"
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+
+            <TextInput
+              placeholder="Enter your House, Building, Flat no."
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={flat}
+              onChangeText={setFlat}
+            />
+
+            <TextInput
+              placeholder="Enter your Area, Street, Sector, Villlage"
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={area}
+              onChangeText={setArea}
+            />
+
+            <View style={styles.twoColumnRow}>
+              <TextInput
+                placeholder="Pincode"
+                placeholderTextColor="#8A8A8E"
+                style={[styles.inputPill, styles.halfInput]}
+                value={pincode}
+                onChangeText={setPincode}
+                keyboardType="number-pad"
+              />
+              <TextInput
+                placeholder="Town/City"
+                placeholderTextColor="#8A8A8E"
+                style={[styles.inputPill, styles.halfInput]}
+                value={city}
+                onChangeText={setCity}
+              />
             </View>
-            <TextInput placeholder="Zip Code *" keyboardType="number-pad" className="bg-white rounded-xl p-4 mb-4 border border-gray-100 font-urbanist" value={zipCode} onChangeText={setZipCode} />
-            
-            <TouchableOpacity onPress={() => setIsDefault(!isDefault)} className="flex-row items-center mb-6">
-               <View className={`w-6 h-6 rounded border items-center justify-center mr-3 ${isDefault ? 'bg-primary border-primary' : 'border-gray-300'}`}>
-                 {isDefault && <Icon name="check" size={16} color="#182F4B" />}
-               </View>
-               <Typography variant="bodyMedium">Set as default address</Typography>
+
+            <TextInput
+              placeholder="Enter your State"
+              placeholderTextColor="#8A8A8E"
+              style={styles.inputPill}
+              value={state}
+              onChangeText={setState}
+            />
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setIsDefault(!isDefault)}
+              style={styles.defaultCheckboxRow}
+            >
+              <MaterialCommunityIcon
+                name={isDefault ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={22}
+                color={isDefault ? '#48BB78' : '#8A8A8E'}
+              />
+              <Typography variant="bodyMedium" style={styles.defaultCheckboxText}>
+                Make this my defalut address
+              </Typography>
             </TouchableOpacity>
 
-            <View className="flex-row gap-4">
-              <Button title="Cancel" variant="outline" onPress={() => setIsAdding(false)} className="flex-1" />
-              <Button title={isLoading ? "Saving..." : "Save"} onPress={handleSave} className="flex-1" disabled={isLoading} />
-            </View>
+            <TouchableOpacity
+              style={styles.primaryActionButton}
+              activeOpacity={0.8}
+              onPress={handleSave}
+              disabled={isLoading}
+            >
+              <Typography variant="bodyMedium" style={styles.primaryActionText}>
+                {isLoading ? 'Saving...' : 'Update Now'}
+              </Typography>
+            </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity 
-            onPress={() => setIsAdding(true)}
-            className="bg-[#FFF5F5] rounded-3xl p-5 border border-primary border-dashed flex-row items-center justify-center mb-4"
-          >
-            <Icon name="plus" size={20} color="#C89338" className="mr-2" />
-            <Typography variant="bodyBold" className="text-primary">Add New Address</Typography>
-          </TouchableOpacity>
-        )}
+          /* Page 11: Confirm Address List */
+          <View style={styles.addressListContainer}>
+            {mockAddresses.map((addr) => (
+              <View key={addr._id} style={styles.addressCard}>
+                <Typography variant="h2" style={styles.addressCardName}>
+                  {addr.name}
+                </Typography>
+                <Typography variant="bodySmall" style={styles.addressCardLine}>
+                  {addr.addressLine1}
+                </Typography>
+                <Typography variant="bodySmall" style={styles.addressCardLine}>
+                  {addr.addressLine2}
+                </Typography>
+                <Typography variant="bodySmall" style={styles.addressCardLine}>
+                  {addr.location}
+                </Typography>
+                <Typography variant="bodySmall" style={styles.addressCardLine}>
+                  {addr.country}
+                </Typography>
+                <Typography variant="bodySmall" style={styles.addressCardPhone}>
+                  Phone number : {addr.phone}
+                </Typography>
 
-        {!isAdding && profile?.addresses?.map((addr: any) => (
-          <View key={addr._id} className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200">
-            <View className="flex-row justify-between items-start mb-2">
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-input-bg rounded-full justify-center items-center mr-3">
-                  <Icon name="map-pin" size={18} color="#182F4B" />
-                </View>
-                <View>
-                  <Typography variant="bodyBold" className="text-lg">{addr.label || 'Address'}</Typography>
-                  {addr.isDefault && <Typography variant="bodySmall" className="text-primary mt-1 bg-primary/10 px-2 py-0.5 rounded text-center">Default</Typography>}
+                <View style={styles.addressCardBottomRow}>
+                  <View style={styles.addressActionButtons}>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      activeOpacity={0.7}
+                      onPress={() => setIsAdding(true)}
+                    >
+                      <Typography variant="bodySmall" style={styles.editButtonText}>
+                        Edit
+                      </Typography>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      activeOpacity={0.7}
+                      onPress={() => {}}
+                    >
+                      <Typography variant="bodySmall" style={styles.removeButtonText}>
+                        Remove
+                      </Typography>
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {}}
+                    style={styles.setDefaultButton}
+                  >
+                    <Typography variant="bodySmall" style={styles.setDefaultText}>
+                      Set as Default Address
+                    </Typography>
+                  </TouchableOpacity>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => handleDelete(addr._id)} className="p-2">
-                 <Icon name="trash-2" size={18} color="#C89338" />
-              </TouchableOpacity>
-            </View>
-            <Typography variant="bodyMedium" className="text-text-secondary mt-2 pl-[52px]">
-              {addr.street}, {addr.city}, {addr.state} - {addr.zipCode}
-            </Typography>
-          </View>
-        ))}
+            ))}
 
+            <TouchableOpacity
+              style={styles.addNewButton}
+              activeOpacity={0.8}
+              onPress={() => setIsAdding(true)}
+            >
+              <Icon name="plus" size={18} color="#8B0000" />
+              <Typography variant="bodyMedium" style={styles.addNewButtonText}>
+                Add New Address
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </ScreenWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#800000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#800000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginVertical: 18,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 20,
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  inputPill: {
+    backgroundColor: '#F0F2F5',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    fontSize: 13,
+    color: '#111827',
+  },
+  twoColumnRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  defaultCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 4,
+    paddingHorizontal: 4,
+  },
+  defaultCheckboxText: {
+    fontSize: 13,
+    color: '#8B0000',
+    fontWeight: '500',
+  },
+  primaryActionButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  primaryActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  addressListContainer: {
+    gap: 16,
+  },
+  addressCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  addressCardName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+  },
+  addressCardLine: {
+    fontSize: 12,
+    color: '#4B5563',
+    lineHeight: 18,
+  },
+  addressCardPhone: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#111827',
+    marginTop: 6,
+    marginBottom: 12,
+  },
+  addressCardBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  addressActionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: '#F0F2F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  editButtonText: {
+    color: '#8A8A8E',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  removeButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  removeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  setDefaultButton: {
+    paddingVertical: 4,
+  },
+  setDefaultText: {
+    color: '#8B0000',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  addNewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#8B0000',
+    gap: 8,
+    marginTop: 8,
+  },
+  addNewButtonText: {
+    color: '#8B0000',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

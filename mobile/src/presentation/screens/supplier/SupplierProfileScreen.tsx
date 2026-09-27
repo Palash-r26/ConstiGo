@@ -1,79 +1,309 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Image,
+  Alert,
+} from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { Button } from '../../components/Button';
+import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import Icon from 'react-native-vector-icons/Feather';
-import { useAuthStore } from '../../../application/store/authStore';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 export const SupplierProfileScreen = ({ navigation }: any) => {
-  const logout = useAuthStore((state) => state.logout);
+  const [name, setName] = useState('Vikas Pawar');
+  const [phone, setPhone] = useState('+91 12345 67890');
+  const [email, setEmail] = useState('vikas.pawar23@gmail.com');
+  const [address, setAddress] = useState('584/96, Rajendra Park, Phase 2');
+  const [city, setCity] = useState('Gurugram');
+  const [state, setState] = useState('Haryana');
+  const [pincode, setPincode] = useState('122002');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
-  // Demo supplier data
-  const supplier = {
-    companyName: 'BuildCorp Supplies',
-    owner: 'Raj Kumar',
-    email: 'raj.kumar@buildcorp.com',
-    phone: '+91 9876543210'
+  const handlePickAvatar = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
+      if (res.assets && res.assets.length > 0) {
+        setAvatarUri(res.assets[0].uri || null);
+      }
+    });
   };
 
-  const handleLogout = async () => {
-    await logout();
+  const handleUpdate = () => {
+    Alert.alert('Success', 'Profile updated successfully!');
   };
 
   return (
-    <ScreenWrapper className="bg-white">
-      {/* Header */}
-      <View className="flex-row justify-center items-center px-6 py-4 mt-4 mb-6">
-        <Typography variant="h2" className="text-xl">Business Profile</Typography>
-      </View>
+    <ScreenWrapper className="bg-[#F5F6FA]">
+      <SupplierTopHeader
+        onProfilePress={() => {}}
+        onNotificationPress={() => {}}
+      />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        {/* Profile Card */}
-        <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200 mb-8 items-center border border-gray-100">
-          <View className="w-24 h-24 rounded-full bg-primary justify-center items-center overflow-hidden mb-4">
-            <Icon name="briefcase" size={48} color="#182F4B" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* User Profile Header Card */}
+        <View style={styles.profileHeaderCard}>
+          {/* Avatar with Pink Background & Camera Badge */}
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarCircle}>
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Icon name="user" size={44} color="#3B4252" />
+                </View>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.cameraBadge}
+              activeOpacity={0.8}
+              onPress={handlePickAvatar}
+            >
+              <Icon name="camera" size={13} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-          <Typography variant="h2" className="mb-1 text-center">{supplier.companyName}</Typography>
-          <Typography variant="bodyMedium" className="text-text-secondary">{supplier.owner}</Typography>
-          <Typography variant="bodyMedium" className="text-text-secondary">{supplier.email}</Typography>
-          <Typography variant="bodyMedium" className="text-text-secondary">{supplier.phone}</Typography>
+
+          {/* User Details */}
+          <View style={styles.userInfoBlock}>
+            <Typography variant="h2" style={styles.userName}>
+              {name}
+            </Typography>
+            <Typography variant="bodySmall" style={styles.userPhone}>
+              {phone}
+            </Typography>
+            <Typography variant="bodySmall" style={styles.userEmail}>
+              {email}
+            </Typography>
+          </View>
         </View>
 
-        {/* Settings Options */}
-        <View className="gap-y-4 mb-8">
-          <TouchableOpacity className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100">
-            <View className="flex-row items-center">
-              <Icon name="settings" size={24} color="#182F4B" className="mr-4" />
-              <Typography variant="bodyMedium">Business Settings</Typography>
-            </View>
-            <Icon name="chevron-right" size={20} color="#8A8A8E" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100">
-            <View className="flex-row items-center">
-              <Icon name="credit-card" size={24} color="#182F4B" className="mr-4" />
-              <Typography variant="bodyMedium">Bank & Payments</Typography>
-            </View>
-            <Icon name="chevron-right" size={20} color="#8A8A8E" />
-          </TouchableOpacity>
-
-          <TouchableOpacity className="flex-row items-center justify-between p-4 bg-surface rounded-2xl border border-gray-100 shadow-sm shadow-gray-100">
-            <View className="flex-row items-center">
-              <Icon name="bar-chart-2" size={24} color="#182F4B" className="mr-4" />
-              <Typography variant="bodyMedium">Sales Reports</Typography>
-            </View>
-            <Icon name="chevron-right" size={20} color="#8A8A8E" />
-          </TouchableOpacity>
+        {/* Section Heading */}
+        <View style={styles.sectionHeadingContainer}>
+          <Typography variant="h2" style={styles.sectionHeading}>
+            Update Your Profile
+          </Typography>
         </View>
 
-        <Button 
-          title="Logout" 
-          variant="outline"
-          onPress={handleLogout} 
-          className="mb-8 rounded-full"
-        />
+        {/* Input Fields */}
+        <View style={styles.inputGroup}>
+          <View style={styles.pillInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Full Name"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
+          <View style={styles.pillInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Phone Number"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+            />
+          </View>
+
+          <View style={styles.pillInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Email ID"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+
+          <View style={styles.pillInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Address"
+              placeholderTextColor="#9CA3AF"
+              value={address}
+              onChangeText={setAddress}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.pillInputContainer, styles.halfWidth]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="City"
+                placeholderTextColor="#9CA3AF"
+                value={city}
+                onChangeText={setCity}
+              />
+            </View>
+            <View style={[styles.pillInputContainer, styles.halfWidth]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="State"
+                placeholderTextColor="#9CA3AF"
+                value={state}
+                onChangeText={setState}
+              />
+            </View>
+          </View>
+
+          <View style={styles.pillInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Pincode"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              value={pincode}
+              onChangeText={setPincode}
+            />
+          </View>
+        </View>
+
+        {/* Update Button */}
+        <TouchableOpacity
+          style={styles.updateButton}
+          activeOpacity={0.85}
+          onPress={handleUpdate}
+        >
+          <Typography variant="bodyBold" style={styles.updateButtonText}>
+            Update Now
+          </Typography>
+        </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 110,
+  },
+  profileHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginTop: 12,
+    marginBottom: 20,
+    paddingHorizontal: 4,
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatarCircle: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: '#FDC5C5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#475569',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  userInfoBlock: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 22,
+    color: '#0F172A',
+    fontFamily: 'BalooBhai2-Bold',
+  },
+  userPhone: {
+    fontSize: 13,
+    color: '#334155',
+    fontFamily: 'Montserrat-Medium',
+    marginTop: 2,
+  },
+  userEmail: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: 'Montserrat-Medium',
+    marginTop: 1,
+  },
+  sectionHeadingContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 6,
+  },
+  sectionHeading: {
+    fontSize: 18,
+    color: '#0F172A',
+    fontFamily: 'BalooBhai2-Bold',
+  },
+  inputGroup: {
+    gap: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
+  },
+  pillInputContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 26,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  textInput: {
+    fontSize: 14,
+    color: '#1E293B',
+    fontFamily: 'Montserrat-Medium',
+    padding: 0,
+  },
+  updateButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 30,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 28,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  updateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+  },
+});

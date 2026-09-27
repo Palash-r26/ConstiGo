@@ -1,103 +1,286 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { Button } from '../../components/Button';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
-import { useFocusEffect } from '@react-navigation/native';
 
 export const CartScreen = ({ navigation }: any) => {
-  const { items: cartItems, subTotal, isLoading, fetchCart, updateQuantity, removeItem } = useCartStore();
+  const { items: cartItems, removeItem } = useCartStore();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchCart();
-    }, [])
-  );
+  const mockCartItems = [
+    {
+      _id: '1',
+      category: 'Bricks',
+      name: 'Jindal Red Bricks Type I',
+      price: '₹ 20,000/-',
+      subPrice: '₹10 Each',
+      isFavorite: true,
+      type: 'bricks',
+    },
+    {
+      _id: '2',
+      category: 'Steel',
+      name: 'JSW Steel & Iron Type II',
+      price: '₹ 4,800/-',
+      subPrice: '₹80 per kg',
+      isFavorite: false,
+      type: 'steel',
+    },
+  ];
 
-  const taxes = subTotal * 0.18; // 18% GST
-  const deliveryFee = subTotal > 0 ? 50 : 0; // Flat ₹50 delivery
-  const total = subTotal + taxes + deliveryFee;
+  const renderIcon = (type: string) => {
+    if (type === 'bricks') {
+      return <MaterialCommunityIcon name="wall" size={36} color="#C26D45" />;
+    }
+    return <MaterialCommunityIcon name="view-parallel" size={36} color="#8A9BA8" />;
+  };
 
   return (
-    <ScreenWrapper className="bg-white">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 mt-4 mb-4">
-        <Typography variant="h1Black" className="text-3xl text-[#182F4B]">My Cart</Typography>
+    <ScreenWrapper>
+      {/* Top Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.avatarButton}
+        >
+          <Icon name="user" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <Logo size="sm" />
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Notifications')}
+          style={styles.bellButton}
+        >
+          <Icon name="bell" size={24} color="#F5A623" />
+        </TouchableOpacity>
       </View>
 
-      {isLoading && cartItems.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#C89338" />
-        </View>
-      ) : cartItems.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <Icon name="shopping-cart" size={64} color="#8A8A8E" className="mb-4" />
-          <Typography variant="h2" className="text-xl text-text-secondary">Your cart is empty</Typography>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 16 }} showsVerticalScrollIndicator={false}>
-          {cartItems.map((item: any) => (
-            <View key={item._id || item.product._id} className="bg-surface rounded-3xl p-4 shadow-sm shadow-gray-200 flex-row">
-              <View className="w-24 h-24 bg-input-bg rounded-2xl justify-center items-center mr-4">
-                 <Icon name="box" size={32} color="#8A8A8E" />
-              </View>
-              <View className="flex-1 justify-between">
-                <View className="flex-row justify-between">
-                  <View className="flex-1">
-                    <Typography variant="bodyBold" className="text-lg leading-tight mb-1" numberOfLines={1}>{item.product.name}</Typography>
-                    <Typography variant="bodySmall" className="text-text-secondary text-xs">by {item.product.supplier?.businessInfo?.companyName || 'ConstiGo Supplies'}</Typography>
-                  </View>
-                  <TouchableOpacity onPress={() => removeItem(item.product._id)} className="p-1">
-                    <Icon name="trash-2" size={18} color="#C89338" />
-                  </TouchableOpacity>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Title and Subtitle */}
+        <Typography variant="h1" style={styles.title}>
+          Shopping Cart
+        </Typography>
+        <Typography variant="bodySmall" style={styles.subtitle}>
+          Two Item Is In Your Cart
+        </Typography>
+
+        {/* Cart Items List */}
+        <View style={styles.listContainer}>
+          {mockCartItems.map((item) => (
+            <View key={item._id} style={styles.cartCard}>
+              <View style={styles.cardMainRow}>
+                {/* Thumbnail */}
+                <View style={styles.thumbnailContainer}>
+                  {renderIcon(item.type)}
                 </View>
-                <View className="flex-row justify-between items-end mt-2">
-                  <Typography variant="bodyBold" className="text-primary text-lg">₹ {item.product.price}</Typography>
-                  <View className="flex-row items-center bg-input-bg rounded-full px-3 py-1">
-                    <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity - 1)}>
-                      <Icon name="minus" size={16} color="#182F4B" />
+
+                {/* Details */}
+                <View style={styles.detailsContainer}>
+                  <View style={styles.topDetailsRow}>
+                    <View style={styles.textDetails}>
+                      <Typography variant="bodySmall" style={styles.categoryText}>
+                        {item.category}
+                      </Typography>
+                      <Typography variant="bodyBold" style={styles.productName}>
+                        {item.name}
+                      </Typography>
+                    </View>
+
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.heartButton}
+                    >
+                      <MaterialCommunityIcon
+                        name={item.isFavorite ? 'cards-heart' : 'heart-outline'}
+                        size={18}
+                        color={item.isFavorite ? '#E05656' : '#8A8A8E'}
+                      />
                     </TouchableOpacity>
-                    <Typography variant="bodyBold" className="mx-4">{item.quantity}</Typography>
-                    <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity + 1)}>
-                      <Icon name="plus" size={16} color="#182F4B" />
+                  </View>
+
+                  {/* Price Row */}
+                  <View style={styles.priceRow}>
+                    <Typography variant="bodyBold" style={styles.priceText}>
+                      {item.price}{' '}
+                    </Typography>
+                    <Typography variant="bodySmall" style={styles.subPriceText}>
+                      {item.subPrice}
+                    </Typography>
+                  </View>
+
+                  {/* Rating & Delete Button Row */}
+                  <View style={styles.bottomRow}>
+                    <View style={styles.starsRow}>
+                      {[...Array(5)].map((_, idx) => (
+                        <Icon key={idx} name="star" size={12} color="#F5A623" />
+                      ))}
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      activeOpacity={0.8}
+                      onPress={() => removeItem(item._id)}
+                    >
+                      <Typography variant="bodySmall" style={styles.deleteText}>
+                        Delete
+                      </Typography>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
             </View>
           ))}
-
-          {/* Bill Details */}
-          <View className="bg-surface rounded-3xl p-6 shadow-sm shadow-gray-200 mt-4">
-            <Typography variant="h2" className="text-xl mb-4">Bill Details</Typography>
-            <View className="flex-row justify-between mb-2">
-              <Typography variant="bodyMedium" className="text-text-secondary">Subtotal</Typography>
-              <Typography variant="bodySemiBold">₹ {subTotal.toFixed(2)}</Typography>
-            </View>
-            <View className="flex-row justify-between mb-2">
-              <Typography variant="bodyMedium" className="text-text-secondary">Delivery Fee</Typography>
-              <Typography variant="bodySemiBold">₹ {deliveryFee.toFixed(2)}</Typography>
-            </View>
-            <View className="flex-row justify-between mb-4">
-              <Typography variant="bodyMedium" className="text-text-secondary">Taxes & Fees (18%)</Typography>
-              <Typography variant="bodySemiBold">₹ {taxes.toFixed(2)}</Typography>
-            </View>
-            <View className="h-[1px] bg-input-bg w-full mb-4" />
-            <View className="flex-row justify-between">
-              <Typography variant="h2" className="text-xl">Total</Typography>
-              <Typography variant="h2" className="text-xl text-primary">₹ {total.toFixed(2)}</Typography>
-            </View>
-          </View>
-
-          <Button 
-            title={`Checkout • ₹ ${total.toFixed(2)}`} 
-            onPress={() => navigation.navigate('Checkout')} 
-            className="mt-4"
-          />
-        </ScrollView>
-      )}
+        </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#800000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#800000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#8A8A8E',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  listContainer: {
+    gap: 16,
+  },
+  cartCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardMainRow: {
+    flexDirection: 'row',
+    gap: 14,
+  },
+  thumbnailContainer: {
+    width: 76,
+    height: 76,
+    borderRadius: 18,
+    backgroundColor: '#F0F4F8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  detailsContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  topDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  textDetails: {
+    flex: 1,
+  },
+  categoryText: {
+    fontSize: 11,
+    color: '#8A8A8E',
+    marginBottom: 2,
+  },
+  productName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  heartButton: {
+    paddingLeft: 8,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  priceText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#28A745',
+  },
+  subPriceText: {
+    fontSize: 11,
+    color: '#E05656',
+    fontWeight: '600',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  deleteButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+  },
+  deleteText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+});

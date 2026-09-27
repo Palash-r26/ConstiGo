@@ -1,147 +1,323 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { Typography } from '../../components/Typography';
-import { Button } from '../../components/Button';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
-import { useUserStore } from '../../../application/store/userStore';
-import { apiClient } from '../../../infrastructure/api/client';
 
 export const CheckoutScreen = ({ navigation }: any) => {
-  const { items, fetchCart, clearCart } = useCartStore();
-  const { profile } = useUserStore();
-  
-  const [selectedAddress, setSelectedAddress] = React.useState<any>(null);
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const { clearCart } = useCartStore();
+  const [selectedMethod, setSelectedMethod] = React.useState('card');
+  const [cardName, setCardName] = React.useState('');
+  const [cardNumber, setCardNumber] = React.useState('');
+  const [cardType, setCardType] = React.useState('');
+  const [validUpto, setValidUpto] = React.useState('');
 
-  React.useEffect(() => {
-    if (profile?.addresses && profile.addresses.length > 0 && !selectedAddress) {
-      setSelectedAddress(profile.addresses.find((a: any) => a.isDefault) || profile.addresses[0]);
-    }
-  }, [profile]);
-
-  const subTotal = items.reduce((acc: number, item: any) => acc + (item.product.price * item.quantity), 0);
-  const taxes = subTotal * 0.18;
-  const deliveryFee = subTotal > 0 ? 50 : 0;
-  const total = subTotal + taxes + deliveryFee;
-
-  const handleCheckout = async () => {
-    if (!selectedAddress) {
-      Alert.alert('Error', 'Please select a delivery address');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const orderItems = items.map((item: any) => ({
-        product: item.product._id,
-        name: item.product.name,
-        qty: item.quantity,
-        price: item.product.price
-      }));
-
-      // 1. Create Order via API
-      const orderResponse = await apiClient.post('/orders/razorpay/create', {
-        supplier: items[0]?.product?.supplier || null, // supplier is ObjectId string
-        orderItems,
-        shippingAddress: {
-          address: selectedAddress.street,
-          city: selectedAddress.city,
-          postalCode: selectedAddress.zipCode,
-        },
-        totalPrice: total,
-      });
-
-      if (orderResponse.data.order) {
-        // Clear Cart
-        await clearCart();
-        navigation.navigate('OrderSuccess');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to place order');
-    } finally {
-      setIsProcessing(false);
-    }
+  const handlePay = async () => {
+    await clearCart();
+    navigation.navigate('OrderSuccess');
   };
 
   return (
-    <ScreenWrapper className="bg-white">
-      <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#182F4B" />
+    <ScreenWrapper>
+      {/* Top Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.avatarButton}
+        >
+          <Icon name="user" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-3xl text-[#182F4B]">Checkout</Typography>
+
+        <Logo size="sm" />
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Notifications')}
+          style={styles.bellButton}
+        >
+          <Icon name="bell" size={24} color="#F5A623" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 16 }} showsVerticalScrollIndicator={false}>
-        {/* Address Selection */}
-        <View className="mb-4">
-          <View className="flex-row justify-between items-center mb-3">
-            <Typography variant="h2" className="text-xl">Delivery Address</Typography>
-            <TouchableOpacity onPress={() => navigation.navigate('AddressManager')}>
-              <Typography variant="bodyMedium" className="text-primary">Change</Typography>
-            </TouchableOpacity>
-          </View>
-          
-          {selectedAddress ? (
-            <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center">
-              <View className="w-12 h-12 bg-primary/10 rounded-full justify-center items-center mr-4">
-                <Icon name="map-pin" size={20} color="#C89338" />
-              </View>
-              <View className="flex-1">
-                <Typography variant="bodyBold" className="text-base mb-1">{selectedAddress.label || 'Home'}</Typography>
-                <Typography variant="bodySmall" className="text-text-secondary leading-relaxed">
-                  {selectedAddress.street}, {selectedAddress.city} - {selectedAddress.zipCode}
-                </Typography>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('AddressManager')}
-              className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center justify-center border border-dashed border-gray-300"
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Title */}
+        <Typography variant="h1" style={styles.pageTitle}>
+          Confirm Address
+        </Typography>
+
+        {/* Payment Methods */}
+        <View style={styles.methodsContainer}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedMethod('cash')}
+            style={[
+              styles.methodPill,
+              selectedMethod === 'cash' && styles.methodPillSelected,
+            ]}
+          >
+            <Typography
+              variant="bodyMedium"
+              style={[
+                styles.methodText,
+                selectedMethod === 'cash' && styles.methodTextSelected,
+              ]}
             >
-              <Icon name="plus" size={20} color="#C89338" className="mr-2" />
-              <Typography variant="bodyBold" className="text-primary">Add New Address</Typography>
-            </TouchableOpacity>
-          )}
+              Cash
+            </Typography>
+            {selectedMethod === 'cash' && (
+              <MaterialCommunityIcon name="check" size={20} color="#48BB78" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedMethod('card')}
+            style={[
+              styles.methodPill,
+              selectedMethod === 'card' && styles.methodPillSelected,
+            ]}
+          >
+            <Typography
+              variant="bodyMedium"
+              style={[
+                styles.methodText,
+                selectedMethod === 'card' && styles.methodTextSelected,
+              ]}
+            >
+              Credit / Debit / ATM Card
+            </Typography>
+            {selectedMethod === 'card' && (
+              <MaterialCommunityIcon name="check" size={20} color="#48BB78" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedMethod('netbanking')}
+            style={[
+              styles.methodPill,
+              selectedMethod === 'netbanking' && styles.methodPillSelected,
+            ]}
+          >
+            <Typography
+              variant="bodyMedium"
+              style={[
+                styles.methodText,
+                selectedMethod === 'netbanking' && styles.methodTextSelected,
+              ]}
+            >
+              Net Banking
+            </Typography>
+            {selectedMethod === 'netbanking' && (
+              <MaterialCommunityIcon name="check" size={20} color="#48BB78" />
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Order Summary */}
-        <View className="mb-4">
-          <Typography variant="h2" className="text-xl mb-3">Order Summary</Typography>
-          <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200">
-            {items.map((item: any) => (
-              <View key={item.product._id} className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0">
-                <View className="flex-1 mr-4">
-                  <Typography variant="bodyMedium" numberOfLines={1}>{item.product.name}</Typography>
-                  <Typography variant="bodySmall" className="text-text-secondary">Qty: {item.quantity}</Typography>
-                </View>
-                <Typography variant="bodyBold">₹ {(item.product.price * item.quantity).toFixed(2)}</Typography>
-              </View>
-            ))}
+        {/* Add Payment Method Button */}
+        <TouchableOpacity style={styles.addPaymentButton} activeOpacity={0.8}>
+          <Typography variant="bodyMedium" style={styles.addPaymentText}>
+            Add Payment Method
+          </Typography>
+        </TouchableOpacity>
+
+        {/* Debit Card Details Form Card */}
+        <View style={styles.cardDetailsCard}>
+          <Typography variant="h2" style={styles.cardDetailsTitle}>
+            Debit Card
+          </Typography>
+
+          <TextInput
+            placeholder="Add your Name"
+            placeholderTextColor="#8A8A8E"
+            style={styles.cardInput}
+            value={cardName}
+            onChangeText={setCardName}
+          />
+
+          <TextInput
+            placeholder="Add your Card Number"
+            placeholderTextColor="#8A8A8E"
+            keyboardType="number-pad"
+            style={styles.cardInput}
+            value={cardNumber}
+            onChangeText={setCardNumber}
+          />
+
+          <View style={styles.twoColRow}>
+            <TextInput
+              placeholder="Card Type"
+              placeholderTextColor="#8A8A8E"
+              style={[styles.cardInput, styles.halfInput]}
+              value={cardType}
+              onChangeText={setCardType}
+            />
+            <TextInput
+              placeholder="Valid Upto"
+              placeholderTextColor="#8A8A8E"
+              style={[styles.cardInput, styles.halfInput]}
+              value={validUpto}
+              onChangeText={setValidUpto}
+            />
           </View>
         </View>
 
-        {/* Payment Method */}
-        <View className="mb-4">
-          <Typography variant="h2" className="text-xl mb-3">Payment Method</Typography>
-          <View className="bg-surface rounded-3xl p-5 shadow-sm shadow-gray-200 flex-row items-center border border-primary/20">
-             <Icon name="credit-card" size={24} color="#C89338" className="mr-4" />
-             <View className="flex-1">
-                <Typography variant="bodyBold" className="text-base">Pay via Razorpay</Typography>
-                <Typography variant="bodySmall" className="text-text-secondary">Credit/Debit Card, UPI</Typography>
-             </View>
-             <Icon name="check-circle" size={20} color="#C89338" />
-          </View>
-        </View>
-
-        <Button 
-          title={isProcessing ? "Processing..." : `Pay ₹ ${total.toFixed(2)}`} 
-          onPress={handleCheckout} 
-          disabled={isProcessing}
-        />
+        {/* Continue To Pay Button */}
+        <TouchableOpacity
+          style={styles.continueButton}
+          activeOpacity={0.8}
+          onPress={handlePay}
+        >
+          <Typography variant="bodyMedium" style={styles.continueText}>
+            Continue To Pay
+          </Typography>
+        </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#800000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#800000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginVertical: 18,
+  },
+  methodsContainer: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  methodPill: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  methodPillSelected: {
+    backgroundColor: '#FFFFFF',
+  },
+  methodText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  methodTextSelected: {
+    color: '#8B0000',
+    fontWeight: '700',
+  },
+  addPaymentButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 25,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  addPaymentText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  cardDetailsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 22,
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 20,
+  },
+  cardDetailsTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  cardInput: {
+    backgroundColor: '#F0F2F5',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: '#111827',
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  continueButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

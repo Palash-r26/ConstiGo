@@ -48,7 +48,7 @@ export const BuyerTabNavigator = () => {
           else if (route.name === 'CartTab') iconName = 'shopping-bag';
           else if (route.name === 'Profile') iconName = 'user';
 
-          return <Icon name={iconName} size={24} color={focused ? '#182F4B' : 'rgba(24, 47, 75, 0.5)'} />;
+          return <Icon name={iconName} size={24} color={focused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'} />;
         },
       })}
     >
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     // Short, centered pill (per buyer_07). Equal left/right insets keep it centered.
     left: 60,
     right: 60,
-    backgroundColor: '#C89338',
+    backgroundColor: '#8B0000',
     borderRadius: 32,
     height: 60,
     paddingBottom: 0, // override default padding
