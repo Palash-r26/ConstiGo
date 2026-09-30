@@ -12,6 +12,7 @@ import { EnterCompanyDetailsScreen } from '../screens/supplier/EnterCompanyDetai
 import { AddProductScreen } from '../screens/supplier/AddProductScreen';
 import { AddMaterialScreen } from '../screens/supplier/AddMaterialScreen';
 import { OrderDetailsScreen } from '../screens/supplier/OrderDetailsScreen';
+import { useAuthStore } from '../../application/store/authStore';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -56,8 +57,12 @@ export const SupplierTabNavigator = () => {
 };
 
 export const SupplierStackNavigator = () => {
+  const user = useAuthStore((state) => state.user);
+  // Note: if company data is present redirect to inventory page else company form page will display
+  const initialRoute = user?.hasCompany === false ? 'EnterCompanyDetails' : 'SupplierTabs';
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SupplierTabs" component={SupplierTabNavigator} />
       <Stack.Screen name="EnterCompanyDetails" component={EnterCompanyDetailsScreen} />
       <Stack.Screen name="AddProduct" component={AddProductScreen} />

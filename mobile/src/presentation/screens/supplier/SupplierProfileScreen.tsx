@@ -13,16 +13,18 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import Icon from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { editProfileSchema } from '../../../application/utils/validators';
 
 export const SupplierProfileScreen = ({ navigation }: any) => {
   const [name, setName] = useState('Vikas Pawar');
-  const [phone, setPhone] = useState('+91 12345 67890');
+  const [phone, setPhone] = useState('9876543210');
   const [email, setEmail] = useState('vikas.pawar23@gmail.com');
   const [address, setAddress] = useState('584/96, Rajendra Park, Phase 2');
   const [city, setCity] = useState('Gurugram');
   const [state, setState] = useState('Haryana');
   const [pincode, setPincode] = useState('122002');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handlePickAvatar = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
@@ -33,6 +35,33 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
   };
 
   const handleUpdate = () => {
+    setFieldErrors({});
+
+    const formData = {
+      name: name.trim(),
+      phone: phone.replace(/\D/g, '').slice(-10),
+      email: email.trim(),
+      address: address.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+    };
+
+    const validation = editProfileSchema.safeParse(formData);
+    if (!validation.success) {
+      const formatted = validation.error.format();
+      const errors: Record<string, string> = {};
+      if (formatted.name?._errors[0]) errors.name = formatted.name._errors[0];
+      if (formatted.phone?._errors[0]) errors.phone = formatted.phone._errors[0];
+      if (formatted.email?._errors[0]) errors.email = formatted.email._errors[0];
+      if (formatted.address?._errors[0]) errors.address = formatted.address._errors[0];
+      if (formatted.city?._errors[0]) errors.city = formatted.city._errors[0];
+      if (formatted.state?._errors[0]) errors.state = formatted.state._errors[0];
+      if (formatted.pincode?._errors[0]) errors.pincode = formatted.pincode._errors[0];
+      setFieldErrors(errors);
+      return;
+    }
+
     Alert.alert('Success', 'Profile updated successfully!');
   };
 
@@ -92,79 +121,152 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
 
         {/* Input Fields */}
         <View style={styles.inputGroup}>
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Full Name"
-              placeholderTextColor="#9CA3AF"
-              value={name}
-              onChangeText={setName}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.name && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Full Name"
+                placeholderTextColor={fieldErrors.name ? '#EF4444' : '#9CA3AF'}
+                value={name}
+                onChangeText={(t) => {
+                  setName(t);
+                  if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.name ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.name}
+              </Typography>
+            ) : null}
           </View>
 
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Phone Number"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.phone && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Phone Number"
+                placeholderTextColor={fieldErrors.phone ? '#EF4444' : '#9CA3AF'}
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={phone}
+                onChangeText={(t) => {
+                  setPhone(t);
+                  if (fieldErrors.phone) setFieldErrors({ ...fieldErrors, phone: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.phone ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.phone}
+              </Typography>
+            ) : null}
           </View>
 
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Email ID"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.email && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Email ID"
+                placeholderTextColor={fieldErrors.email ? '#EF4444' : '#9CA3AF'}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.email ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.email}
+              </Typography>
+            ) : null}
           </View>
 
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Address"
-              placeholderTextColor="#9CA3AF"
-              value={address}
-              onChangeText={setAddress}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.address && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Address"
+                placeholderTextColor={fieldErrors.address ? '#EF4444' : '#9CA3AF'}
+                value={address}
+                onChangeText={(t) => {
+                  setAddress(t);
+                  if (fieldErrors.address) setFieldErrors({ ...fieldErrors, address: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.address ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.address}
+              </Typography>
+            ) : null}
           </View>
 
           <View style={styles.row}>
-            <View style={[styles.pillInputContainer, styles.halfWidth]}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="City"
-                placeholderTextColor="#9CA3AF"
-                value={city}
-                onChangeText={setCity}
-              />
+            <View style={styles.halfWidth}>
+              <View style={[styles.pillInputContainer, fieldErrors.city && styles.inputError]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="City"
+                  placeholderTextColor={fieldErrors.city ? '#EF4444' : '#9CA3AF'}
+                  value={city}
+                  onChangeText={(t) => {
+                    setCity(t);
+                    if (fieldErrors.city) setFieldErrors({ ...fieldErrors, city: '' });
+                  }}
+                />
+              </View>
+              {fieldErrors.city ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.city}
+                </Typography>
+              ) : null}
             </View>
-            <View style={[styles.pillInputContainer, styles.halfWidth]}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="State"
-                placeholderTextColor="#9CA3AF"
-                value={state}
-                onChangeText={setState}
-              />
+
+            <View style={styles.halfWidth}>
+              <View style={[styles.pillInputContainer, fieldErrors.state && styles.inputError]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="State"
+                  placeholderTextColor={fieldErrors.state ? '#EF4444' : '#9CA3AF'}
+                  value={state}
+                  onChangeText={(t) => {
+                    setState(t);
+                    if (fieldErrors.state) setFieldErrors({ ...fieldErrors, state: '' });
+                  }}
+                />
+              </View>
+              {fieldErrors.state ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.state}
+                </Typography>
+              ) : null}
             </View>
           </View>
 
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Pincode"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="numeric"
-              value={pincode}
-              onChangeText={setPincode}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.pincode && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Pincode"
+                placeholderTextColor={fieldErrors.pincode ? '#EF4444' : '#9CA3AF'}
+                keyboardType="numeric"
+                maxLength={6}
+                value={pincode}
+                onChangeText={(t) => {
+                  setPincode(t);
+                  if (fieldErrors.pincode) setFieldErrors({ ...fieldErrors, pincode: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.pincode ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.pincode}
+              </Typography>
+            ) : null}
           </View>
         </View>
 
@@ -281,6 +383,17 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F1F5F9',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inlineErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 12,
+    fontFamily: 'Montserrat-Medium',
   },
   textInput: {
     fontSize: 14,

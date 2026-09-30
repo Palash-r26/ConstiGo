@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -14,22 +14,24 @@ import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useUserStore } from '../../../application/store/userStore';
 import { apiClient } from '../../../infrastructure/api/client';
+import { addressManagerSchema } from '../../../application/utils/validators';
 
 export const AddressManagerScreen = ({ navigation }: any) => {
   const { profile, fetchProfile } = useUserStore();
-  const [isAdding, setIsAdding] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form State
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
-  const [flat, setFlat] = React.useState('');
-  const [area, setArea] = React.useState('');
-  const [pincode, setPincode] = React.useState('');
-  const [city, setCity] = React.useState('');
-  const [state, setState] = React.useState('');
-  const [isDefault, setIsDefault] = React.useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [flat, setFlat] = useState('');
+  const [area, setArea] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [isDefault, setIsDefault] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const mockAddresses = [
     {
@@ -55,19 +57,43 @@ export const AddressManagerScreen = ({ navigation }: any) => {
   ];
 
   const handleSave = async () => {
-    if (!flat || !city || !state || !pincode) {
-      Alert.alert('Required', 'Please fill in all address details.');
+    setFieldErrors({});
+
+    const formData = {
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.replace(/\D/g, '').slice(-10),
+      flat: flat.trim(),
+      area: area.trim(),
+      pincode: pincode.trim(),
+      city: city.trim(),
+      state: state.trim(),
+    };
+
+    const validation = addressManagerSchema.safeParse(formData);
+    if (!validation.success) {
+      const formatted = validation.error.format();
+      const errors: Record<string, string> = {};
+      if (formatted.name?._errors[0]) errors.name = formatted.name._errors[0];
+      if (formatted.email?._errors[0]) errors.email = formatted.email._errors[0];
+      if (formatted.phone?._errors[0]) errors.phone = formatted.phone._errors[0];
+      if (formatted.flat?._errors[0]) errors.flat = formatted.flat._errors[0];
+      if (formatted.area?._errors[0]) errors.area = formatted.area._errors[0];
+      if (formatted.pincode?._errors[0]) errors.pincode = formatted.pincode._errors[0];
+      if (formatted.city?._errors[0]) errors.city = formatted.city._errors[0];
+      if (formatted.state?._errors[0]) errors.state = formatted.state._errors[0];
+      setFieldErrors(errors);
       return;
     }
 
     setIsLoading(true);
     try {
       await apiClient.post('/users/me/address', {
-        label: name || 'Home',
-        street: `${flat}, ${area}`,
-        city,
-        state,
-        zipCode: pincode,
+        label: formData.name || 'Home',
+        street: `${formData.flat}, ${formData.area}`,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.pincode,
         isDefault,
       });
       await fetchProfile();
@@ -114,73 +140,157 @@ export const AddressManagerScreen = ({ navigation }: any) => {
         {isAdding ? (
           /* Page 10: Add Address Form */
           <View style={styles.formCard}>
-            <TextInput
-              placeholder="Enter your Name"
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={name}
-              onChangeText={setName}
-            />
-
-            <TextInput
-              placeholder="Enter your Email"
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
-
-            <TextInput
-              placeholder="Enter your Mobile Number"
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-            />
-
-            <TextInput
-              placeholder="Enter your House, Building, Flat no."
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={flat}
-              onChangeText={setFlat}
-            />
-
-            <TextInput
-              placeholder="Enter your Area, Street, Sector, Villlage"
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={area}
-              onChangeText={setArea}
-            />
-
-            <View style={styles.twoColumnRow}>
+            <View>
               <TextInput
-                placeholder="Pincode"
-                placeholderTextColor="#8A8A8E"
-                style={[styles.inputPill, styles.halfInput]}
-                value={pincode}
-                onChangeText={setPincode}
-                keyboardType="number-pad"
+                placeholder="Enter your Name"
+                placeholderTextColor={fieldErrors.name ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.name && styles.inputError]}
+                value={name}
+                onChangeText={(t) => {
+                  setName(t);
+                  if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+                }}
               />
-              <TextInput
-                placeholder="Town/City"
-                placeholderTextColor="#8A8A8E"
-                style={[styles.inputPill, styles.halfInput]}
-                value={city}
-                onChangeText={setCity}
-              />
+              {fieldErrors.name ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.name}
+                </Typography>
+              ) : null}
             </View>
 
-            <TextInput
-              placeholder="Enter your State"
-              placeholderTextColor="#8A8A8E"
-              style={styles.inputPill}
-              value={state}
-              onChangeText={setState}
-            />
+            <View>
+              <TextInput
+                placeholder="Enter your Email"
+                placeholderTextColor={fieldErrors.email ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.email && styles.inputError]}
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {fieldErrors.email ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.email}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View>
+              <TextInput
+                placeholder="Enter your Mobile Number"
+                placeholderTextColor={fieldErrors.phone ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.phone && styles.inputError]}
+                value={phone}
+                onChangeText={(t) => {
+                  setPhone(t);
+                  if (fieldErrors.phone) setFieldErrors({ ...fieldErrors, phone: '' });
+                }}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+              {fieldErrors.phone ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.phone}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View>
+              <TextInput
+                placeholder="Enter your House, Building, Flat no."
+                placeholderTextColor={fieldErrors.flat ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.flat && styles.inputError]}
+                value={flat}
+                onChangeText={(t) => {
+                  setFlat(t);
+                  if (fieldErrors.flat) setFieldErrors({ ...fieldErrors, flat: '' });
+                }}
+              />
+              {fieldErrors.flat ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.flat}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View>
+              <TextInput
+                placeholder="Enter your Area, Street, Sector, Village"
+                placeholderTextColor={fieldErrors.area ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.area && styles.inputError]}
+                value={area}
+                onChangeText={(t) => {
+                  setArea(t);
+                  if (fieldErrors.area) setFieldErrors({ ...fieldErrors, area: '' });
+                }}
+              />
+              {fieldErrors.area ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.area}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View style={styles.twoColumnRow}>
+              <View style={styles.halfInput}>
+                <TextInput
+                  placeholder="Pincode"
+                  placeholderTextColor={fieldErrors.pincode ? '#EF4444' : '#8A8A8E'}
+                  style={[styles.inputPill, fieldErrors.pincode && styles.inputError]}
+                  value={pincode}
+                  onChangeText={(t) => {
+                    setPincode(t);
+                    if (fieldErrors.pincode) setFieldErrors({ ...fieldErrors, pincode: '' });
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+                {fieldErrors.pincode ? (
+                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                    {fieldErrors.pincode}
+                  </Typography>
+                ) : null}
+              </View>
+
+              <View style={styles.halfInput}>
+                <TextInput
+                  placeholder="Town/City"
+                  placeholderTextColor={fieldErrors.city ? '#EF4444' : '#8A8A8E'}
+                  style={[styles.inputPill, fieldErrors.city && styles.inputError]}
+                  value={city}
+                  onChangeText={(t) => {
+                    setCity(t);
+                    if (fieldErrors.city) setFieldErrors({ ...fieldErrors, city: '' });
+                  }}
+                />
+                {fieldErrors.city ? (
+                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                    {fieldErrors.city}
+                  </Typography>
+                ) : null}
+              </View>
+            </View>
+
+            <View>
+              <TextInput
+                placeholder="Enter your State"
+                placeholderTextColor={fieldErrors.state ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.state && styles.inputError]}
+                value={state}
+                onChangeText={(t) => {
+                  setState(t);
+                  if (fieldErrors.state) setFieldErrors({ ...fieldErrors, state: '' });
+                }}
+              />
+              {fieldErrors.state ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.state}
+                </Typography>
+              ) : null}
+            </View>
 
             <TouchableOpacity
               activeOpacity={0.8}
@@ -193,7 +303,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
                 color={isDefault ? '#48BB78' : '#8A8A8E'}
               />
               <Typography variant="bodyMedium" style={styles.defaultCheckboxText}>
-                Make this my defalut address
+                Make this my default address
               </Typography>
             </TouchableOpacity>
 
@@ -343,6 +453,19 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 13,
     color: '#111827',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inlineErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 12,
+    fontFamily: 'Montserrat-Medium',
   },
   twoColumnRow: {
     flexDirection: 'row',

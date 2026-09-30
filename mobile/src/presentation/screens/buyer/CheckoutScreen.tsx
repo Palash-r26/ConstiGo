@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -13,16 +13,41 @@ import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
+import { cardPaymentSchema } from '../../../application/utils/validators';
 
 export const CheckoutScreen = ({ navigation }: any) => {
   const { clearCart } = useCartStore();
-  const [selectedMethod, setSelectedMethod] = React.useState('card');
-  const [cardName, setCardName] = React.useState('');
-  const [cardNumber, setCardNumber] = React.useState('');
-  const [cardType, setCardType] = React.useState('');
-  const [validUpto, setValidUpto] = React.useState('');
+  const [selectedMethod, setSelectedMethod] = useState('card');
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardType, setCardType] = useState('Debit Card');
+  const [validUpto, setValidUpto] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handlePay = async () => {
+    setFieldErrors({});
+
+    if (selectedMethod === 'card') {
+      const formData = {
+        cardName: cardName.trim(),
+        cardNumber: cardNumber.replace(/\s+/g, ''),
+        cardType: cardType.trim(),
+        validUpto: validUpto.trim(),
+      };
+
+      const validation = cardPaymentSchema.safeParse(formData);
+      if (!validation.success) {
+        const formatted = validation.error.format();
+        const errors: Record<string, string> = {};
+        if (formatted.cardName?._errors[0]) errors.cardName = formatted.cardName._errors[0];
+        if (formatted.cardNumber?._errors[0]) errors.cardNumber = formatted.cardNumber._errors[0];
+        if (formatted.cardType?._errors[0]) errors.cardType = formatted.cardType._errors[0];
+        if (formatted.validUpto?._errors[0]) errors.validUpto = formatted.validUpto._errors[0];
+        setFieldErrors(errors);
+        return;
+      }
+    }
+
     await clearCart();
     navigation.navigate('OrderSuccess');
   };
@@ -63,7 +88,10 @@ export const CheckoutScreen = ({ navigation }: any) => {
         <View style={styles.methodsContainer}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => setSelectedMethod('cash')}
+            onPress={() => {
+              setSelectedMethod('cash');
+              setFieldErrors({});
+            }}
             style={[
               styles.methodPill,
               selectedMethod === 'cash' && styles.methodPillSelected,
@@ -107,7 +135,10 @@ export const CheckoutScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => setSelectedMethod('netbanking')}
+            onPress={() => {
+              setSelectedMethod('netbanking');
+              setFieldErrors({});
+            }}
             style={[
               styles.methodPill,
               selectedMethod === 'netbanking' && styles.methodPillSelected,
@@ -135,46 +166,91 @@ export const CheckoutScreen = ({ navigation }: any) => {
           </Typography>
         </TouchableOpacity>
 
-        {/* Debit Card Details Form Card */}
-        <View style={styles.cardDetailsCard}>
-          <Typography variant="h2" style={styles.cardDetailsTitle}>
-            Debit Card
-          </Typography>
+        {/* Debit Card Details Form Card (when card is selected) */}
+        {selectedMethod === 'card' ? (
+          <View style={styles.cardDetailsCard}>
+            <Typography variant="h2" style={styles.cardDetailsTitle}>
+              Debit Card
+            </Typography>
 
-          <TextInput
-            placeholder="Add your Name"
-            placeholderTextColor="#8A8A8E"
-            style={styles.cardInput}
-            value={cardName}
-            onChangeText={setCardName}
-          />
+            <View>
+              <TextInput
+                placeholder="Add your Name"
+                placeholderTextColor={fieldErrors.cardName ? '#EF4444' : '#8A8A8E'}
+                style={[styles.cardInput, fieldErrors.cardName && styles.inputError]}
+                value={cardName}
+                onChangeText={(t) => {
+                  setCardName(t);
+                  if (fieldErrors.cardName) setFieldErrors({ ...fieldErrors, cardName: '' });
+                }}
+              />
+              {fieldErrors.cardName ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.cardName}
+                </Typography>
+              ) : null}
+            </View>
 
-          <TextInput
-            placeholder="Add your Card Number"
-            placeholderTextColor="#8A8A8E"
-            keyboardType="number-pad"
-            style={styles.cardInput}
-            value={cardNumber}
-            onChangeText={setCardNumber}
-          />
+            <View>
+              <TextInput
+                placeholder="Add your Card Number"
+                placeholderTextColor={fieldErrors.cardNumber ? '#EF4444' : '#8A8A8E'}
+                keyboardType="number-pad"
+                maxLength={16}
+                style={[styles.cardInput, fieldErrors.cardNumber && styles.inputError]}
+                value={cardNumber}
+                onChangeText={(t) => {
+                  setCardNumber(t);
+                  if (fieldErrors.cardNumber) setFieldErrors({ ...fieldErrors, cardNumber: '' });
+                }}
+              />
+              {fieldErrors.cardNumber ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.cardNumber}
+                </Typography>
+              ) : null}
+            </View>
 
-          <View style={styles.twoColRow}>
-            <TextInput
-              placeholder="Card Type"
-              placeholderTextColor="#8A8A8E"
-              style={[styles.cardInput, styles.halfInput]}
-              value={cardType}
-              onChangeText={setCardType}
-            />
-            <TextInput
-              placeholder="Valid Upto"
-              placeholderTextColor="#8A8A8E"
-              style={[styles.cardInput, styles.halfInput]}
-              value={validUpto}
-              onChangeText={setValidUpto}
-            />
+            <View style={styles.twoColRow}>
+              <View style={styles.halfInput}>
+                <TextInput
+                  placeholder="Card Type"
+                  placeholderTextColor={fieldErrors.cardType ? '#EF4444' : '#8A8A8E'}
+                  style={[styles.cardInput, fieldErrors.cardType && styles.inputError]}
+                  value={cardType}
+                  onChangeText={(t) => {
+                    setCardType(t);
+                    if (fieldErrors.cardType) setFieldErrors({ ...fieldErrors, cardType: '' });
+                  }}
+                />
+                {fieldErrors.cardType ? (
+                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                    {fieldErrors.cardType}
+                  </Typography>
+                ) : null}
+              </View>
+
+              <View style={styles.halfInput}>
+                <TextInput
+                  placeholder="Valid Upto (MM/YY)"
+                  placeholderTextColor={fieldErrors.validUpto ? '#EF4444' : '#8A8A8E'}
+                  maxLength={5}
+                  style={[styles.cardInput, fieldErrors.validUpto && styles.inputError]}
+                  value={validUpto}
+                  onChangeText={(t) => {
+                    setValidUpto(t);
+                    if (fieldErrors.validUpto) setFieldErrors({ ...fieldErrors, validUpto: '' });
+                  }}
+                />
+                {fieldErrors.validUpto ? (
+                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                    {fieldErrors.validUpto}
+                  </Typography>
+                ) : null}
+              </View>
+            </View>
           </View>
-        </View>
+        ) : null}
 
         {/* Continue To Pay Button */}
         <TouchableOpacity
@@ -300,6 +376,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 13,
     color: '#111827',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inlineErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 12,
+    fontFamily: 'Montserrat-Medium',
   },
   twoColRow: {
     flexDirection: 'row',

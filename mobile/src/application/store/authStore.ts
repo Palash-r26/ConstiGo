@@ -1,12 +1,17 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface User {
+export interface User {
   _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  vendorid?: string;
+  vendorId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  hasCompany?: boolean;
   role: 'BUYER' | 'SUPPLIER' | 'ADMIN';
+  [key: string]: any;
 }
 
 interface AuthState {

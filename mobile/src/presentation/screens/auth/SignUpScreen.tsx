@@ -7,6 +7,7 @@ import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
+import { registerVendor } from '../../../infrastructure/api/vendorApi';
 import { useAuthStore } from '../../../application/store/authStore';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,15 +39,51 @@ export const SignUpScreen = ({ navigation, route }: any) => {
     try {
       setIsLoading(true);
       setError('');
-      const response = await apiClient.post('/auth/register', {
-        ...data,
-        role: selectedRole
-      });
-      if (response.data.success) {
-        await login(response.data.data, response.data.data.token);
+
+      if (selectedRole === 'SUPPLIER') {
+        // Call REAL production PHP endpoint: https://constigo.in/app/vendor/registration.php
+        const response = await registerVendor({
+          fname: data.firstName,
+          lname: data.lastName,
+          dob: data.dateOfBirth,
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+          confrimpassword: data.confirmPassword, // Exact param name required by PHP API
+        });
+
+        // Defensive handling: log raw response
+        console.log('[SignUpScreen] Supplier Registration Raw Response:', response);
+
+        // TODO: Confirm exact success response schema from backend (e.g. response.status, response.vendorid)
+        const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
+        if (isSuccess) {
+          const vendorId = response?.vendorid || response?.data?.vendorid || response?.vendor_id || `CV_${data.phone}`;
+          await login({
+            _id: String(vendorId),
+            vendorid: String(vendorId),
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            role: 'SUPPLIER',
+          }, response?.token || 'vendor_session_token');
+        } else {
+          // TODO: Confirm exact error field shape
+          setError(response?.message || response?.error || 'Registration failed. Please try again.');
+        }
+      } else {
+        // Buyer registration via Node/Mongo client
+        const response = await apiClient.post('/auth/register', {
+          ...data,
+          role: selectedRole
+        });
+        if (response.data.success) {
+          await login(response.data.data, response.data.data.token);
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error('[SignUpScreen] Registration Error:', err);
+      setError(err.message || err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }

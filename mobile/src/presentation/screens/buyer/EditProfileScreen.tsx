@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -14,35 +14,64 @@ import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useUserStore } from '../../../application/store/userStore';
 import { apiClient } from '../../../infrastructure/api/client';
+import { editProfileSchema } from '../../../application/utils/validators';
 
 export const EditProfileScreen = ({ navigation }: any) => {
   const { profile, fetchProfile } = useUserStore();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Form State matching Page 16
-  const [name, setName] = React.useState(
+  // Form State
+  const [name, setName] = useState(
     profile?.firstName ? `${profile.firstName} ${profile.lastName}` : 'Vikas Pawar'
   );
-  const [phone, setPhone] = React.useState(profile?.phone || '+91 12345 67890');
-  const [email, setEmail] = React.useState(
+  const [phone, setPhone] = useState(profile?.phone || '9876543210');
+  const [email, setEmail] = useState(
     profile?.email || 'vikas.pawar23@gmail.com'
   );
-  const [address, setAddress] = React.useState('584/96, Rajendra Park, Phase 2');
-  const [city, setCity] = React.useState('Gurugram');
-  const [state, setState] = React.useState('Haryana');
-  const [pincode, setPincode] = React.useState('122002');
+  const [address, setAddress] = useState('584/96, Rajendra Park, Phase 2');
+  const [city, setCity] = useState('Gurugram');
+  const [state, setState] = useState('Haryana');
+  const [pincode, setPincode] = useState('122002');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handleSave = async () => {
+    setFieldErrors({});
+
+    const formData = {
+      name: name.trim(),
+      phone: phone.replace(/\D/g, '').slice(-10),
+      email: email.trim(),
+      address: address.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+    };
+
+    const validation = editProfileSchema.safeParse(formData);
+    if (!validation.success) {
+      const formatted = validation.error.format();
+      const errors: Record<string, string> = {};
+      if (formatted.name?._errors[0]) errors.name = formatted.name._errors[0];
+      if (formatted.phone?._errors[0]) errors.phone = formatted.phone._errors[0];
+      if (formatted.email?._errors[0]) errors.email = formatted.email._errors[0];
+      if (formatted.address?._errors[0]) errors.address = formatted.address._errors[0];
+      if (formatted.city?._errors[0]) errors.city = formatted.city._errors[0];
+      if (formatted.state?._errors[0]) errors.state = formatted.state._errors[0];
+      if (formatted.pincode?._errors[0]) errors.pincode = formatted.pincode._errors[0];
+      setFieldErrors(errors);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const parts = name.split(' ');
+      const parts = formData.name.split(' ');
       const firstName = parts[0] || '';
       const lastName = parts.slice(1).join(' ') || '';
 
       await apiClient.patch('/users/me', {
         firstName,
         lastName,
-        phone,
+        phone: formData.phone,
       });
       await fetchProfile();
       Alert.alert('Success', 'Profile updated successfully', [
@@ -115,65 +144,139 @@ export const EditProfileScreen = ({ navigation }: any) => {
 
         {/* Form Inputs (White Pills) */}
         <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Name"
-            placeholderTextColor="#8A8A8E"
-            style={styles.inputPill}
-            value={name}
-            onChangeText={setName}
-          />
-
-          <TextInput
-            placeholder="Phone Number"
-            placeholderTextColor="#8A8A8E"
-            keyboardType="phone-pad"
-            style={styles.inputPill}
-            value={phone}
-            onChangeText={setPhone}
-          />
-
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor="#8A8A8E"
-            keyboardType="email-address"
-            style={styles.inputPill}
-            value={email}
-            onChangeText={setEmail}
-          />
-
-          <TextInput
-            placeholder="Address"
-            placeholderTextColor="#8A8A8E"
-            style={styles.inputPill}
-            value={address}
-            onChangeText={setAddress}
-          />
-
-          <View style={styles.twoColRow}>
+          <View>
             <TextInput
-              placeholder="City"
-              placeholderTextColor="#8A8A8E"
-              style={[styles.inputPill, styles.halfInput]}
-              value={city}
-              onChangeText={setCity}
+              placeholder="Name"
+              placeholderTextColor={fieldErrors.name ? '#EF4444' : '#8A8A8E'}
+              style={[styles.inputPill, fieldErrors.name && styles.inputError]}
+              value={name}
+              onChangeText={(t) => {
+                setName(t);
+                if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+              }}
             />
-            <TextInput
-              placeholder="State"
-              placeholderTextColor="#8A8A8E"
-              style={[styles.inputPill, styles.halfInput]}
-              value={state}
-              onChangeText={setState}
-            />
+            {fieldErrors.name ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.name}
+              </Typography>
+            ) : null}
           </View>
 
-          <TextInput
-            placeholder="Pincode"
-            placeholderTextColor="#8A8A8E"
-            keyboardType="number-pad"
-            style={styles.inputPill}
-            value={pincode}
-            onChangeText={setPincode}
-          />
+          <View>
+            <TextInput
+              placeholder="Phone Number"
+              placeholderTextColor={fieldErrors.phone ? '#EF4444' : '#8A8A8E'}
+              keyboardType="phone-pad"
+              maxLength={10}
+              style={[styles.inputPill, fieldErrors.phone && styles.inputError]}
+              value={phone}
+              onChangeText={(t) => {
+                setPhone(t);
+                if (fieldErrors.phone) setFieldErrors({ ...fieldErrors, phone: '' });
+              }}
+            />
+            {fieldErrors.phone ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.phone}
+              </Typography>
+            ) : null}
+          </View>
+
+          <View>
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor={fieldErrors.email ? '#EF4444' : '#8A8A8E'}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[styles.inputPill, fieldErrors.email && styles.inputError]}
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+              }}
+            />
+            {fieldErrors.email ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.email}
+              </Typography>
+            ) : null}
+          </View>
+
+          <View>
+            <TextInput
+              placeholder="Address"
+              placeholderTextColor={fieldErrors.address ? '#EF4444' : '#8A8A8E'}
+              style={[styles.inputPill, fieldErrors.address && styles.inputError]}
+              value={address}
+              onChangeText={(t) => {
+                setAddress(t);
+                if (fieldErrors.address) setFieldErrors({ ...fieldErrors, address: '' });
+              }}
+            />
+            {fieldErrors.address ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.address}
+              </Typography>
+            ) : null}
+          </View>
+
+          <View style={styles.twoColRow}>
+            <View style={styles.halfInput}>
+              <TextInput
+                placeholder="City"
+                placeholderTextColor={fieldErrors.city ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.city && styles.inputError]}
+                value={city}
+                onChangeText={(t) => {
+                  setCity(t);
+                  if (fieldErrors.city) setFieldErrors({ ...fieldErrors, city: '' });
+                }}
+              />
+              {fieldErrors.city ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.city}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View style={styles.halfInput}>
+              <TextInput
+                placeholder="State"
+                placeholderTextColor={fieldErrors.state ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.state && styles.inputError]}
+                value={state}
+                onChangeText={(t) => {
+                  setState(t);
+                  if (fieldErrors.state) setFieldErrors({ ...fieldErrors, state: '' });
+                }}
+              />
+              {fieldErrors.state ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.state}
+                </Typography>
+              ) : null}
+            </View>
+          </View>
+
+          <View>
+            <TextInput
+              placeholder="Pincode"
+              placeholderTextColor={fieldErrors.pincode ? '#EF4444' : '#8A8A8E'}
+              keyboardType="number-pad"
+              maxLength={6}
+              style={[styles.inputPill, fieldErrors.pincode && styles.inputError]}
+              value={pincode}
+              onChangeText={(t) => {
+                setPincode(t);
+                if (fieldErrors.pincode) setFieldErrors({ ...fieldErrors, pincode: '' });
+              }}
+            />
+            {fieldErrors.pincode ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.pincode}
+              </Typography>
+            ) : null}
+          </View>
         </View>
 
         {/* Update Now Button */}
@@ -293,6 +396,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inlineErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 12,
+    fontFamily: 'Montserrat-Medium',
   },
   twoColRow: {
     flexDirection: 'row',

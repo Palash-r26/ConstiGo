@@ -7,6 +7,7 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
+import { checkVendorLogin, checkCompanyStatus } from '../../../infrastructure/api/vendorApi';
 import { useAuthStore } from '../../../application/store/authStore';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,15 +32,60 @@ export const SignInScreen = ({ route, navigation }: any) => {
     try {
       setIsLoading(true);
       setError('');
-      const response = await apiClient.post('/auth/login', {
-        ...data,
-        role,
-      });
-      if (response.data.success) {
-        await login(response.data.data, response.data.data.token);
+
+      if (isSupplier) {
+        // Call REAL production PHP endpoint: https://constigo.in/app/vendor/checklogin.php
+        const response = await checkVendorLogin({
+          phone: data.identity,
+          password: data.password,
+        });
+
+        // Defensive handling: log raw response
+        console.log('[SignInScreen] Vendor Check Login Raw Response:', response);
+
+        // TODO: Confirm exact success response schema from backend (e.g. response.status, response.vendorid)
+        const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
+        if (isSuccess) {
+          const vendorId = response?.vendorid || response?.data?.vendorid || response?.vendor_id || `CV_${data.identity}`;
+          
+          // Check Company API: https://constigo.in/app/vendor/check-company.php
+          // Note: if company data is present redirect to inventory page else company form page will display
+          let hasCompany = true;
+          try {
+            const companyCheck = await checkCompanyStatus(String(vendorId));
+            console.log('[SignInScreen] Check Company Raw Response:', companyCheck);
+            // TODO: Confirm exact check-company JSON response fields
+            if (companyCheck) {
+              hasCompany = companyCheck?.status === true || companyCheck?.status === 'success' || !!companyCheck?.data || !!companyCheck?.companyname;
+            }
+          } catch (compErr) {
+            console.warn('[SignInScreen] Check company tentative error:', compErr);
+          }
+
+          await login({
+            _id: String(vendorId),
+            vendorid: String(vendorId),
+            phone: data.identity,
+            hasCompany,
+            role: 'SUPPLIER',
+          }, response?.token || 'vendor_session_token');
+        } else {
+          // TODO: Confirm exact error field shape
+          setError(response?.message || response?.error || 'Invalid phone or password');
+        }
+      } else {
+        // Buyer login via Node/Mongo client
+        const response = await apiClient.post('/auth/login', {
+          ...data,
+          role,
+        });
+        if (response.data.success) {
+          await login(response.data.data, response.data.data.token);
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      console.error('[SignInScreen] Login Error:', err);
+      setError(err.message || err.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }

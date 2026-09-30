@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { AuthInput } from '../../components/AuthInput';
@@ -9,22 +9,24 @@ import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { CLOUDINARY_CLOUD_NAME } from '@env';
+import { addMaterialSchema } from '../../../application/utils/validators';
 
 export const AddMaterialScreen = ({ navigation }: any) => {
-  const [name, setName] = React.useState('');
-  const [stockQty, setStockQty] = React.useState('');
-  const [price, setPrice] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState('');
-  const [imageUri, setImageUri] = React.useState<string | null>(null);
-  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [name, setName] = useState('');
+  const [stockQty, setStockQty] = useState('');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleSelectImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, (response) => {
       if (response.didCancel) return;
       if (response.errorCode) {
-        setError(response.errorMessage || 'Image selection failed');
+        setServerError(response.errorMessage || 'Image selection failed');
         return;
       }
       if (response.assets && response.assets.length > 0) {
@@ -40,7 +42,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
       type: 'image/jpeg',
       name: 'upload.jpg',
     } as any);
-    data.append('upload_preset', 'constigo_preset'); // NOTE: Needs an unsigned preset named 'constigo_preset' in Cloudinary
+    data.append('upload_preset', 'constigo_preset');
     data.append('cloud_name', CLOUDINARY_CLOUD_NAME);
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
@@ -55,22 +57,47 @@ export const AddMaterialScreen = ({ navigation }: any) => {
   };
 
   const handleSubmit = async () => {
+    setFieldErrors({});
+    setServerError('');
+
+    const formData = {
+      name: name.trim(),
+      stockQty: stockQty.trim(),
+      price: price.trim(),
+      description: description.trim(),
+    };
+
+    const validation = addMaterialSchema.safeParse(formData);
+    if (!validation.success) {
+      const formatted = validation.error.format();
+      setFieldErrors({
+        name: formatted.name?._errors[0] || '',
+        stockQty: formatted.stockQty?._errors[0] || '',
+        price: formatted.price?._errors[0] || '',
+        description: formatted.description?._errors[0] || '',
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
-      setError('');
       
       let finalImageUrl = '';
       if (imageUri) {
         setIsUploadingImage(true);
-        finalImageUrl = await uploadToCloudinary(imageUri);
+        try {
+          finalImageUrl = await uploadToCloudinary(imageUri);
+        } catch (e) {
+          console.warn('Cloudinary upload notice, continuing with material submit:', e);
+        }
         setIsUploadingImage(false);
       }
 
       const response = await apiClient.post('/products', {
-        name,
-        stockQty: parseInt(stockQty, 10),
-        price: parseFloat(price),
-        description,
+        name: formData.name,
+        stockQty: parseInt(formData.stockQty, 10),
+        price: parseFloat(formData.price),
+        description: formData.description,
         unit: 'Unit',
         images: finalImageUrl ? [finalImageUrl] : [],
       });
@@ -78,11 +105,12 @@ export const AddMaterialScreen = ({ navigation }: any) => {
         navigation.goBack();
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to add material');
+      setServerError(err.response?.data?.message || 'Failed to add material');
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <ScreenWrapper>
       {/* Top Header */}
@@ -102,10 +130,39 @@ export const AddMaterialScreen = ({ navigation }: any) => {
         </View>
 
         <View className="gap-y-4 mb-10">
-          {error ? <Typography className="text-red-500 text-center">{error}</Typography> : null}
-          <AuthInput placeholder="Product Name" value={name} onChangeText={setName} />
-          <AuthInput placeholder="Product Quantity" value={stockQty} onChangeText={setStockQty} keyboardType="numeric" />
-          <AuthInput placeholder="Product Price" value={price} onChangeText={setPrice} keyboardType="numeric" />
+          {serverError ? <Typography className="text-red-500 text-center">{serverError}</Typography> : null}
+          
+          <AuthInput
+            placeholder="Product Name"
+            value={name}
+            onChangeText={(t) => {
+              setName(t);
+              if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+            }}
+            error={fieldErrors.name}
+          />
+
+          <AuthInput
+            placeholder="Product Quantity"
+            value={stockQty}
+            onChangeText={(t) => {
+              setStockQty(t);
+              if (fieldErrors.stockQty) setFieldErrors({ ...fieldErrors, stockQty: '' });
+            }}
+            keyboardType="numeric"
+            error={fieldErrors.stockQty}
+          />
+
+          <AuthInput
+            placeholder="Product Price"
+            value={price}
+            onChangeText={(t) => {
+              setPrice(t);
+              if (fieldErrors.price) setFieldErrors({ ...fieldErrors, price: '' });
+            }}
+            keyboardType="numeric"
+            error={fieldErrors.price}
+          />
           
           <TouchableOpacity onPress={handleSelectImage} className="flex-row justify-between items-center bg-input-bg rounded-2xl px-5 py-4 overflow-hidden border border-gray-100">
             {imageUri ? (
@@ -117,9 +174,27 @@ export const AddMaterialScreen = ({ navigation }: any) => {
             <Icon name="upload" size={20} color="#C89338" className="z-10" />
           </TouchableOpacity>
 
-          <View className="bg-input-bg rounded-2xl px-5 py-4 h-32">
-            <Typography variant="bodyDefault" className="text-text-secondary">Description</Typography>
+          <View className={`rounded-2xl px-5 py-3 h-32 ${fieldErrors.description ? 'bg-red-50 border border-red-500' : 'bg-input-bg'}`}>
+            <TextInput
+              placeholder="Description"
+              placeholderTextColor={fieldErrors.description ? '#EF4444' : '#8A8A8E'}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              value={description}
+              onChangeText={(t) => {
+                setDescription(t);
+                if (fieldErrors.description) setFieldErrors({ ...fieldErrors, description: '' });
+              }}
+              className="text-base text-text-primary h-full"
+              style={{ paddingVertical: 0 }}
+            />
           </View>
+          {fieldErrors.description ? (
+            <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">
+              {fieldErrors.description}
+            </Typography>
+          ) : null}
         </View>
 
         <Button 

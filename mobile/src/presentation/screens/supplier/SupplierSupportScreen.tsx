@@ -10,13 +10,34 @@ import {
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
+import { supportSchema } from '../../../application/utils/validators';
 
 export const SupplierSupportScreen = ({ navigation }: any) => {
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handleSubmit = () => {
+    setFieldErrors({});
+
+    const formData = {
+      name: name.trim(),
+      phoneNumber: phoneNumber.replace(/\D/g, '').slice(-10),
+      message: message.trim(),
+    };
+
+    const validation = supportSchema.safeParse(formData);
+    if (!validation.success) {
+      const formatted = validation.error.format();
+      const errors: Record<string, string> = {};
+      if (formatted.name?._errors[0]) errors.name = formatted.name._errors[0];
+      if (formatted.phoneNumber?._errors[0]) errors.phoneNumber = formatted.phoneNumber._errors[0];
+      if (formatted.message?._errors[0]) errors.message = formatted.message._errors[0];
+      setFieldErrors(errors);
+      return;
+    }
+
     Alert.alert('Support Request Submitted', 'Our team will contact you shortly.');
     setName('');
     setPhoneNumber('');
@@ -46,38 +67,69 @@ export const SupplierSupportScreen = ({ navigation }: any) => {
 
         {/* Inputs */}
         <View style={styles.inputGroup}>
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Name"
-              placeholderTextColor="#9CA3AF"
-              value={name}
-              onChangeText={setName}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.name && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Name"
+                placeholderTextColor={fieldErrors.name ? '#EF4444' : '#9CA3AF'}
+                value={name}
+                onChangeText={(t) => {
+                  setName(t);
+                  if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.name ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.name}
+              </Typography>
+            ) : null}
           </View>
 
-          <View style={styles.pillInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Phone Number"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-            />
+          <View>
+            <View style={[styles.pillInputContainer, fieldErrors.phoneNumber && styles.inputError]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Phone Number"
+                placeholderTextColor={fieldErrors.phoneNumber ? '#EF4444' : '#9CA3AF'}
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={phoneNumber}
+                onChangeText={(t) => {
+                  setPhoneNumber(t);
+                  if (fieldErrors.phoneNumber) setFieldErrors({ ...fieldErrors, phoneNumber: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.phoneNumber ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.phoneNumber}
+              </Typography>
+            ) : null}
           </View>
 
-          <View style={styles.textAreaContainer}>
-            <TextInput
-              style={styles.textAreaInput}
-              placeholder="Message"
-              placeholderTextColor="#9CA3AF"
-              multiline
-              numberOfLines={6}
-              textAlignVertical="top"
-              value={message}
-              onChangeText={setMessage}
-            />
+          <View>
+            <View style={[styles.textAreaContainer, fieldErrors.message && styles.inputError]}>
+              <TextInput
+                style={styles.textAreaInput}
+                placeholder="Message"
+                placeholderTextColor={fieldErrors.message ? '#EF4444' : '#9CA3AF'}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                value={message}
+                onChangeText={(t) => {
+                  setMessage(t);
+                  if (fieldErrors.message) setFieldErrors({ ...fieldErrors, message: '' });
+                }}
+              />
+            </View>
+            {fieldErrors.message ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.message}
+              </Typography>
+            ) : null}
           </View>
         </View>
 
@@ -135,12 +187,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
-  textInput: {
-    fontSize: 14,
-    color: '#1E293B',
-    fontFamily: 'Montserrat-Medium',
-    padding: 0,
-  },
   textAreaContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 22,
@@ -154,6 +200,23 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F1F5F9',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inlineErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 12,
+    fontFamily: 'Montserrat-Medium',
+  },
+  textInput: {
+    fontSize: 14,
+    color: '#1E293B',
+    fontFamily: 'Montserrat-Medium',
+    padding: 0,
   },
   textAreaInput: {
     fontSize: 14,
