@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Logo } from './Logo';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -20,13 +20,13 @@ export const SupplierTopHeader = ({
         onPress={onProfilePress}
         style={styles.avatarButton}
       >
-        <View style={styles.avatarInner}>
-          <Icon name="user" size={20} color="#FFFFFF" />
-        </View>
+        <Icon name="user" size={19} color="#FFFFFF" />
       </TouchableOpacity>
 
       {/* Center Logo */}
-      <Logo size="sm" />
+      <View style={styles.logoWrapper}>
+        <Logo size="sm" />
+      </View>
 
       {/* Right Notification Bell Icon */}
       <TouchableOpacity
@@ -35,7 +35,7 @@ export const SupplierTopHeader = ({
         style={styles.bellButton}
       >
         <View style={styles.bellContainer}>
-          <Icon name="bell" size={24} color="#D97706" />
+          <Icon name="bell" size={20} color="#8B0000" />
           <View style={styles.bellBadge} />
         </View>
       </TouchableOpacity>
@@ -49,31 +49,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: Platform.OS === 'android' ? 6 : 8,
+    paddingBottom: 10,
+    minHeight: 56,
   },
   avatarButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#8B0000',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#8B0000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 3,
   },
-  avatarInner: {
+  logoWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   bellButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   bellContainer: {
     position: 'relative',
@@ -82,11 +92,13 @@ const styles = StyleSheet.create({
   },
   bellBadge: {
     position: 'absolute',
-    top: 0,
-    right: 2,
+    top: -2,
+    right: -2,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#DC2626',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });

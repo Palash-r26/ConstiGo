@@ -44,14 +44,14 @@ export const MyOrdersScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-white">
       <View className="flex-row items-center px-6 py-4 mt-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-left" size={24} color="#182F4B" />
+          <Icon name="arrow-left" size={24} color="#111827" />
         </TouchableOpacity>
-        <Typography variant="h1Black" className="text-3xl text-[#182F4B]">My Orders</Typography>
+        <Typography variant="h1Black" className="text-3xl text-[#111827]">My Orders</Typography>
       </View>
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#C89338" />
+          <ActivityIndicator size="large" color="#8B0000" />
         </View>
       ) : orders.length === 0 ? (
         <View className="flex-1 justify-center items-center">

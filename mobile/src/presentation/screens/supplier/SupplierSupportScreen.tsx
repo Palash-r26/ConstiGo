@@ -80,7 +80,7 @@ export const SupplierSupportScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-[#F5F6FA]">
       <SupplierTopHeader
         onProfilePress={() => navigation?.navigate('Profile')}
-        onNotificationPress={() => {}}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
       />
 
       <ScrollView

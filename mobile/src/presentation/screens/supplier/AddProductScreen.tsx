@@ -18,6 +18,8 @@ import { addProductSchema } from '../../../application/utils/validators';
 import { useAuthStore } from '../../../application/store/authStore';
 import { addVendorProduct, updateVendorProduct } from '../../../infrastructure/api/vendorApi';
 
+const QUICK_CATEGORIES = ['Cement', 'Steel', 'Bricks', 'Sand', 'Aggregate', 'Tiles', 'Paint', 'Plumbing', 'Electrical'];
+
 export const AddProductScreen = ({ navigation, route }: any) => {
   const user = useAuthStore((state) => state.user);
   const vendorId = route?.params?.vendorid || user?.vendorid || user?._id || 'CV290926162458';
@@ -113,7 +115,6 @@ export const AddProductScreen = ({ navigation, route }: any) => {
         console.log('[AddProductScreen] Product Add Raw Response:', response);
       }
 
-      // TODO: Confirm exact success response format from backend
       const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
       if (isSuccess) {
         Alert.alert(
@@ -136,7 +137,7 @@ export const AddProductScreen = ({ navigation, route }: any) => {
     <ScreenWrapper className="bg-[#F5F6FA]">
       <SupplierTopHeader
         onProfilePress={() => navigation?.navigate('Profile')}
-        onNotificationPress={() => {}}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
       />
 
       <ScrollView
@@ -222,6 +223,36 @@ export const AddProductScreen = ({ navigation, route }: any) => {
                 </Typography>
               ) : null}
             </View>
+          </View>
+
+          {/* Quick Select Category Chips */}
+          <View style={{ marginBottom: 4 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
+              {QUICK_CATEGORIES.map((cat) => {
+                const isSelected = productCategory.toLowerCase() === cat.toLowerCase();
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => {
+                      setProductCategory(cat);
+                      if (fieldErrors.productCategory) setFieldErrors({ ...fieldErrors, productCategory: '' });
+                    }}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 14,
+                      backgroundColor: isSelected ? '#8B0000' : '#FFFFFF',
+                      borderWidth: 1,
+                      borderColor: isSelected ? '#8B0000' : '#E2E8F0',
+                    }}
+                  >
+                    <Typography style={{ fontSize: 11, color: isSelected ? '#FFFFFF' : '#475569', fontFamily: isSelected ? 'Montserrat-Bold' : 'Montserrat-Medium' }}>
+                      {cat}
+                    </Typography>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
 
           {/* Product Description */}

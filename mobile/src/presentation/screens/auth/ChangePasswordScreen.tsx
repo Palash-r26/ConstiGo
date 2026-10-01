@@ -76,10 +76,10 @@ export const ChangePasswordScreen = ({ route, navigation }: any) => {
       {/* Header */}
       <View className="flex-row items-center mt-4 mb-12">
         <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10 py-2">
-          <Icon name="chevron-left" size={28} color="#182F4B" />
+          <Icon name="chevron-left" size={28} color="#111827" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Typography variant="bodyBold" className="text-center text-xl text-[#182F4B]">
+          <Typography variant="bodyBold" className="text-center text-xl text-[#111827]">
             Change Password
           </Typography>
         </View>

@@ -116,17 +116,17 @@ export const AddMaterialScreen = ({ navigation }: any) => {
       {/* Top Header */}
       <View className="flex-row justify-between items-center px-6 py-4 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="w-8 h-8 rounded-full bg-primary justify-center items-center">
-          <Icon name="user" size={16} color="#182F4B" />
+          <Icon name="chevron-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <Logo size="sm" />
-        <TouchableOpacity>
-          <Icon name="bell" size={24} color="#182F4B" />
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          <Icon name="bell" size={24} color="#8B0000" />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         <View className="items-center mb-8 mt-2">
-          <Typography variant="h1" className="text-3xl text-center">Add New Material</Typography>
+          <Typography variant="h1" className="text-3xl text-center text-[#111827]">Add New Material</Typography>
         </View>
 
         <View className="gap-y-4 mb-10">
@@ -171,7 +171,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
             <Typography variant={imageUri ? "bodyBold" : "bodyDefault"} className={imageUri ? "text-primary z-10" : "text-text-secondary z-10"}>
               {imageUri ? 'Image Selected (Tap to change)' : 'Upload Image'}
             </Typography>
-            <Icon name="upload" size={20} color="#C89338" className="z-10" />
+            <Icon name="upload" size={20} color="#8B0000" className="z-10" />
           </TouchableOpacity>
 
           <View className={`rounded-2xl px-5 py-3 h-32 ${fieldErrors.description ? 'bg-red-50 border border-red-500' : 'bg-input-bg'}`}>

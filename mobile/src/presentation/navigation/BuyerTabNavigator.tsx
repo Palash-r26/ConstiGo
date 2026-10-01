@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 
-// Dummy screens for now
+// Screens
 import { HomeDashboardScreen } from '../screens/buyer/HomeDashboardScreen';
 import { SupplierListingScreen } from '../screens/buyer/SupplierListingScreen';
 import { SupplierDetailsScreen } from '../screens/buyer/SupplierDetailsScreen';
@@ -12,14 +12,6 @@ import { OrderSuccessScreen } from '../screens/buyer/OrderSuccessScreen';
 import { WishlistScreen } from '../screens/buyer/WishlistScreen';
 import { ProfileScreen } from '../screens/buyer/ProfileScreen';
 import { CartScreen } from '../screens/buyer/CartScreen';
-
-const DummyScreen = ({ navigation }: any) => (
-  <View className="flex-1 bg-background justify-center items-center">
-    <Icon name="info" size={40} color="#C89338" />
-  </View>
-);
-
-// Additional screens
 import { SearchScreen } from '../screens/buyer/SearchScreen';
 import { NotificationsScreen } from '../screens/buyer/NotificationsScreen';
 import { CheckoutScreen } from '../screens/buyer/CheckoutScreen';
@@ -39,16 +31,26 @@ export const BuyerTabNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
+        safeAreaInsets: { bottom: 0, top: 0, left: 0, right: 0 },
         tabBarStyle: styles.tabBar,
-        tabBarItemStyle: { justifyContent: 'center', alignItems: 'center', paddingTop: 0, paddingBottom: 0, height: '100%' },
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarItemStyle: styles.tabBarItem,
+        tabBarIconStyle: styles.tabBarIcon,
+        tabBarIcon: ({ focused }) => {
           let iconName = 'home';
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Wishlist') iconName = 'heart';
           else if (route.name === 'CartTab') iconName = 'shopping-bag';
           else if (route.name === 'Profile') iconName = 'user';
 
-          return <Icon name={iconName} size={24} color={focused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'} />;
+          return (
+            <View style={[styles.iconWrapper, focused && styles.iconWrapperFocused]}>
+              <Icon
+                name={iconName}
+                size={22}
+                color={focused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.65)'}
+              />
+            </View>
+          );
         },
       })}
     >
@@ -83,20 +85,48 @@ export const BuyerStackNavigator = () => {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 24,
-    // Short, centered pill (per buyer_07). Equal left/right insets keep it centered.
-    left: 60,
-    right: 60,
+    bottom: Platform.OS === 'android' ? 18 : 28,
+    left: 28,
+    right: 28,
     backgroundColor: '#8B0000',
-    borderRadius: 32,
-    height: 60,
-    paddingBottom: 0, // override default padding
+    borderRadius: 36,
+    height: 64,
     paddingHorizontal: 8,
+    paddingTop: 0,
+    paddingBottom: 0,
     borderTopWidth: 0,
-    elevation: 10,
-    shadowColor: '#000',
+    elevation: 12,
+    shadowColor: '#8B0000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabBarItem: {
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 0,
+    margin: 0,
+  },
+  tabBarIcon: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    margin: 0,
+    padding: 0,
+  },
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapperFocused: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

@@ -95,23 +95,23 @@ export const SignUpScreen = ({ navigation, route }: any) => {
         {/* Header */}
         <View className="flex-row items-center mt-4 mb-6">
           <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10">
-            <Icon name="chevron-left" size={28} color="#182F4B" />
+            <Icon name="chevron-left" size={28} color="#111827" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Typography variant="h2" className="text-center text-xl">Sign Up</Typography>
+            <Typography variant="h2" className="text-center text-xl text-[#111827]">Sign Up</Typography>
           </View>
         </View>
 
         {/* Role Selector */}
-        <View className="flex-row bg-[#E2E5EA] rounded-full p-1 mb-6">
+        <View className="flex-row bg-[#F0F2F5] rounded-full p-1 mb-6">
           <TouchableOpacity
             onPress={() => setSelectedRole('BUYER')}
-            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'BUYER' ? 'bg-[#182F4B]' : ''}`}
+            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'BUYER' ? 'bg-[#8B0000]' : ''}`}
           >
             <Typography
               variant="bodyBold"
               className="text-sm"
-              color={selectedRole === 'BUYER' ? '#FFFFFF' : '#182F4B'}
+              color={selectedRole === 'BUYER' ? '#FFFFFF' : '#111827'}
             >
               Buyer Account
             </Typography>
@@ -119,12 +119,12 @@ export const SignUpScreen = ({ navigation, route }: any) => {
 
           <TouchableOpacity
             onPress={() => setSelectedRole('SUPPLIER')}
-            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'SUPPLIER' ? 'bg-[#C89338]' : ''}`}
+            className={`flex-1 py-2.5 rounded-full items-center justify-center ${selectedRole === 'SUPPLIER' ? 'bg-[#8B0000]' : ''}`}
           >
             <Typography
               variant="bodyBold"
               className="text-sm"
-              color={selectedRole === 'SUPPLIER' ? '#FFFFFF' : '#182F4B'}
+              color={selectedRole === 'SUPPLIER' ? '#FFFFFF' : '#111827'}
             >
               Supplier Account
             </Typography>
@@ -164,11 +164,11 @@ export const SignUpScreen = ({ navigation, route }: any) => {
                   <Typography
                     style={{ fontFamily: 'Montserrat-Regular' }}
                     className="text-base"
-                    color={errors.dateOfBirth ? '#EF4444' : value ? '#182F4B' : '#8A8A8E'}
+                    color={errors.dateOfBirth ? '#EF4444' : value ? '#111827' : '#8A8A8E'}
                   >
                     {value || 'Date of Birth'}
                   </Typography>
-                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#C89338'} />
+                  <Icon name="calendar" size={20} color={errors.dateOfBirth ? '#EF4444' : '#8B0000'} />
                 </TouchableOpacity>
                 {errors.dateOfBirth ? (
                   <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">{errors.dateOfBirth.message}</Typography>
@@ -229,7 +229,7 @@ export const SignUpScreen = ({ navigation, route }: any) => {
         />
 
         <View className="flex-row justify-center items-center">
-          <Typography variant="bodyBold" className="text-sm text-[#182F4B]">Already have an account? </Typography>
+          <Typography variant="bodyBold" className="text-sm text-[#111827]">Already have an account? </Typography>
           <Button 
             variant="link" 
             title="Sign In" 

@@ -61,7 +61,7 @@ export const CheckoutScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Profile')}
           style={styles.avatarButton}
         >
-          <Icon name="user" size={20} color="#FFFFFF" />
+          <Icon name="user" size={19} color="#FFFFFF" />
         </TouchableOpacity>
 
         <Logo size="sm" />
@@ -71,7 +71,7 @@ export const CheckoutScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Notifications')}
           style={styles.bellButton}
         >
-          <Icon name="bell" size={24} color="#F5A623" />
+          <Icon name="bell" size={20} color="#8B0000" />
         </TouchableOpacity>
       </View>
 

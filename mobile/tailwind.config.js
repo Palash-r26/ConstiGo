@@ -4,14 +4,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#C89338",
-        accent: "#C89338",
+        primary: "#8B0000",
+        accent: "#8B0000",
         background: "#F4F6F8",
         surface: "#FFFFFF",
-        "input-bg": "#F2F4F7",
-        "text-primary": "#182F4B",
-        "text-secondary": "#8A8A8E",
-        success: "#28A745",
+        "input-bg": "#F0F2F5",
+        "text-primary": "#111827",
+        "text-secondary": "#6B7280",
+        success: "#10B981",
       },
       fontFamily: {
         baloobhai2: ["BalooBhai2", "sans-serif"],
@@ -22,3 +22,4 @@ module.exports = {
   presets: [require("nativewind/preset")],
   plugins: [],
 }
+

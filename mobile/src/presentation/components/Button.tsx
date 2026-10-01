@@ -35,13 +35,13 @@ export const Button = ({
       baseContainerStyle += 'py-2 ';
       baseTextStyle += 'text-base ';
       textVariant = 'bodyBold';
-      explicitColor = '#182F4B'; // text-accent
+      explicitColor = '#8B0000'; // text-accent
       break;
     case 'outline':
       baseContainerStyle += 'bg-transparent border border-primary rounded-full py-4 px-6 ';
       baseTextStyle += 'text-lg ';
       textVariant = 'bodyLarge';
-      explicitColor = '#C89338'; // text-primary
+      explicitColor = '#8B0000'; // text-primary
       break;
   }
 
@@ -55,7 +55,7 @@ export const Button = ({
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#C89338'} />
+        <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#8B0000'} />
       ) : (
         <Typography 
           variant={textVariant} 

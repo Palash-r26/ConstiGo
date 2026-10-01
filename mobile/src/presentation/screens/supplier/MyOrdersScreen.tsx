@@ -5,47 +5,131 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Alert,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import Icon from 'react-native-vector-icons/Feather';
 
+export interface SupplierOrder {
+  id: string;
+  _id?: string;
+  title: string;
+  subType: string;
+  distance: string;
+  badge: string;
+  unitLabel: string;
+  unitValue: string;
+  estTotal: string;
+  total?: number;
+  status: 'pending' | 'accepted' | 'declined';
+  type: 'brick' | 'steel' | 'cement' | 'sand';
+  buyerName?: string;
+  date?: string;
+}
+
+const INITIAL_ORDERS: SupplierOrder[] = [
+  {
+    id: '1',
+    _id: 'ORD-1092',
+    title: 'Jindal Red Bricks',
+    subType: 'Type I/II Red Clay',
+    distance: '3.5 km far',
+    badge: 'Genuine Customer',
+    unitLabel: 'Number of Items',
+    unitValue: '2000 Pcs',
+    estTotal: 'Est. total: ₹ 20,000.00 (₹10 each)',
+    total: 20000,
+    status: 'pending',
+    type: 'brick',
+    buyerName: 'Palash Sharma Construction',
+    date: 'Today, 11:30 AM',
+  },
+  {
+    id: '2',
+    _id: 'ORD-1093',
+    title: 'JSW Steel & TMT Bars',
+    subType: '12mm Fe-550D High Grade',
+    distance: '1.5 km far',
+    badge: 'Genuine Customer',
+    unitLabel: 'Item In Kg.',
+    unitValue: '600 kg',
+    estTotal: 'Est. total: ₹ 48,000.00 (₹80 per kg)',
+    total: 48000,
+    status: 'pending',
+    type: 'steel',
+    buyerName: 'Rajesh Infrastructure Ltd',
+    date: 'Today, 09:15 AM',
+  },
+  {
+    id: '3',
+    _id: 'ORD-1090',
+    title: 'UltraTech Super Cement',
+    subType: 'PPC Grade 53',
+    distance: '4.2 km far',
+    badge: 'Verified Builder',
+    unitLabel: 'Bags (50kg)',
+    unitValue: '100 Bags',
+    estTotal: 'Est. total: ₹ 38,500.00 (₹385 per bag)',
+    total: 38500,
+    status: 'accepted',
+    type: 'cement',
+    buyerName: 'Apex Developers',
+    date: 'Yesterday, 04:20 PM',
+  },
+];
+
 export const MyOrdersScreen = ({ navigation }: any) => {
   const [activeTab, setActiveTab] = useState<'all' | 'accepted' | 'declined'>('all');
+  const [orders, setOrders] = useState<SupplierOrder[]>(INITIAL_ORDERS);
 
-  const orders = [
-    {
-      id: '1',
-      title: 'Jindal Red Bricks',
-      subType: 'Type I/II',
-      distance: '3.5 km far',
-      badge: 'Geniune Customer',
-      unitLabel: 'Number of Item',
-      unitValue: '2000.',
-      estTotal: 'Est. total: ₹ 20,000.00 (₹10 each)',
-      status: 'pending',
-      type: 'brick',
-    },
-    {
-      id: '2',
-      title: 'JSW Steel & Iron',
-      subType: 'Type I/II',
-      distance: '15 km far',
-      badge: 'Geniune Customer',
-      unitLabel: 'Item In Kg.',
-      unitValue: '60kg',
-      estTotal: 'Est. total: ₹ 4,800.00 (₹80 per kg)',
-      status: 'pending',
-      type: 'steel',
-    },
-  ];
+  const handleAcceptOrder = (order: SupplierOrder) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === order.id ? { ...o, status: 'accepted' } : o))
+    );
+    Alert.alert(
+      'Order Accepted! 🎉',
+      `You accepted the order for ${order.title}. Buyer has been notified to proceed with delivery.`,
+      [
+        {
+          text: 'View Details',
+          onPress: () => navigation.navigate('OrderDetails', { order: { ...order, status: 'accepted' } }),
+        },
+        { text: 'OK', style: 'default' },
+      ]
+    );
+  };
+
+  const handleDeclineOrder = (order: SupplierOrder) => {
+    Alert.alert(
+      'Decline Order',
+      `Are you sure you want to decline this order for ${order.title}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Decline',
+          style: 'destructive',
+          onPress: () => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === order.id ? { ...o, status: 'declined' } : o))
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  const filteredOrders = orders.filter((o) => {
+    if (activeTab === 'all') return true;
+    return o.status === activeTab;
+  });
 
   return (
     <ScreenWrapper className="bg-[#F5F6FA]">
       <SupplierTopHeader
         onProfilePress={() => navigation?.navigate('Profile')}
-        onNotificationPress={() => {}}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
       />
 
       <ScrollView
@@ -58,7 +142,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
             My Orders
           </Typography>
           <Typography variant="bodySmall" style={styles.subtitle}>
-            View your inventory pricing, and visibility
+            Manage incoming customer orders, accept and track delivery
           </Typography>
         </View>
 
@@ -81,7 +165,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                   : styles.filterTabTextInactive,
               ]}
             >
-              All Orders
+              All Orders ({orders.length})
             </Typography>
           </TouchableOpacity>
 
@@ -102,7 +186,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                   : styles.filterTabTextInactive,
               ]}
             >
-              Accepted
+              Accepted ({orders.filter((o) => o.status === 'accepted').length})
             </Typography>
           </TouchableOpacity>
 
@@ -123,114 +207,185 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                   : styles.filterTabTextInactive,
               ]}
             >
-              Declined
+              Declined ({orders.filter((o) => o.status === 'declined').length})
             </Typography>
           </TouchableOpacity>
         </View>
 
         {/* Orders List */}
-        <View style={styles.ordersList}>
-          {orders.map((order) => (
-            <View key={order.id} style={styles.orderCard}>
-              {/* Card Header Row */}
-              <View style={styles.cardHeaderRow}>
-                {/* 3D Icon Box */}
-                <View style={styles.productIconContainer}>
-                  {order.type === 'brick' ? (
-                    <View style={styles.brickIconPlaceholder}>
-                      <Icon name="layers" size={28} color="#C2410C" />
-                    </View>
-                  ) : (
-                    <View style={styles.steelIconPlaceholder}>
-                      <Icon name="grid" size={28} color="#475569" />
-                    </View>
-                  )}
-                </View>
+        {filteredOrders.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="package" size={48} color="#CBD5E1" />
+            <Typography variant="bodyBold" style={styles.emptyTitle}>
+              No {activeTab !== 'all' ? activeTab : ''} orders found
+            </Typography>
+            <Typography variant="bodySmall" style={styles.emptySubtitle}>
+              Incoming orders will appear here as soon as buyers place requests.
+            </Typography>
+          </View>
+        ) : (
+          <View style={styles.ordersList}>
+            {filteredOrders.map((order) => (
+              <TouchableOpacity
+                key={order.id}
+                style={styles.orderCard}
+                activeOpacity={0.92}
+                onPress={() => navigation.navigate('OrderDetails', { order })}
+              >
+                {/* Card Header Row */}
+                <View style={styles.cardHeaderRow}>
+                  {/* 3D Icon Box */}
+                  <View style={styles.productIconContainer}>
+                    {order.type === 'brick' ? (
+                      <View style={styles.brickIconPlaceholder}>
+                        <Icon name="layers" size={26} color="#C2410C" />
+                      </View>
+                    ) : order.type === 'steel' ? (
+                      <View style={styles.steelIconPlaceholder}>
+                        <Icon name="grid" size={26} color="#475569" />
+                      </View>
+                    ) : (
+                      <View style={styles.brickIconPlaceholder}>
+                        <Icon name="box" size={26} color="#8B0000" />
+                      </View>
+                    )}
+                  </View>
 
-                {/* Info */}
-                <View style={styles.productInfo}>
-                  <Typography variant="bodyLarge" style={styles.productTitle}>
-                    {order.title}
-                  </Typography>
-                  <Typography variant="bodyBold" style={styles.productType}>
-                    {order.subType}
-                  </Typography>
-
-                  <View style={styles.metaRow}>
-                    <View style={styles.metaItem}>
-                      <Icon name="map-pin" size={12} color="#DC2626" />
-                      <Typography variant="bodySmall" style={styles.metaText}>
-                        {order.distance}
+                  {/* Info */}
+                  <View style={styles.productInfo}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="bodyLarge" style={styles.productTitle}>
+                        {order.title}
                       </Typography>
+                      {/* Status Tag */}
+                      <View
+                        style={{
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 10,
+                          backgroundColor:
+                            order.status === 'accepted'
+                              ? '#DCFCE7'
+                              : order.status === 'declined'
+                              ? '#FEE2E2'
+                              : '#FEF3C7',
+                        }}
+                      >
+                        <Typography
+                          style={{
+                            fontSize: 10,
+                            fontFamily: 'Montserrat-Bold',
+                            color:
+                              order.status === 'accepted'
+                                ? '#16A34A'
+                                : order.status === 'declined'
+                                ? '#DC2626'
+                                : '#D97706',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {order.status}
+                        </Typography>
+                      </View>
                     </View>
+                    <Typography variant="bodyBold" style={styles.productType}>
+                      {order.subType}
+                    </Typography>
 
-                    <View style={styles.metaItem}>
-                      <Icon name="star" size={12} color="#EAB308" />
-                      <Typography variant="bodySmall" style={styles.metaText}>
-                        {order.badge}
-                      </Typography>
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Icon name="map-pin" size={12} color="#DC2626" />
+                        <Typography variant="bodySmall" style={styles.metaText}>
+                          {order.distance}
+                        </Typography>
+                      </View>
+
+                      <View style={styles.metaItem}>
+                        <Icon name="star" size={12} color="#EAB308" />
+                        <Typography variant="bodySmall" style={styles.metaText}>
+                          {order.badge}
+                        </Typography>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Divider */}
-              <View style={styles.cardDivider} />
+                {/* Divider */}
+                <View style={styles.cardDivider} />
 
-              {/* Card Middle: Unit Details + Mini Map */}
-              <View style={styles.cardMiddleRow}>
-                <View style={styles.unitDetails}>
-                  <Typography variant="bodySmall" style={styles.unitLabel}>
-                    {order.unitLabel}
-                  </Typography>
-                  <Typography variant="h1" style={styles.unitValue}>
-                    {order.unitValue}
-                  </Typography>
-                  <Typography variant="bodySmall" style={styles.estTotal}>
-                    {order.estTotal}
-                  </Typography>
-                </View>
+                {/* Card Middle: Unit Details + Mini Map */}
+                <View style={styles.cardMiddleRow}>
+                  <View style={styles.unitDetails}>
+                    <Typography variant="bodySmall" style={styles.unitLabel}>
+                      {order.unitLabel}
+                    </Typography>
+                    <Typography variant="h1" style={styles.unitValue}>
+                      {order.unitValue}
+                    </Typography>
+                    <Typography variant="bodySmall" style={styles.estTotal}>
+                      {order.estTotal}
+                    </Typography>
+                  </View>
 
-                {/* Mini Route Map Preview */}
-                <View style={styles.miniMapContainer}>
-                  <Image
-                    source={{
-                      uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&auto=format&fit=crop&q=60',
-                    }}
-                    style={styles.miniMapImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.mapPinDot}>
-                    <Icon name="map-pin" size={10} color="#DC2626" />
+                  {/* Mini Route Map Preview */}
+                  <View style={styles.miniMapContainer}>
+                    <Image
+                      source={{
+                        uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&auto=format&fit=crop&q=60',
+                      }}
+                      style={styles.miniMapImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.mapPinDot}>
+                      <Icon name="map-pin" size={10} color="#DC2626" />
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Action Buttons */}
-              <View style={styles.actionButtonsRow}>
-                <TouchableOpacity
-                  style={styles.acceptButton}
-                  activeOpacity={0.85}
-                  onPress={() => {}}
-                >
-                  <Typography variant="bodyBold" style={styles.acceptButtonText}>
-                    Accept Order
-                  </Typography>
-                </TouchableOpacity>
+                {/* Action Buttons */}
+                {order.status === 'pending' ? (
+                  <View style={styles.actionButtonsRow}>
+                    <TouchableOpacity
+                      style={styles.acceptButton}
+                      activeOpacity={0.85}
+                      onPress={() => handleAcceptOrder(order)}
+                    >
+                      <Icon name="check" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+                      <Typography variant="bodyBold" style={styles.acceptButtonText}>
+                        Accept Order
+                      </Typography>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.declineButton}
-                  activeOpacity={0.85}
-                  onPress={() => {}}
-                >
-                  <Typography variant="bodySemiBold" style={styles.declineButtonText}>
-                    Decline Order
-                  </Typography>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
+                    <TouchableOpacity
+                      style={styles.declineButton}
+                      activeOpacity={0.85}
+                      onPress={() => handleDeclineOrder(order)}
+                    >
+                      <Icon name="x" size={15} color="#64748B" style={{ marginRight: 6 }} />
+                      <Typography variant="bodySemiBold" style={styles.declineButtonText}>
+                        Decline Order
+                      </Typography>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginTop: 4, borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+                    <Typography style={{ fontSize: 12, color: order.status === 'accepted' ? '#16A34A' : '#DC2626', fontFamily: 'Montserrat-SemiBold' }}>
+                      {order.status === 'accepted' ? '✓ Order Confirmed & In Progress' : '✕ Order Declined'}
+                    </Typography>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('OrderDetails', { order })}
+                      style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 }}
+                    >
+                      <Typography style={{ fontSize: 11, color: '#334155', fontFamily: 'Montserrat-SemiBold' }}>
+                        View Details →
+                      </Typography>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </ScreenWrapper>
   );
@@ -447,5 +602,29 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 13,
     fontFamily: 'Montserrat-SemiBold',
+  },
+  emptyContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    color: '#0F172A',
+    fontFamily: 'BalooBhai2-Bold',
+    marginTop: 12,
+    textTransform: 'capitalize',
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 6,
+    fontFamily: 'Montserrat-Medium',
   },
 });

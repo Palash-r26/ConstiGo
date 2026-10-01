@@ -20,6 +20,7 @@ import { fetchVendorProfile, updateVendorProfile } from '../../../infrastructure
 
 export const SupplierProfileScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const vendorId = user?.vendorid || user?._id || 'CV290926162458';
 
   const [fname, setFname] = useState(user?.firstName || 'Anant Pratap');
@@ -35,6 +36,23 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to log out from your supplier account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -120,7 +138,7 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
     <ScreenWrapper className="bg-[#F5F6FA]">
       <SupplierTopHeader
         onProfilePress={() => {}}
-        onNotificationPress={() => {}}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
       />
 
       <ScrollView
@@ -161,6 +179,15 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
               {email}
             </Typography>
           </View>
+
+          {/* Quick Logout Icon Button */}
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.headerLogoutBtn}
+            activeOpacity={0.7}
+          >
+            <Icon name="log-out" size={18} color="#DC2626" />
+          </TouchableOpacity>
         </View>
 
         {/* Section Heading */}
@@ -365,6 +392,18 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
             </Typography>
           )}
         </TouchableOpacity>
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          activeOpacity={0.85}
+          onPress={handleLogout}
+        >
+          <Icon name="log-out" size={18} color="#DC2626" style={{ marginRight: 8 }} />
+          <Typography variant="bodyBold" style={styles.logoutButtonText}>
+            Logout
+          </Typography>
+        </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -382,6 +421,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 20,
     paddingHorizontal: 4,
+    position: 'relative',
+  },
+  headerLogoutBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarWrapper: {
     position: 'relative',
@@ -492,7 +540,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 28,
+    marginTop: 24,
     shadowColor: '#8B0000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -502,6 +550,27 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+  },
+  logoutButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginTop: 14,
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  logoutButtonText: {
+    color: '#DC2626',
+    fontSize: 15,
     fontFamily: 'Montserrat-Bold',
   },
 });

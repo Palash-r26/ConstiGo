@@ -1,5 +1,18 @@
 import { z } from 'zod';
 
+// Reusable phone validator: accepts any 10 to 13 digit phone number, with or without +91 / leading 0 / spaces / ending with any digit
+export const phoneValidator = z
+  .string()
+  .trim()
+  .min(1, 'Mobile number is required')
+  .refine(
+    (val) => {
+      const clean = val.replace(/\D/g, '');
+      return clean.length >= 10 && clean.length <= 13;
+    },
+    { message: 'Enter a valid 10-digit mobile number' }
+  );
+
 // ==========================================
 // 1. AUTH SCHEMAS
 // ==========================================
@@ -17,10 +30,7 @@ export const signUpSchema = z.object({
     .regex(/^[a-zA-Z\s]+$/, 'Last name should contain only letters and spaces'),
   dateOfBirth: z.string().trim().min(1, 'Date of birth is required'),
   email: z.string().trim().email('Enter a valid email address'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -37,9 +47,9 @@ export const loginSchema = z.object({
     .min(1, 'Email or phone number is required')
     .refine(
       (val) => {
-        const clean = val.replace(/\s+/g, '');
-        const isPhone = /^[6-9]\d{9}$/.test(clean);
-        const isEmail = z.string().email().safeParse(val).success;
+        const clean = val.replace(/\D/g, '');
+        const isPhone = clean.length >= 10 && clean.length <= 13;
+        const isEmail = z.string().email().safeParse(val.trim()).success;
         return isPhone || isEmail;
       },
       { message: 'Enter a valid 10-digit phone number or email address' }
@@ -50,25 +60,16 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 export const forgotSendOtpSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
 });
 
 export const forgotVerifyOtpSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
   otp: z.string().trim().regex(/^\d{4}$/, 'Enter a valid 4-digit OTP'),
 });
 
 export const changePasswordSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
   newPassword: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your new password'),
 }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -82,10 +83,7 @@ export const changePasswordSchema = z.object({
 
 export const companyDetailsSchema = z.object({
   companyName: z.string().trim().min(1, 'Company name is required'),
-  mobileNumber: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  mobileNumber: phoneValidator,
   emailId: z.string().trim().email('Enter a valid email address'),
   companyAddress: z.string().trim().min(1, 'Company address is required'),
   gstin: z
@@ -111,10 +109,7 @@ export const companyDetailsSchema = z.object({
     .string()
     .trim()
     .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Enter a valid 11-character IFSC code (e.g. ICIC0001010)'),
-  emergencyContact: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit emergency phone number'),
+  emergencyContact: phoneValidator,
   workingHrs: z.string().trim().min(1, 'Working hours are required'),
 });
 
@@ -185,10 +180,7 @@ export const editProfileSchema = z.object({
     .trim()
     .min(1, 'Name is required')
     .regex(/^[a-zA-Z\s]+$/, 'Name should contain only letters and spaces'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
   email: z.string().trim().email('Enter a valid email address'),
   address: z.string().trim().min(1, 'Address is required'),
   city: z
@@ -214,10 +206,7 @@ export const addressManagerSchema = z.object({
     .min(1, 'Name is required')
     .regex(/^[a-zA-Z\s]+$/, 'Name should contain only letters and spaces'),
   email: z.string().trim().email('Enter a valid email address'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  phone: phoneValidator,
   flat: z.string().trim().min(1, 'House/Flat/Building details are required'),
   area: z.string().trim().min(1, 'Area/Street details are required'),
   pincode: z
@@ -263,9 +252,6 @@ export const supportSchema = z.object({
     .trim()
     .min(1, 'Name is required')
     .regex(/^[a-zA-Z\s]+$/, 'Name should contain only letters and spaces'),
-  phoneNumber: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit phone number'),
+  phoneNumber: phoneValidator,
   message: z.string().trim().min(1, 'Message is required'),
 });

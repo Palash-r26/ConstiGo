@@ -24,34 +24,53 @@ export const VENDOR_ENDPOINTS = {
   PROFILE_UPDATE: `${VENDOR_API_BASE}/profile_update.php`,
 };
 
-// Generic helper to send POST requests as multipart/form-data to PHP endpoints
+// Generic helper to send POST requests to PHP vendor endpoints reliably
 export const postVendorForm = async <T = any>(
   url: string,
   payload: Record<string, any>
 ): Promise<T> => {
   try {
-    const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === 'object' && value.uri) {
-          // File object for image upload in React Native
-          formData.append(key, {
-            uri: value.uri,
-            type: value.type || 'image/jpeg',
-            name: value.name || 'upload.jpg',
-          } as any);
-        } else {
-          formData.append(key, String(value));
+    const hasFiles = Object.values(payload).some(
+      (val) => val && typeof val === 'object' && val.uri
+    );
+
+    let data: any;
+    const headers: Record<string, string> = {};
+
+    if (hasFiles) {
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (typeof value === 'object' && value.uri) {
+            // File object for image upload in React Native
+            formData.append(key, {
+              uri: value.uri,
+              type: value.type || 'image/jpeg',
+              name: value.name || 'upload.jpg',
+            } as any);
+          } else {
+            formData.append(key, String(value));
+          }
         }
-      }
-    });
+      });
+      data = formData;
+      // Note: Do NOT hardcode 'Content-Type': 'multipart/form-data' so React Native/Axios generates the boundary parameter
+    } else {
+      // For standard POST data, application/x-www-form-urlencoded is native to PHP $_POST
+      const searchParams = new URLSearchParams();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      data = searchParams.toString();
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    }
 
     console.log(`[VendorAPI Request] POST ${url}`, payload);
 
-    const response = await axios.post<T>(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const response = await axios.post<T>(url, data, {
+      headers,
       timeout: 30000,
     });
 
