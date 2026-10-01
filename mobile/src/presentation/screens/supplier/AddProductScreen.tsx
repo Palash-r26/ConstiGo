@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
@@ -14,17 +15,33 @@ import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import Icon from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { addProductSchema } from '../../../application/utils/validators';
+import { useAuthStore } from '../../../application/store/authStore';
+import { addVendorProduct, updateVendorProduct } from '../../../infrastructure/api/vendorApi';
 
-export const AddProductScreen = ({ navigation }: any) => {
-  const [productName, setProductName] = useState('');
-  const [productCategory, setProductCategory] = useState('');
-  const [stockQuantity, setStockQuantity] = useState('');
-  const [productDescription, setProductDescription] = useState('');
-  const [productPrice, setProductPrice] = useState('');
-  const [discountedPrice, setDiscountedPrice] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [warrantyDetails, setWarrantyDetails] = useState('');
+export const AddProductScreen = ({ navigation, route }: any) => {
+  const user = useAuthStore((state) => state.user);
+  const vendorId = route?.params?.vendorid || user?.vendorid || user?._id || 'CV290926162458';
+  const existingProduct = route?.params?.product || null;
+
+  const [productName, setProductName] = useState(existingProduct?.productname || existingProduct?.name || '');
+  const [productCategory, setProductCategory] = useState(existingProduct?.productcategory || existingProduct?.category || '');
+  const [stockQuantity, setStockQuantity] = useState(existingProduct?.stock ? String(existingProduct.stock) : '');
+  const [productDescription, setProductDescription] = useState(existingProduct?.product_description || existingProduct?.description || '');
+  const [productPrice, setProductPrice] = useState(existingProduct?.product_price ? String(existingProduct.product_price) : '');
+  const [discountedPrice, setDiscountedPrice] = useState(existingProduct?.discount_price ? String(existingProduct.discount_price) : '');
+  const [imageUri, setImageUri] = useState<string | null>(existingProduct?.productimage || null);
+  const [warrantyDetails, setWarrantyDetails] = useState(existingProduct?.warranty_details || '1 Year Product Warranty');
+  const [productStatus, setProductStatus] = useState<'in_stock' | 'out_of_stock'>(
+    existingProduct?.productStatus === 'out_of_stock' ||
+    existingProduct?.product_status === 'unavailable' ||
+    existingProduct?.product_status === 'out_of_stock' ||
+    existingProduct?.isAvailable === false
+      ? 'out_of_stock'
+      : 'in_stock'
+  );
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
 
   const handlePickImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
@@ -34,8 +51,9 @@ export const AddProductScreen = ({ navigation }: any) => {
     });
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setFieldErrors({});
+    setServerError('');
 
     const formData = {
       productName: productName.trim(),
@@ -45,6 +63,7 @@ export const AddProductScreen = ({ navigation }: any) => {
       productPrice: productPrice.trim(),
       discountedPrice: discountedPrice.trim() || undefined,
       warrantyDetails: warrantyDetails.trim() || undefined,
+      productStatus: productStatus,
     };
 
     const validation = addProductSchema.safeParse(formData);
@@ -57,13 +76,60 @@ export const AddProductScreen = ({ navigation }: any) => {
       if (formatted.productDescription?._errors[0]) errors.productDescription = formatted.productDescription._errors[0];
       if (formatted.productPrice?._errors[0]) errors.productPrice = formatted.productPrice._errors[0];
       if (formatted.discountedPrice?._errors[0]) errors.discountedPrice = formatted.discountedPrice._errors[0];
+      if (formatted.productStatus?._errors[0]) errors.productStatus = formatted.productStatus._errors[0];
       setFieldErrors(errors);
       return;
     }
 
-    Alert.alert('Success', 'Product details saved successfully!', [
-      { text: 'OK', onPress: () => navigation?.goBack() },
-    ]);
+    try {
+      setIsLoading(true);
+
+      const payload = {
+        vendorid: vendorId,
+        productname: formData.productName,
+        productcategory: formData.productCategory,
+        stock: formData.stockQuantity,
+        product_description: formData.productDescription,
+        product_price: formData.productPrice,
+        discount_price: formData.discountedPrice || '0',
+        productimage: imageUri ? { uri: imageUri, type: 'image/jpeg', name: 'product.jpg' } : undefined,
+        warranty_details: formData.warrantyDetails || '1 Year Product Warranty',
+        delivery_available: 'yes',
+        product_status: productStatus === 'in_stock' ? 'available' : 'unavailable',
+        productStatus: productStatus,
+      };
+
+      let response;
+      if (existingProduct?.productid || existingProduct?._id) {
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/product_update.php
+        response = await updateVendorProduct({
+          ...payload,
+          productid: existingProduct.productid || existingProduct._id,
+        });
+        console.log('[AddProductScreen] Product Update Raw Response:', response);
+      } else {
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/product_add.php
+        response = await addVendorProduct(payload);
+        console.log('[AddProductScreen] Product Add Raw Response:', response);
+      }
+
+      // TODO: Confirm exact success response format from backend
+      const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
+      if (isSuccess) {
+        Alert.alert(
+          'Success',
+          existingProduct ? 'Product updated successfully!' : 'Product added successfully!',
+          [{ text: 'OK', onPress: () => navigation?.goBack() }]
+        );
+      } else {
+        setServerError(response?.message || response?.error || 'Failed to save product. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('[AddProductScreen] Submit Error:', err);
+      setServerError(err.message || 'An error occurred while saving the product.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -80,12 +146,16 @@ export const AddProductScreen = ({ navigation }: any) => {
         {/* Title Section */}
         <View style={styles.titleContainer}>
           <Typography variant="h1" style={styles.mainTitle}>
-            Add Product
+            {existingProduct ? 'Update Product' : 'Add Product'}
           </Typography>
           <Typography variant="bodySmall" style={styles.subtitle}>
             Add your inventory pricing, and visibility
           </Typography>
         </View>
+
+        {serverError ? (
+          <Typography className="text-red-500 text-center mb-4 text-sm">{serverError}</Typography>
+        ) : null}
 
         {/* Input Fields */}
         <View style={styles.inputGroup}>
@@ -263,17 +333,99 @@ export const AddProductScreen = ({ navigation }: any) => {
               onChangeText={setWarrantyDetails}
             />
           </View>
+
+          {/* Product Status Field */}
+          <View style={styles.statusSection}>
+            <Typography variant="bodyBold" style={styles.fieldLabel}>
+              Product Status
+            </Typography>
+            <View style={styles.statusOptionsRow}>
+              {/* Option 1: In Stock */}
+              <TouchableOpacity
+                style={styles.checkboxItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setProductStatus('in_stock');
+                  if (fieldErrors.productStatus) {
+                    setFieldErrors({ ...fieldErrors, productStatus: '' });
+                  }
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkboxBox,
+                    productStatus === 'in_stock' && styles.checkboxBoxSelected,
+                  ]}
+                >
+                  {productStatus === 'in_stock' && (
+                    <Icon name="check" size={14} color="#FFFFFF" />
+                  )}
+                </View>
+                <Typography
+                  variant="bodyMedium"
+                  style={[
+                    styles.checkboxLabel,
+                    productStatus === 'in_stock' && styles.checkboxLabelSelected,
+                  ]}
+                >
+                  In Stock
+                </Typography>
+              </TouchableOpacity>
+
+              {/* Option 2: Out of Stock */}
+              <TouchableOpacity
+                style={styles.checkboxItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setProductStatus('out_of_stock');
+                  if (fieldErrors.productStatus) {
+                    setFieldErrors({ ...fieldErrors, productStatus: '' });
+                  }
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkboxBox,
+                    productStatus === 'out_of_stock' && styles.checkboxBoxSelected,
+                  ]}
+                >
+                  {productStatus === 'out_of_stock' && (
+                    <Icon name="check" size={14} color="#FFFFFF" />
+                  )}
+                </View>
+                <Typography
+                  variant="bodyMedium"
+                  style={[
+                    styles.checkboxLabel,
+                    productStatus === 'out_of_stock' && styles.checkboxLabelSelected,
+                  ]}
+                >
+                  Out of Stock
+                </Typography>
+              </TouchableOpacity>
+            </View>
+            {fieldErrors.productStatus ? (
+              <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                {fieldErrors.productStatus}
+              </Typography>
+            ) : null}
+          </View>
         </View>
 
         {/* Continue Button */}
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, isLoading && { opacity: 0.7 }]}
           activeOpacity={0.85}
+          disabled={isLoading}
           onPress={handleContinue}
         >
-          <Typography variant="bodyBold" style={styles.continueButtonText}>
-            Continue
-          </Typography>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Typography variant="bodyBold" style={styles.continueButtonText}>
+              {existingProduct ? 'Update Product' : 'Continue'}
+            </Typography>
+          )}
         </TouchableOpacity>
 
         {/* Bottom Home Indicator */}
@@ -398,6 +550,50 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Montserrat-Bold',
+  },
+  statusSection: {
+    paddingHorizontal: 4,
+    marginTop: 4,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    color: '#0F172A',
+    fontFamily: 'Montserrat-SemiBold',
+    marginBottom: 8,
+  },
+  statusOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 28,
+  },
+  checkboxItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  checkboxBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxBoxSelected: {
+    backgroundColor: '#8B0000',
+    borderColor: '#8B0000',
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#475569',
+    fontFamily: 'Montserrat-Medium',
+  },
+  checkboxLabelSelected: {
+    color: '#0F172A',
+    fontFamily: 'Montserrat-SemiBold',
   },
   bottomIndicator: {
     width: 140,

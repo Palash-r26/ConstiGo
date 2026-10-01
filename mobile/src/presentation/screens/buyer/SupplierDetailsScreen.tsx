@@ -76,6 +76,11 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
                     {product?.rating || '4.8 (140)'}
                   </Typography>
                 </View>
+                <View style={[styles.statusBadge, (product?.isAvailable !== false && product?.productStatus !== 'out_of_stock') ? styles.statusInStock : styles.statusOutOfStock]}>
+                  <Typography style={[styles.statusText, (product?.isAvailable !== false && product?.productStatus !== 'out_of_stock') ? styles.statusTextIn : styles.statusTextOut]}>
+                    {(product?.isAvailable !== false && product?.productStatus !== 'out_of_stock') ? 'In Stock' : 'Out of Stock'}
+                  </Typography>
+                </View>
               </View>
             </View>
           </View>
@@ -451,5 +456,27 @@ const styles = StyleSheet.create({
     color: '#8B0000',
     fontSize: 14,
     fontWeight: '700',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 6,
+  },
+  statusInStock: {
+    backgroundColor: '#ECFDF5',
+  },
+  statusOutOfStock: {
+    backgroundColor: '#FEF2F2',
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  statusTextIn: {
+    color: '#059669',
+  },
+  statusTextOut: {
+    color: '#DC2626',
   },
 });

@@ -144,6 +144,9 @@ export const addProductSchema = z.object({
       'Enter a valid discounted price'
     ),
   warrantyDetails: z.string().trim().optional(),
+  productStatus: z.enum(['in_stock', 'out_of_stock'], {
+    message: 'Please select a product status (In Stock or Out of Stock)',
+  }),
 }).refine(
   (data) => {
     if (data.discountedPrice && data.productPrice) {
@@ -169,6 +172,7 @@ export const addMaterialSchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, 'Enter a valid price')
     .refine((v) => parseFloat(v) > 0, 'Price must be greater than 0'),
   description: z.string().trim().min(1, 'Description is required'),
+  productStatus: z.enum(['in_stock', 'out_of_stock']).optional(),
 });
 
 // ==========================================

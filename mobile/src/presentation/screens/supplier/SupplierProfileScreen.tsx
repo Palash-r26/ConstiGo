@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
@@ -14,17 +15,49 @@ import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import Icon from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { editProfileSchema } from '../../../application/utils/validators';
+import { useAuthStore } from '../../../application/store/authStore';
+import { fetchVendorProfile, updateVendorProfile } from '../../../infrastructure/api/vendorApi';
 
 export const SupplierProfileScreen = ({ navigation }: any) => {
-  const [name, setName] = useState('Vikas Pawar');
-  const [phone, setPhone] = useState('9876543210');
-  const [email, setEmail] = useState('vikas.pawar23@gmail.com');
+  const user = useAuthStore((state) => state.user);
+  const vendorId = user?.vendorid || user?._id || 'CV290926162458';
+
+  const [fname, setFname] = useState(user?.firstName || 'Anant Pratap');
+  const [lname, setLname] = useState(user?.lastName || 'Gaur');
+  const [dob, setDob] = useState(user?.dob || '26-08-1990');
+  const [phone, setPhone] = useState(user?.phone || '9589908555');
+  const [email, setEmail] = useState(user?.email || 'infinity.gaur008@gmail.com');
   const [address, setAddress] = useState('584/96, Rajendra Park, Phase 2');
   const [city, setCity] = useState('Gurugram');
   const [state, setState] = useState('Haryana');
   const [pincode, setPincode] = useState('122002');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsFetching(true);
+        const res = await fetchVendorProfile(vendorId);
+        console.log('[SupplierProfileScreen] Profile Fetch Response:', res);
+        const data = res?.data || res?.profile || res;
+        if (data) {
+          if (data.fname || data.firstName) setFname(data.fname || data.firstName);
+          if (data.lname || data.lastName) setLname(data.lname || data.lastName);
+          if (data.dob) setDob(data.dob);
+          if (data.phone) setPhone(data.phone);
+          if (data.email) setEmail(data.email);
+        }
+      } catch (e) {
+        console.warn('[SupplierProfileScreen] Failed to fetch profile:', e);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    loadProfile();
+  }, [vendorId]);
 
   const handlePickAvatar = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
@@ -34,11 +67,12 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
     });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     setFieldErrors({});
 
+    const fullName = `${fname} ${lname}`.trim();
     const formData = {
-      name: name.trim(),
+      name: fullName,
       phone: phone.replace(/\D/g, '').slice(-10),
       email: email.trim(),
       address: address.trim(),
@@ -62,7 +96,24 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
       return;
     }
 
-    Alert.alert('Success', 'Profile updated successfully!');
+    try {
+      setIsLoading(true);
+      const res = await updateVendorProfile({
+        vendorid: vendorId,
+        fname: fname.trim(),
+        lname: lname.trim(),
+        dob: dob.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+      });
+      console.log('[SupplierProfileScreen] Profile Update Response:', res);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (err: any) {
+      console.error('[SupplierProfileScreen] Profile Update Error:', err);
+      Alert.alert('Error', err.message || 'Failed to update profile.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -101,7 +152,7 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
           {/* User Details */}
           <View style={styles.userInfoBlock}>
             <Typography variant="h2" style={styles.userName}>
-              {name}
+              {`${fname} ${lname}`.trim()}
             </Typography>
             <Typography variant="bodySmall" style={styles.userPhone}>
               {phone}
@@ -121,24 +172,53 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
 
         {/* Input Fields */}
         <View style={styles.inputGroup}>
+          <View style={styles.row}>
+            <View style={styles.halfWidth}>
+              <View style={[styles.pillInputContainer, fieldErrors.name && styles.inputError]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="First Name"
+                  placeholderTextColor={fieldErrors.name ? '#EF4444' : '#9CA3AF'}
+                  value={fname}
+                  onChangeText={(t) => {
+                    setFname(t);
+                    if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+                  }}
+                />
+              </View>
+            </View>
+
+            <View style={styles.halfWidth}>
+              <View style={[styles.pillInputContainer, fieldErrors.name && styles.inputError]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Last Name"
+                  placeholderTextColor={fieldErrors.name ? '#EF4444' : '#9CA3AF'}
+                  value={lname}
+                  onChangeText={(t) => {
+                    setLname(t);
+                    if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+          {fieldErrors.name ? (
+            <Typography variant="bodySmall" style={styles.inlineErrorText}>
+              {fieldErrors.name}
+            </Typography>
+          ) : null}
+
           <View>
-            <View style={[styles.pillInputContainer, fieldErrors.name && styles.inputError]}>
+            <View style={styles.pillInputContainer}>
               <TextInput
                 style={styles.textInput}
-                placeholder="Full Name"
-                placeholderTextColor={fieldErrors.name ? '#EF4444' : '#9CA3AF'}
-                value={name}
-                onChangeText={(t) => {
-                  setName(t);
-                  if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
-                }}
+                placeholder="Date of Birth (DD-MM-YYYY)"
+                placeholderTextColor="#9CA3AF"
+                value={dob}
+                onChangeText={setDob}
               />
             </View>
-            {fieldErrors.name ? (
-              <Typography variant="bodySmall" style={styles.inlineErrorText}>
-                {fieldErrors.name}
-              </Typography>
-            ) : null}
           </View>
 
           <View>
@@ -272,13 +352,18 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
 
         {/* Update Button */}
         <TouchableOpacity
-          style={styles.updateButton}
+          style={[styles.updateButton, isLoading && { opacity: 0.7 }]}
           activeOpacity={0.85}
+          disabled={isLoading}
           onPress={handleUpdate}
         >
-          <Typography variant="bodyBold" style={styles.updateButtonText}>
-            Update Now
-          </Typography>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Typography variant="bodyBold" style={styles.updateButtonText}>
+              Update Now
+            </Typography>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>

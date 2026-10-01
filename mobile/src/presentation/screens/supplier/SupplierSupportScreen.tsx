@@ -6,20 +6,31 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
 import { supportSchema } from '../../../application/utils/validators';
+import { useAuthStore } from '../../../application/store/authStore';
+import { submitVendorSupport } from '../../../infrastructure/api/vendorApi';
 
 export const SupplierSupportScreen = ({ navigation }: any) => {
-  const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const user = useAuthStore((state) => state.user);
+  const vendorId = user?.vendorid || user?._id || 'CV290926162458';
+
+  const [name, setName] = useState(
+    user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : ''
+  );
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [message, setMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setFieldErrors({});
+    setServerError('');
 
     const formData = {
       name: name.trim(),
@@ -38,10 +49,31 @@ export const SupplierSupportScreen = ({ navigation }: any) => {
       return;
     }
 
-    Alert.alert('Support Request Submitted', 'Our team will contact you shortly.');
-    setName('');
-    setPhoneNumber('');
-    setMessage('');
+    try {
+      setIsLoading(true);
+      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/support.php
+      const response = await submitVendorSupport({
+        vendorid: vendorId,
+        name: formData.name,
+        phone: formData.phoneNumber,
+        message: formData.message,
+      });
+
+      console.log('[SupplierSupportScreen] Support Submission Raw Response:', response);
+
+      const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
+      if (isSuccess) {
+        Alert.alert('Support Request Submitted', 'Our team will review your message and contact you shortly.');
+        setMessage('');
+      } else {
+        setServerError(response?.message || response?.error || 'Failed to submit support request. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('[SupplierSupportScreen] Support Error:', err);
+      setServerError(err.message || 'An error occurred while submitting your support request.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -61,9 +93,13 @@ export const SupplierSupportScreen = ({ navigation }: any) => {
             Support
           </Typography>
           <Typography variant="bodySmall" style={styles.subtitle}>
-            For more Quaries
+            For more Queries
           </Typography>
         </View>
+
+        {serverError ? (
+          <Typography className="text-red-500 text-center mb-4 text-sm">{serverError}</Typography>
+        ) : null}
 
         {/* Inputs */}
         <View style={styles.inputGroup}>
@@ -135,13 +171,18 @@ export const SupplierSupportScreen = ({ navigation }: any) => {
 
         {/* Submit Button */}
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[styles.submitButton, isLoading && { opacity: 0.7 }]}
           activeOpacity={0.85}
+          disabled={isLoading}
           onPress={handleSubmit}
         >
-          <Typography variant="bodyBold" style={styles.submitButtonText}>
-            Submit
-          </Typography>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Typography variant="bodyBold" style={styles.submitButtonText}>
+              Submit
+            </Typography>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>

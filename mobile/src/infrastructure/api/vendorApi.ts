@@ -13,6 +13,15 @@ export const VENDOR_ENDPOINTS = {
   COMPANY_DETAILS_FETCH: `${VENDOR_API_BASE}/companydetailsfetch.php`,
   COMPANY_DETAILS_UPDATE: `${VENDOR_API_BASE}/companydetailsupdate.php`,
   CHECK_COMPANY: `${VENDOR_API_BASE}/check-company.php`,
+  PRODUCT_ADD: `${VENDOR_API_BASE}/product_add.php`,
+  PRODUCT_UPDATE: `${VENDOR_API_BASE}/product_update.php`,
+  PRODUCT_DELETE: `${VENDOR_API_BASE}/product_delete.php`,
+  PRODUCTS_ALL_LIST: `${VENDOR_API_BASE}/products_all_list.php`,
+  PRODUCTS_AVAILABLE_LIST: `${VENDOR_API_BASE}/product_available.php`,
+  PRODUCTS_UNAVAILABLE_LIST: `${VENDOR_API_BASE}/product_unavailable.php`,
+  SUPPORT: `${VENDOR_API_BASE}/support.php`,
+  PROFILE: `${VENDOR_API_BASE}/profile.php`,
+  PROFILE_UPDATE: `${VENDOR_API_BASE}/profile_update.php`,
 };
 
 // Generic helper to send POST requests as multipart/form-data to PHP endpoints
@@ -24,7 +33,16 @@ export const postVendorForm = async <T = any>(
     const formData = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
+        if (typeof value === 'object' && value.uri) {
+          // File object for image upload in React Native
+          formData.append(key, {
+            uri: value.uri,
+            type: value.type || 'image/jpeg',
+            name: value.name || 'upload.jpg',
+          } as any);
+        } else {
+          formData.append(key, String(value));
+        }
       }
     });
 
@@ -44,7 +62,6 @@ export const postVendorForm = async <T = any>(
     if (error.response) {
       console.error(`[VendorAPI Error Data]`, error.response.data);
     }
-    // Generic user-friendly error message fallback for network or timeout issues
     const isNetworkError =
       error.code === 'ECONNABORTED' ||
       error.message?.includes('timeout') ||
@@ -55,7 +72,6 @@ export const postVendorForm = async <T = any>(
       throw new Error('Network connection issue or request timed out. Please check your internet connection and try again.');
     }
 
-    // Pass through backend message or error object
     const backendMessage =
       typeof error.response?.data === 'string'
         ? error.response.data
@@ -114,13 +130,49 @@ export interface VendorCompanyDetailsPayload {
   maplongitude: string;
 }
 
-export interface VendorCompanyFetchPayload {
+export interface VendorAddProductPayload {
   vendorid: string;
+  productname: string;
+  productcategory: string;
+  stock: string;
+  product_description: string;
+  product_price: string;
+  discount_price?: string;
+  productimage?: any;
+  warranty_details?: string;
+  delivery_available?: string; // 'yes' | 'no'
+  product_status?: string; // 'available' | 'unavailable'
+  productStatus?: 'in_stock' | 'out_of_stock' | string;
 }
 
-export interface VendorCheckCompanyPayload {
-  vendorid: string;
+export interface VendorUpdateProductPayload extends VendorAddProductPayload {
+  productid: string;
 }
+
+export interface VendorDeleteProductPayload {
+  vendorid: string;
+  productid: string;
+}
+
+export interface VendorSupportPayload {
+  vendorid: string;
+  name: string;
+  phone: string;
+  message: string;
+}
+
+export interface VendorProfileUpdatePayload {
+  vendorid: string;
+  fname: string;
+  lname: string;
+  dob: string;
+  email: string;
+  phone: string;
+}
+
+// ==========================================
+// API FUNCTIONS
+// ==========================================
 
 /**
  * 1. Registration API
@@ -136,7 +188,6 @@ export const registerVendor = async (data: VendorRegistrationPayload) => {
     password: data.password,
     confrimpassword: data.confrimpassword,
   });
-  // TODO: Confirm exact success & error JSON schema from production backend (e.g. status, vendorid, token)
   return result;
 };
 
@@ -149,7 +200,6 @@ export const checkVendorLogin = async (data: VendorLoginPayload) => {
     phone: data.phone,
     password: data.password,
   });
-  // TODO: Confirm exact success & error JSON schema from production backend (e.g. vendorid, token, user profile)
   return result;
 };
 
@@ -161,7 +211,6 @@ export const sendForgotOtp = async (phone: string) => {
   const result = await postVendorForm(VENDOR_ENDPOINTS.FORGOT_SEND_OTP, {
     phone,
   });
-  // TODO: Confirm exact response shape (e.g. { status: true, otp: ... } or message)
   return result;
 };
 
@@ -174,7 +223,6 @@ export const verifyForgotOtp = async (phone: string, otp: string) => {
     phone,
     otp,
   });
-  // TODO: Confirm exact response shape for successful OTP verification
   return result;
 };
 
@@ -188,7 +236,6 @@ export const changeVendorPassword = async (data: VendorChangePasswordPayload) =>
     newpassword: data.newpassword,
     confirmpassword: data.confirmpassword,
   });
-  // TODO: Confirm exact response shape for change password
   return result;
 };
 
@@ -214,7 +261,6 @@ export const addCompanyDetails = async (data: VendorCompanyDetailsPayload) => {
     maplatitude: data.maplatitude,
     maplongitude: data.maplongitude,
   });
-  // TODO: Confirm exact response shape for company details add
   return result;
 };
 
@@ -226,7 +272,6 @@ export const fetchCompanyDetails = async (vendorid: string) => {
   const result = await postVendorForm(VENDOR_ENDPOINTS.COMPANY_DETAILS_FETCH, {
     vendorid,
   });
-  // TODO: Confirm exact response shape for company details fetch
   return result;
 };
 
@@ -252,19 +297,152 @@ export const updateCompanyDetails = async (data: VendorCompanyDetailsPayload) =>
     maplatitude: data.maplatitude,
     maplongitude: data.maplongitude,
   });
-  // TODO: Confirm exact response shape for company details update
   return result;
 };
 
 /**
  * 9. Check Company
  * POST https://constigo.in/app/vendor/check-company.php
- * Note: if company data is present redirect to inventory page else company form page will display
  */
 export const checkCompanyStatus = async (vendorid: string) => {
   const result = await postVendorForm(VENDOR_ENDPOINTS.CHECK_COMPANY, {
     vendorid,
   });
-  // TODO: Confirm exact response format. Usually returns { status: true/false, data: ... } or company details object.
+  return result;
+};
+
+/**
+ * 10. Add Product
+ * POST https://constigo.in/app/vendor/product_add.php
+ */
+export const addVendorProduct = async (data: VendorAddProductPayload) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCT_ADD, {
+    vendorid: data.vendorid,
+    productname: data.productname,
+    productcategory: data.productcategory,
+    stock: data.stock,
+    product_description: data.product_description,
+    product_price: data.product_price,
+    discount_price: data.discount_price || '0',
+    productimage: data.productimage,
+    warranty_details: data.warranty_details || '1 Year Product Warranty',
+    delivery_available: data.delivery_available || 'yes',
+    product_status: data.product_status || (data.productStatus === 'out_of_stock' ? 'unavailable' : 'available'),
+    productStatus: data.productStatus || (data.product_status === 'unavailable' ? 'out_of_stock' : 'in_stock'),
+  });
+  // TODO: Confirm exact success response schema from backend
+  return result;
+};
+
+/**
+ * 11. Update Product
+ * POST https://constigo.in/app/vendor/product_update.php
+ */
+export const updateVendorProduct = async (data: VendorUpdateProductPayload) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCT_UPDATE, {
+    vendorid: data.vendorid,
+    productid: data.productid,
+    productname: data.productname,
+    productcategory: data.productcategory,
+    stock: data.stock,
+    product_description: data.product_description,
+    product_price: data.product_price,
+    discount_price: data.discount_price || '0',
+    productimage: data.productimage,
+    warranty_details: data.warranty_details || '1 Year Product Warranty',
+    delivery_available: data.delivery_available || 'yes',
+    product_status: data.product_status || (data.productStatus === 'out_of_stock' ? 'unavailable' : 'available'),
+    productStatus: data.productStatus || (data.product_status === 'unavailable' ? 'out_of_stock' : 'in_stock'),
+  });
+  // TODO: Confirm exact update response schema from backend
+  return result;
+};
+
+/**
+ * 12. Delete Product
+ * POST https://constigo.in/app/vendor/product_delete.php
+ */
+export const deleteVendorProduct = async (vendorid: string, productid: string) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCT_DELETE, {
+    vendorid,
+    productid,
+  });
+  // TODO: Confirm exact delete response schema from backend
+  return result;
+};
+
+/**
+ * 13. Products All List
+ * POST https://constigo.in/app/vendor/products_all_list.php
+ */
+export const fetchVendorAllProducts = async (vendorid: string) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCTS_ALL_LIST, {
+    vendorid,
+  });
+  // TODO: Confirm exact response shape (e.g. array of products or { status: true, data: [...] })
+  return result;
+};
+
+/**
+ * 14. Products Available List
+ * POST https://constigo.in/app/vendor/product_available.php
+ */
+export const fetchVendorAvailableProducts = async (vendorid: string) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCTS_AVAILABLE_LIST, {
+    vendorid,
+  });
+  return result;
+};
+
+/**
+ * 15. Products Unavailable List
+ * POST https://constigo.in/app/vendor/product_unavailable.php
+ */
+export const fetchVendorUnavailableProducts = async (vendorid: string) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PRODUCTS_UNAVAILABLE_LIST, {
+    vendorid,
+  });
+  return result;
+};
+
+/**
+ * 16. Support API
+ * POST https://constigo.in/app/vendor/support.php
+ */
+export const submitVendorSupport = async (data: VendorSupportPayload) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.SUPPORT, {
+    vendorid: data.vendorid,
+    name: data.name,
+    phone: data.phone,
+    message: data.message,
+  });
+  // TODO: Confirm exact response shape from support endpoint
+  return result;
+};
+
+/**
+ * 17. Profile API
+ * POST https://constigo.in/app/vendor/profile.php
+ */
+export const fetchVendorProfile = async (vendorid: string) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PROFILE, {
+    vendorid,
+  });
+  return result;
+};
+
+/**
+ * 18. Profile Update API
+ * POST https://constigo.in/app/vendor/profile_update.php
+ */
+export const updateVendorProfile = async (data: VendorProfileUpdatePayload) => {
+  const result = await postVendorForm(VENDOR_ENDPOINTS.PROFILE_UPDATE, {
+    vendorid: data.vendorid,
+    fname: data.fname,
+    lname: data.lname,
+    dob: data.dob,
+    email: data.email,
+    phone: data.phone,
+  });
   return result;
 };

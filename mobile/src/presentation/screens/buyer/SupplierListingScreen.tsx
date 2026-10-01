@@ -114,6 +114,11 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
                       {item.rating}
                     </Typography>
                   </View>
+                  <View style={[styles.statusBadge, item.isAvailable !== false ? styles.statusInStock : styles.statusOutOfStock]}>
+                    <Typography style={[styles.statusText, item.isAvailable !== false ? styles.statusTextIn : styles.statusTextOut]}>
+                      {item.isAvailable !== false ? 'In Stock' : 'Out of Stock'}
+                    </Typography>
+                  </View>
                 </View>
               </View>
             </View>
@@ -351,5 +356,27 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     fontSize: 13,
     fontWeight: '600',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 6,
+  },
+  statusInStock: {
+    backgroundColor: '#ECFDF5',
+  },
+  statusOutOfStock: {
+    backgroundColor: '#FEF2F2',
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  statusTextIn: {
+    color: '#059669',
+  },
+  statusTextOut: {
+    color: '#DC2626',
   },
 });

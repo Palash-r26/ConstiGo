@@ -18,7 +18,7 @@ export const WelcomeScreen = ({ navigation }: any) => {
         </Typography>
       </View>
 
-      <View className="gap-y-4 mb-10 w-full px-2">
+      <View className="gap-y-4 mb-6 w-full px-2">
         <Button 
           title="Sign In as Buyer" 
           onPress={() => navigation.navigate('SignIn', { role: 'BUYER' })} 
@@ -29,16 +29,10 @@ export const WelcomeScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('SignIn', { role: 'SUPPLIER' })} 
           className="rounded-full shadow-md"
         />
-      </View>
-
-      <View className="flex-row justify-center items-center">
-        <Typography variant="bodyBold" className="text-[#182F4B] text-sm mr-1">Don't have an account?</Typography>
         <Button 
-          variant="link" 
-          title="Sign Up" 
-          onPress={() => navigation.navigate('SignUp')} 
-          textClassName="text-sm"
-          className="py-0"
+          title="Sign Up as Worker" 
+          onPress={() => navigation.navigate('WorkerSignUp')} 
+          className="rounded-full shadow-md"
         />
       </View>
     </ScreenWrapper>
