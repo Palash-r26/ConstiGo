@@ -1,97 +1,131 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 📱 ConstiGo Mobile Application
 
-# Getting Started
+[![React Native](https://img.shields.io/badge/React_Native-0.86.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NativeWind](https://img.shields.io/badge/Tailwind_CSS-NativeWind_v4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://www.nativewind.dev/)
+[![Zustand](https://img.shields.io/badge/State-Zustand-443E38?style=flat-square)](https://github.com/pmndrs/zustand)
+[![MapLibre](https://img.shields.io/badge/Map-MapLibre_Native-000000?style=flat-square&logo=maplibre&logoColor=white)](https://maplibre.org/)
+[![Razorpay](https://img.shields.io/badge/Payments-Razorpay-02042B?style=flat-square&logo=razorpay&logoColor=3395FF)](https://razorpay.com/)
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+The **ConstiGo Mobile Application** is built with **React Native** (Clean Architecture + NativeWind v4), offering a high-performance, polished mobile experience for contractors, construction material buyers, suppliers, and skilled workers.
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 🎨 Key Features & Screens
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### 🛍️ **Buyer Portal**
+- **Home Dashboard (`HomeDashboardScreen.tsx`)**: Material categories, popular products, nearby suppliers, and promotional banners.
+- **Search & Filter (`SearchScreen.tsx`)**: Real-time search with category chips and price filters.
+- **Supplier Discovery (`SupplierListingScreen.tsx` & `SupplierDetailsScreen.tsx`)**: Verified vendor profile, catalogue listing, ratings, and location pin.
+- **Cart & Dynamic Pricing (`CartScreen.tsx`)**: Unit-based pricing (per bag, ton, truckload, piece) with tax/delivery estimates.
+- **Interactive Checkout (`CheckoutScreen.tsx`)**: Address selector and Razorpay / Cash on Delivery payment integration.
+- **Address Manager (`AddressManagerScreen.tsx`)**: MapLibre pin-drop coordinate geocoding for construction job sites.
+- **Order Tracking (`MyOrdersScreen.tsx` & `OrderDetailsScreen.tsx`)**: Real-time milestone status (`PENDING` → `ACCEPTED` → `DISPATCHED` → `DELIVERED`).
+- **Wishlist & Notifications (`WishlistScreen.tsx`, `NotificationsScreen.tsx`)**.
 
-```sh
-# Using npm
+### 🏭 **Supplier Hub**
+- **Inventory Dashboard (`InventoryDashboardScreen.tsx`)**: Stock levels, instant availability toggles, unit pricing.
+- **Add Product & Materials (`AddProductScreen.tsx`, `AddMaterialScreen.tsx`)**: Material classification, image uploads, grade specs, and pricing.
+- **Merchant Onboarding (`EnterCompanyDetailsScreen.tsx`)**: Business KYC, GSTIN, warehouse coordinates.
+- **Supplier Orders (`MyOrdersScreen.tsx`, `OrderDetailsScreen.tsx`)**: Incoming orders, dispatch approvals, fulfillment tracking.
+
+### 🔐 **Authentication & Onboarding**
+- **Sign In & Sign Up (`SignInScreen.tsx`, `SignUpScreen.tsx`)**: Dual role registration for Buyers and Suppliers.
+- **Worker Hub (`WorkerSignUpScreen.tsx`)**: Registration for skilled trade workers with wage rates and location.
+
+---
+
+## 📂 Mobile Architecture
+
+The mobile app follows Clean Architecture principles:
+
+```
+mobile/src/
+├── application/            # State Stores (Zustand) & Business Logic
+│   ├── store/
+│   │   ├── authStore.ts    # Authentication tokens & current user session
+│   │   ├── cartStore.ts    # Shopping cart items, counts, calculations
+│   │   ├── homeStore.ts    # Dashboard data & categories
+│   │   └── userStore.ts    # Profile state & addresses
+│   └── utils/
+│       └── validators.ts   # Form validation helpers
+├── domain/                 # Core entities and data contracts
+├── infrastructure/         # Native storage, HTTP clients, platform APIs
+└── presentation/           # User Interface Layer
+    ├── assets/             # Branding and vector artwork
+    ├── components/         # Design system (AuthInput, Button, Cards, Modals)
+    ├── hooks/              # Custom presentation hooks
+    ├── navigation/         # React Navigation stacks & bottom tab bars
+    │   ├── RootNavigator.tsx
+    │   ├── BuyerTabNavigator.tsx
+    │   └── SupplierTabNavigator.tsx
+    └── screens/            # Application screens
+        ├── auth/
+        ├── buyer/
+        └── supplier/
+```
+
+---
+
+## ⚙️ Environment Configuration
+
+Create a `.env` file in the `mobile/` root:
+
+```env
+# Backend Base API URL
+API_URL=http://10.0.2.2:5000/api/v1
+
+# Razorpay Key ID
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+
+# Cloudinary & Maps
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+OLA_MAPS_API_KEY=your_ola_maps_api_key
+```
+
+> **Note on Android Emulator**: `http://10.0.2.2:5000/api/v1` connects directly to your localhost machine.
+
+---
+
+## 🚀 Running the App
+
+### 1. Install Dependencies
+```bash
+cd mobile
+npm install
+```
+
+### 2. Start the Metro Bundler
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+### 3. Run on Android
+Ensure an Android emulator is booted or a physical device is plugged in via USB debugging:
+```bash
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+### 4. Run on iOS (macOS only)
+```bash
+cd ios
+bundle exec pod install # or: pod install
+cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+---
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## 📦 Building for Release
 
-## Step 3: Modify your app
+### Android APK / Bundle
+```bash
+cd android
+# Build release APK
+./gradlew assembleRelease
 
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+# Build release App Bundle (AAB) for Play Store
+./gradlew bundleRelease
+```
+The output APK is generated at:
+`android/app/build/outputs/apk/release/app-release.apk`
