@@ -17,21 +17,21 @@ import { apiClient } from '../../../infrastructure/api/client';
 import { editProfileSchema } from '../../../application/utils/validators';
 
 export const EditProfileScreen = ({ navigation }: any) => {
-  const { profile, fetchProfile } = useUserStore();
+  const { profile, fetchProfile, updateProfile } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
   // Form State
   const [name, setName] = useState(
-    profile?.firstName ? `${profile.firstName} ${profile.lastName}` : 'Vikas Pawar'
+    profile?.firstName ? `${profile.firstName} ${profile.lastName}`.trim() : 'Anant Pratap Gaur'
   );
-  const [phone, setPhone] = useState(profile?.phone || '9876543210');
+  const [phone, setPhone] = useState(profile?.phone || '9589908555');
   const [email, setEmail] = useState(
-    profile?.email || 'vikas.pawar23@gmail.com'
+    profile?.email || 'infinity.gaur008@gmail.com'
   );
-  const [address, setAddress] = useState('584/96, Rajendra Park, Phase 2');
-  const [city, setCity] = useState('Gurugram');
-  const [state, setState] = useState('Haryana');
-  const [pincode, setPincode] = useState('122002');
+  const [address, setAddress] = useState('Govindpuri, near darpan colony');
+  const [city, setCity] = useState('Gwalior');
+  const [state, setState] = useState('Madhya Pradesh');
+  const [pincode, setPincode] = useState('474011');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handleSave = async () => {
@@ -68,10 +68,12 @@ export const EditProfileScreen = ({ navigation }: any) => {
       const firstName = parts[0] || '';
       const lastName = parts.slice(1).join(' ') || '';
 
-      await apiClient.patch('/users/me', {
-        firstName,
-        lastName,
+      await updateProfile({
+        fname: firstName,
+        lname: lastName,
         phone: formData.phone,
+        email: formData.email,
+        dob: profile?.dob || '26-08-1990',
       });
       await fetchProfile();
       Alert.alert('Success', 'Profile updated successfully', [

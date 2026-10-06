@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Alert,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
@@ -14,6 +15,11 @@ import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
+import {
+  registerWorker,
+  fetchWorkerCategories,
+  isWorkerSuccess,
+} from '../../../infrastructure/api/workerApi';
 
 export interface SkillOption {
   id: string;
@@ -22,7 +28,7 @@ export interface SkillOption {
   description: string;
 }
 
-const SKILL_OPTIONS: SkillOption[] = [
+const DEFAULT_SKILL_OPTIONS: SkillOption[] = [
   { id: 'plumber', name: 'Plumber', icon: 'tool', description: 'Pipe fittings, leak repairs & sanitary installations' },
   { id: 'mistry', name: 'Mistry / Mason', icon: 'home', description: 'Brickwork, plastering, foundation & civil work' },
   { id: 'electrician', name: 'Electrician', icon: 'zap', description: 'Wiring, switches, MCBs, lighting & load setup' },
@@ -45,6 +51,37 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [skillOptions, setSkillOptions] = useState<SkillOption[]>(DEFAULT_SKILL_OPTIONS);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        // Call REAL PHP production endpoint: https://constigo.in/app/worker/categories_fetch.php
+        const res = await fetchWorkerCategories();
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          const apiOptions: SkillOption[] = res.data.map((catItem) => {
+            const matched = DEFAULT_SKILL_OPTIONS.find(
+              (o) => o.name.toLowerCase() === catItem.category.toLowerCase()
+            );
+            return {
+              id: String(catItem.id),
+              name: catItem.category,
+              icon: matched ? matched.icon : 'tool',
+              description: matched ? matched.description : `${catItem.category} services & work`,
+            };
+          });
+          setSkillOptions(apiOptions);
+        }
+      } catch (e) {
+        console.warn('[WorkerSignUp] Failed to load worker categories from API, using fallback:', e);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleSelectSkill = (skill: SkillOption) => {
     setCategory(skill.name);
@@ -78,17 +115,34 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
     setIsLoading(true);
 
     try {
-      setTimeout(() => {
-        setIsLoading(false);
+      // Call REAL PHP production endpoint: https://constigo.in/app/worker/registration.php
+      const response = await registerWorker({
+        fullname: name.trim(),
+        phone: phone.trim(),
+        skill: category.trim(),
+        location: city.trim() || 'Indore',
+        service_charge: serviceCharge.trim(),
+        visit_charge: visitingCharge.trim(),
+      });
+
+      console.log('[WorkerSignUpScreen] Registration Response:', response);
+
+      if (isWorkerSuccess(response)) {
+        const workerId = response.workerid ? ` (ID: ${response.workerid})` : '';
         Alert.alert(
           'Registration Submitted! 🎉',
-          `Welcome ${name}! Your worker profile (${category}) has been submitted successfully. Contractors can now connect with you directly.`,
+          `Welcome ${name}! Your worker profile (${category})${workerId} has been registered successfully. Contractors can now connect with you directly.`,
           [{ text: 'OK', onPress: () => navigation.navigate('Welcome') }]
         );
-      }, 800);
-    } catch (err) {
+      } else {
+        const errMsg = response.error || response.message || 'Worker registration failed. Please try again.';
+        Alert.alert('Registration Failed', errMsg);
+      }
+    } catch (err: any) {
+      console.error('[WorkerSignUpScreen] Error:', err);
+      Alert.alert('Error', err.message || 'Worker registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      Alert.alert('Error', 'Worker registration failed. Please try again.');
     }
   };
 
@@ -285,11 +339,19 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
             </Typography>
 
             {/* Skill List */}
-            <FlatList
-              data={SKILL_OPTIONS}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 24, gap: 10 }}
+            {loadingCategories ? (
+              <View style={{ paddingVertical: 40, alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator size="small" color="#9C101A" />
+                <Typography variant="bodySmall" style={{ marginTop: 8, color: '#64748B' }}>
+                  Loading trade categories...
+                </Typography>
+              </View>
+            ) : (
+              <FlatList
+                data={skillOptions}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 24, gap: 10 }}
               renderItem={({ item }) => {
                 const isSelected = category.toLowerCase() === item.name.toLowerCase();
                 return (
@@ -342,6 +404,7 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
                 );
               }}
             />
+            )}
           </View>
         </View>
       </Modal>

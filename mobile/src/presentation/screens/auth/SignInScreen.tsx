@@ -8,6 +8,7 @@ import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import { apiClient } from '../../../infrastructure/api/client';
 import { checkVendorLogin, checkCompanyStatus } from '../../../infrastructure/api/vendorApi';
+import { checkBuyerLogin, isBuyerSuccess } from '../../../infrastructure/api/buyerApi';
 import { useAuthStore } from '../../../application/store/authStore';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,18 +44,15 @@ export const SignInScreen = ({ route, navigation }: any) => {
         // Defensive handling: log raw response
         console.log('[SignInScreen] Vendor Check Login Raw Response:', response);
 
-        // TODO: Confirm exact success response schema from backend (e.g. response.status, response.vendorid)
         const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
         if (isSuccess) {
           const vendorId = response?.vendorid || response?.data?.vendorid || response?.vendor_id || `CV_${data.identity}`;
           
           // Check Company API: https://constigo.in/app/vendor/check-company.php
-          // Note: if company data is present redirect to inventory page else company form page will display
           let hasCompany = true;
           try {
             const companyCheck = await checkCompanyStatus(String(vendorId));
             console.log('[SignInScreen] Check Company Raw Response:', companyCheck);
-            // TODO: Confirm exact check-company JSON response fields
             if (companyCheck) {
               hasCompany = companyCheck?.status === true || companyCheck?.status === 'success' || !!companyCheck?.data || !!companyCheck?.companyname;
             }
@@ -70,17 +68,31 @@ export const SignInScreen = ({ route, navigation }: any) => {
             role: 'SUPPLIER',
           }, response?.token || 'vendor_session_token');
         } else {
-          // TODO: Confirm exact error field shape
           setError(response?.message || response?.error || 'Invalid phone or password');
         }
       } else {
-        // Buyer login via Node/Mongo client
-        const response = await apiClient.post('/auth/login', {
-          ...data,
-          role,
+        // Call REAL production PHP endpoint: https://constigo.in/app/buyer/checklogin.php
+        const response = await checkBuyerLogin({
+          phone: data.identity,
+          password: data.password,
         });
-        if (response.data.success) {
-          await login(response.data.data, response.data.data.token);
+
+        console.log('[SignInScreen] Buyer Check Login Raw Response:', response);
+
+        if (isBuyerSuccess(response)) {
+          const buyerId = response?.buyerid || response?.data?.buyerid || response?.id || `CB_${data.identity}`;
+          const buyerData = response?.data || {};
+          await login({
+            _id: String(buyerId),
+            buyerid: String(buyerId),
+            phone: data.identity,
+            firstName: buyerData.fname || buyerData.firstName || '',
+            lastName: buyerData.lname || buyerData.lastName || '',
+            email: buyerData.email || '',
+            role: 'BUYER',
+          }, response?.token || 'buyer_session_token');
+        } else {
+          setError(response?.message || response?.error || 'Invalid phone or password');
         }
       }
     } catch (err: any) {
@@ -174,7 +186,7 @@ export const SignInScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
           <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { role })}>
           <Typography variant="bodyBold" className="text-sm text-primary">Forget Password ?</Typography>
         </TouchableOpacity>
       </View>

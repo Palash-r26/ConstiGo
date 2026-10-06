@@ -6,10 +6,14 @@ import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import Icon from 'react-native-vector-icons/Feather';
 import { changeVendorPassword } from '../../../infrastructure/api/vendorApi';
+import { changeBuyerPassword, isBuyerSuccess } from '../../../infrastructure/api/buyerApi';
 import { changePasswordSchema } from '../../../application/utils/validators';
 
 export const ChangePasswordScreen = ({ route, navigation }: any) => {
   const initialPhone = route?.params?.phone || '';
+  const role = route?.params?.role || 'BUYER';
+  const isSupplier = role === 'SUPPLIER';
+
   const [phone, setPhone] = useState(initialPhone);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,12 +43,22 @@ export const ChangePasswordScreen = ({ route, navigation }: any) => {
 
     try {
       setIsLoading(true);
-      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/changepassword.php
-      const response = await changeVendorPassword({
-        phone: phone.trim(),
-        newpassword: newPassword,
-        confirmpassword: confirmPassword,
-      });
+      let response: any;
+      if (isSupplier) {
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/changepassword.php
+        response = await changeVendorPassword({
+          phone: phone.trim(),
+          newpassword: newPassword,
+          confirmpassword: confirmPassword,
+        });
+      } else {
+        // Call REAL PHP production endpoint: https://constigo.in/app/buyer/changepassword.php
+        response = await changeBuyerPassword({
+          phone: phone.trim(),
+          newpassword: newPassword,
+          confirmpassword: confirmPassword,
+        });
+      }
 
       console.log('[ChangePasswordScreen] Change Password Raw Response:', response);
 
@@ -56,7 +70,7 @@ export const ChangePasswordScreen = ({ route, navigation }: any) => {
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('SignIn', { role: 'SUPPLIER' }),
+              onPress: () => navigation.navigate('SignIn', { role }),
             },
           ]
         );

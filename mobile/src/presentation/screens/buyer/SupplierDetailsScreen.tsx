@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
@@ -7,10 +7,12 @@ import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RazorpayCheckout from 'react-native-razorpay';
 import { apiClient } from '../../../infrastructure/api/client';
+import { useCartStore } from '../../../application/store/cartStore';
 import { RAZORPAY_KEY_ID } from '@env';
 
 export const SupplierDetailsScreen = ({ route, navigation }: any) => {
   const { product } = route.params || {};
+  const { addToCart } = useCartStore();
   const supplierName =
     product?.name ||
     product?.supplier?.businessInfo?.companyName ||
@@ -239,12 +241,37 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.downloadPdfButton}
+            style={styles.addToCartButton}
             activeOpacity={0.8}
-            onPress={() => {}}
+            onPress={async () => {
+              try {
+                const success = await addToCart({
+                  productId: product?._id || product?.productid || 'CVP300926224904',
+                  vendorId: product?.supplier?._id || product?.vendorid || 'CV290926162458',
+                  productName: product?.name || 'Cement Grade I',
+                  amount: product?.price || 400,
+                  quantity: 1,
+                  category: product?.category || 'Cement',
+                });
+                if (success) {
+                  Alert.alert(
+                    'Added to Cart',
+                    `${product?.name || 'Item'} has been added to your cart.`,
+                    [
+                      { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
+                      { text: 'Continue Shopping' },
+                    ]
+                  );
+                } else {
+                  Alert.alert('Notice', 'Failed to add item to cart. Please try again.');
+                }
+              } catch (e: any) {
+                Alert.alert('Error', e.message || 'Could not add to cart.');
+              }
+            }}
           >
-            <Typography variant="bodyMedium" style={styles.downloadPdfText}>
-              Download PDF
+            <Typography variant="bodyMedium" style={styles.addToCartText}>
+              Add to Cart
             </Typography>
           </TouchableOpacity>
         </View>
@@ -439,6 +466,21 @@ const styles = StyleSheet.create({
   },
   confirmOrderText: {
     color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  addToCartButton: {
+    flex: 1,
+    backgroundColor: '#F7F8FA',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#8B0000',
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addToCartText: {
+    color: '#8B0000',
     fontSize: 14,
     fontWeight: '700',
   },

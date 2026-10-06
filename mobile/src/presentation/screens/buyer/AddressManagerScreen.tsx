@@ -13,12 +13,19 @@ import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useUserStore } from '../../../application/store/userStore';
-import { apiClient } from '../../../infrastructure/api/client';
+import {
+  addBuyerAddress,
+  updateBuyerAddress,
+  fetchBuyerAddressEdit,
+  deleteBuyerAddress,
+  fetchBuyerAddressList,
+} from '../../../infrastructure/api/buyerApi';
 import { addressManagerSchema } from '../../../application/utils/validators';
 
 export const AddressManagerScreen = ({ navigation }: any) => {
   const { profile, fetchProfile } = useUserStore();
   const [isAdding, setIsAdding] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Form State
@@ -56,6 +63,110 @@ export const AddressManagerScreen = ({ navigation }: any) => {
     },
   ];
 
+  const [addressList, setAddressList] = useState<any[]>(mockAddresses);
+  const [loadingList, setLoadingList] = useState(false);
+
+  const loadAddressList = async () => {
+    const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
+    try {
+      setLoadingList(true);
+      const res = await fetchBuyerAddressList(buyerId);
+      let list: any[] = [];
+      if (Array.isArray(res)) {
+        list = res;
+      } else if (res && Array.isArray(res.data)) {
+        list = res.data;
+      } else if (res && Array.isArray(res.addresses)) {
+        list = res.addresses;
+      }
+      if (list.length > 0) {
+        setAddressList(list);
+      }
+    } catch (e) {
+      console.warn('[AddressManager] Failed to fetch address list:', e);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadAddressList();
+  }, [profile]);
+
+  const handleEditPress = async (addr: any) => {
+    setEditingAddressId(addr._id || addr.id || '3');
+    setName(addr.name || addr.fullname || '');
+    setEmail(addr.email || profile?.email || '');
+    setPhone(addr.phone || '');
+    setFlat(addr.address1 || addr.addressLine1 || '');
+    setArea(addr.address2 || addr.addressLine2 || '');
+    setPincode(addr.pincode || '');
+    setCity(addr.city || '');
+    setState(addr.state || '');
+    setIsDefault(addr.isDefault || addr.default_status === '1');
+    setIsAdding(true);
+
+    try {
+      const res = await fetchBuyerAddressEdit(addr._id || addr.id || '3');
+      if (res && res.data) {
+        const d = res.data;
+        if (d.fullname) setName(d.fullname);
+        if (d.email) setEmail(d.email);
+        if (d.phone) setPhone(d.phone);
+        if (d.address1) setFlat(d.address1);
+        if (d.address2) setArea(d.address2);
+        if (d.pincode) setPincode(d.pincode);
+        if (d.city) setCity(d.city);
+        if (d.state) setState(d.state);
+        if (d.default_status !== undefined) setIsDefault(d.default_status === '1');
+      }
+    } catch (e) {
+      console.warn('[AddressManager] Failed to fetch address edit data:', e);
+    }
+  };
+
+  const handleDeletePress = (addrId: string) => {
+    Alert.alert('Delete Address', 'Are you sure you want to delete this address?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteBuyerAddress(addrId);
+            Alert.alert('Success', 'Address deleted successfully.');
+            loadAddressList();
+          } catch (err: any) {
+            Alert.alert('Error', err.message || 'Failed to delete address.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleSetDefault = async (addr: any) => {
+    const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
+    try {
+      await updateBuyerAddress({
+        id: addr._id || addr.id || '3',
+        buyerid: buyerId,
+        fullname: addr.fullname || addr.name || '',
+        email: addr.email || profile?.email || '',
+        phone: addr.phone || '',
+        address1: addr.address1 || addr.addressLine1 || '',
+        address2: addr.address2 || addr.addressLine2 || '',
+        pincode: addr.pincode || '',
+        city: addr.city || '',
+        state: addr.state || '',
+        default_status: '1',
+      });
+      Alert.alert('Success', 'Default address updated.');
+      loadAddressList();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update default address.');
+    }
+  };
+
   const handleSave = async () => {
     setFieldErrors({});
 
@@ -88,18 +199,38 @@ export const AddressManagerScreen = ({ navigation }: any) => {
 
     setIsLoading(true);
     try {
-      await apiClient.post('/users/me/address', {
-        label: formData.name || 'Home',
-        street: `${formData.flat}, ${formData.area}`,
+      const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
+      const addressPayload = {
+        buyerid: buyerId,
+        fullname: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address1: formData.flat,
+        address2: formData.area,
+        pincode: formData.pincode,
         city: formData.city,
         state: formData.state,
-        zipCode: formData.pincode,
-        isDefault,
-      });
+        default_status: isDefault ? '1' : '0',
+      };
+
+      if (editingAddressId) {
+        await updateBuyerAddress({
+          id: editingAddressId,
+          ...addressPayload,
+        });
+        Alert.alert('Success', 'Address updated successfully!');
+      } else {
+        await addBuyerAddress(addressPayload);
+        Alert.alert('Success', 'Address added successfully!');
+      }
+
       await fetchProfile();
+      await loadAddressList();
       setIsAdding(false);
-    } catch {
-      setIsAdding(false);
+      setEditingAddressId(null);
+    } catch (err: any) {
+      console.error('[AddressManager] Save error:', err);
+      Alert.alert('Error', err.message || 'Failed to save address. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -319,64 +450,92 @@ export const AddressManagerScreen = ({ navigation }: any) => {
             </TouchableOpacity>
           </View>
         ) : (
-          /* Page 11: Confirm Address List */
           <View style={styles.addressListContainer}>
-            {mockAddresses.map((addr) => (
-              <View key={addr._id} style={styles.addressCard}>
-                <Typography variant="h2" style={styles.addressCardName}>
-                  {addr.name}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.addressCardLine}>
-                  {addr.addressLine1}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.addressCardLine}>
-                  {addr.addressLine2}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.addressCardLine}>
-                  {addr.location}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.addressCardLine}>
-                  {addr.country}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.addressCardPhone}>
-                  Phone number : {addr.phone}
-                </Typography>
+            {addressList.map((addr) => {
+              const addrId = String(addr.id || addr._id || '3');
+              const displayName = addr.fullname || addr.name || 'Saved Address';
+              const line1 = addr.address1 || addr.addressLine1 || '';
+              const line2 = addr.address2 || addr.addressLine2 || '';
+              const cityState =
+                addr.city && addr.state
+                  ? `${addr.city}, ${addr.state} ${addr.pincode || ''}`
+                  : addr.location || '';
+              const isDef = addr.default_status === '1' || addr.isDefault === true;
 
-                <View style={styles.addressCardBottomRow}>
-                  <View style={styles.addressActionButtons}>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      activeOpacity={0.7}
-                      onPress={() => setIsAdding(true)}
-                    >
-                      <Typography variant="bodySmall" style={styles.editButtonText}>
-                        Edit
-                      </Typography>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      activeOpacity={0.7}
-                      onPress={() => {}}
-                    >
-                      <Typography variant="bodySmall" style={styles.removeButtonText}>
-                        Remove
-                      </Typography>
-                    </TouchableOpacity>
-                  </View>
-
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => {}}
-                    style={styles.setDefaultButton}
-                  >
-                    <Typography variant="bodySmall" style={styles.setDefaultText}>
-                      Set as Default Address
+              return (
+                <View key={addrId} style={styles.addressCard}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h2" style={styles.addressCardName}>
+                      {displayName}
                     </Typography>
-                  </TouchableOpacity>
+                    {isDef ? (
+                      <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                        <Typography style={{ fontSize: 10, color: '#059669', fontFamily: 'Montserrat-Bold' }}>
+                          DEFAULT
+                        </Typography>
+                      </View>
+                    ) : null}
+                  </View>
+                  {line1 ? (
+                    <Typography variant="bodySmall" style={styles.addressCardLine}>
+                      {line1}
+                    </Typography>
+                  ) : null}
+                  {line2 ? (
+                    <Typography variant="bodySmall" style={styles.addressCardLine}>
+                      {line2}
+                    </Typography>
+                  ) : null}
+                  {cityState ? (
+                    <Typography variant="bodySmall" style={styles.addressCardLine}>
+                      {cityState}
+                    </Typography>
+                  ) : null}
+                  <Typography variant="bodySmall" style={styles.addressCardLine}>
+                    {addr.country || 'India'}
+                  </Typography>
+                  <Typography variant="bodySmall" style={styles.addressCardPhone}>
+                    Phone number : {addr.phone || 'N/A'}
+                  </Typography>
+
+                  <View style={styles.addressCardBottomRow}>
+                    <View style={styles.addressActionButtons}>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        activeOpacity={0.7}
+                        onPress={() => handleEditPress(addr)}
+                      >
+                        <Typography variant="bodySmall" style={styles.editButtonText}>
+                          Edit
+                        </Typography>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        activeOpacity={0.7}
+                        onPress={() => handleDeletePress(addrId)}
+                      >
+                        <Typography variant="bodySmall" style={styles.removeButtonText}>
+                          Remove
+                        </Typography>
+                      </TouchableOpacity>
+                    </View>
+
+                    {!isDef && (
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleSetDefault(addr)}
+                        style={styles.setDefaultButton}
+                      >
+                        <Typography variant="bodySmall" style={styles.setDefaultText}>
+                          Set as Default Address
+                        </Typography>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
 
             <TouchableOpacity
               style={styles.addNewButton}

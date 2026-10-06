@@ -6,6 +6,7 @@ import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
+import { fetchBuyerProductDetails } from '../../../infrastructure/api/buyerApi';
 
 export const SupplierListingScreen = ({ route, navigation }: any) => {
   const { product } = route.params || {};
@@ -13,6 +14,12 @@ export const SupplierListingScreen = ({ route, navigation }: any) => {
   const { addToCart } = useCartStore();
 
   React.useEffect(() => {
+    const prodId = product?.productid || product?._id || product?.id;
+    if (prodId) {
+      fetchBuyerProductDetails(prodId).catch((err) => {
+        console.log('[SupplierListingScreen] Details API:', err?.message);
+      });
+    }
     // Reference-accurate supplier data matching Buyer New page 8
     const mockSuppliers = [
       {

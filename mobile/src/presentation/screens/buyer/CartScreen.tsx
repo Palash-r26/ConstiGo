@@ -11,13 +11,21 @@ import { Logo } from '../../components/Logo';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
+import { useFocusEffect } from '@react-navigation/native';
 
 export const CartScreen = ({ navigation }: any) => {
-  const { items: cartItems, removeItem } = useCartStore();
+  const { items: cartItems, subTotal, fetchCart, removeItem } = useCartStore();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchCart();
+    }, [])
+  );
 
   const mockCartItems = [
     {
       _id: '1',
+      productid: 'CVP300926224904',
       category: 'Bricks',
       name: 'Jindal Red Bricks Type I',
       price: '₹ 20,000/-',
@@ -27,6 +35,7 @@ export const CartScreen = ({ navigation }: any) => {
     },
     {
       _id: '2',
+      productid: 'CVP300926224905',
       category: 'Steel',
       name: 'JSW Steel & Iron Type II',
       price: '₹ 4,800/-',
@@ -36,9 +45,14 @@ export const CartScreen = ({ navigation }: any) => {
     },
   ];
 
+  const displayItems = cartItems.length > 0 ? cartItems : mockCartItems;
+
   const renderIcon = (type: string) => {
-    if (type === 'bricks') {
+    if (type?.toLowerCase().includes('brick')) {
       return <MaterialCommunityIcon name="wall" size={36} color="#C26D45" />;
+    }
+    if (type?.toLowerCase().includes('cement')) {
+      return <MaterialCommunityIcon name="sack" size={36} color="#D29A5C" />;
     }
     return <MaterialCommunityIcon name="view-parallel" size={36} color="#8A9BA8" />;
   };
@@ -75,76 +89,99 @@ export const CartScreen = ({ navigation }: any) => {
           Shopping Cart
         </Typography>
         <Typography variant="bodySmall" style={styles.subtitle}>
-          Two Item Is In Your Cart
+          {cartItems.length > 0
+            ? `${cartItems.length} Item(s) In Your Cart`
+            : 'Two Item Is In Your Cart'}
         </Typography>
 
         {/* Cart Items List */}
         <View style={styles.listContainer}>
-          {mockCartItems.map((item) => (
-            <View key={item._id} style={styles.cartCard}>
-              <View style={styles.cardMainRow}>
-                {/* Thumbnail */}
-                <View style={styles.thumbnailContainer}>
-                  {renderIcon(item.type)}
-                </View>
+          {displayItems.map((item: any) => {
+            const itemId = item._id || item.id || item.productid;
+            const itemName = item.productname || item.name;
+            const itemCategory = item.product_category || item.category || 'Materials';
+            const itemPrice = item.price
+              ? (typeof item.price === 'number' ? `₹ ${item.price}/-` : item.price)
+              : (item.amount ? `₹ ${item.amount}/-` : '₹ 400/-');
+            const itemSub = item.quantity ? `Qty: ${item.quantity}` : (item.subPrice || 'In Stock');
 
-                {/* Details */}
-                <View style={styles.detailsContainer}>
-                  <View style={styles.topDetailsRow}>
-                    <View style={styles.textDetails}>
-                      <Typography variant="bodySmall" style={styles.categoryText}>
-                        {item.category}
+            return (
+              <View key={itemId} style={styles.cartCard}>
+                <View style={styles.cardMainRow}>
+                  {/* Thumbnail */}
+                  <View style={styles.thumbnailContainer}>
+                    {renderIcon(item.type || itemCategory)}
+                  </View>
+
+                  {/* Details */}
+                  <View style={styles.detailsContainer}>
+                    <View style={styles.topDetailsRow}>
+                      <View style={styles.textDetails}>
+                        <Typography variant="bodySmall" style={styles.categoryText}>
+                          {itemCategory}
+                        </Typography>
+                        <Typography variant="bodyBold" style={styles.productName}>
+                          {itemName}
+                        </Typography>
+                      </View>
+
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={styles.heartButton}
+                      >
+                        <MaterialCommunityIcon
+                          name={item.isFavorite ? 'cards-heart' : 'heart-outline'}
+                          size={18}
+                          color={item.isFavorite ? '#E05656' : '#8A8A8E'}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Price Row */}
+                    <View style={styles.priceRow}>
+                      <Typography variant="bodyBold" style={styles.priceText}>
+                        {itemPrice}{' '}
                       </Typography>
-                      <Typography variant="bodyBold" style={styles.productName}>
-                        {item.name}
+                      <Typography variant="bodySmall" style={styles.subPriceText}>
+                        {itemSub}
                       </Typography>
                     </View>
 
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      style={styles.heartButton}
-                    >
-                      <MaterialCommunityIcon
-                        name={item.isFavorite ? 'cards-heart' : 'heart-outline'}
-                        size={18}
-                        color={item.isFavorite ? '#E05656' : '#8A8A8E'}
-                      />
-                    </TouchableOpacity>
-                  </View>
+                    {/* Rating & Delete Button Row */}
+                    <View style={styles.bottomRow}>
+                      <View style={styles.starsRow}>
+                        {[...Array(5)].map((_, idx) => (
+                          <Icon key={idx} name="star" size={12} color="#F5A623" />
+                        ))}
+                      </View>
 
-                  {/* Price Row */}
-                  <View style={styles.priceRow}>
-                    <Typography variant="bodyBold" style={styles.priceText}>
-                      {item.price}{' '}
-                    </Typography>
-                    <Typography variant="bodySmall" style={styles.subPriceText}>
-                      {item.subPrice}
-                    </Typography>
-                  </View>
-
-                  {/* Rating & Delete Button Row */}
-                  <View style={styles.bottomRow}>
-                    <View style={styles.starsRow}>
-                      {[...Array(5)].map((_, idx) => (
-                        <Icon key={idx} name="star" size={12} color="#F5A623" />
-                      ))}
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        activeOpacity={0.8}
+                        onPress={() => removeItem(itemId)}
+                      >
+                        <Typography variant="bodySmall" style={styles.deleteText}>
+                          Delete
+                        </Typography>
+                      </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      activeOpacity={0.8}
-                      onPress={() => removeItem(item._id)}
-                    >
-                      <Typography variant="bodySmall" style={styles.deleteText}>
-                        Delete
-                      </Typography>
-                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
+
+        {/* Proceed to Checkout Button */}
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('Checkout')}
+        >
+          <Typography variant="bodyMedium" style={styles.checkoutButtonText}>
+            Proceed to Checkout {subTotal > 0 ? `(₹ ${subTotal})` : ''}
+          </Typography>
+        </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -281,6 +318,24 @@ const styles = StyleSheet.create({
   deleteText: {
     color: '#FFFFFF',
     fontSize: 11,
+    fontWeight: '700',
+  },
+  checkoutButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  checkoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '700',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -16,14 +16,21 @@ import Icon from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { addProductSchema } from '../../../application/utils/validators';
 import { useAuthStore } from '../../../application/store/authStore';
-import { addVendorProduct, updateVendorProduct } from '../../../infrastructure/api/vendorApi';
+import {
+  addVendorProduct,
+  updateVendorProduct,
+  fetchVendorProductCategories,
+} from '../../../infrastructure/api/vendorApi';
 
-const QUICK_CATEGORIES = ['Cement', 'Steel', 'Bricks', 'Sand', 'Aggregate', 'Tiles', 'Paint', 'Plumbing', 'Electrical'];
+const DEFAULT_CATEGORIES = ['Cement', 'Bricks', 'Steel', 'Sand', 'PVC Pipe', 'Plywood', 'Wire', 'Scaffolding', 'Shuttering', 'Aggregate', 'Tiles', 'Paint'];
 
 export const AddProductScreen = ({ navigation, route }: any) => {
   const user = useAuthStore((state) => state.user);
   const vendorId = route?.params?.vendorid || user?.vendorid || user?._id || 'CV290926162458';
   const existingProduct = route?.params?.product || null;
+
+  const [categoriesList, setCategoriesList] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [productName, setProductName] = useState(existingProduct?.productname || existingProduct?.name || '');
   const [productCategory, setProductCategory] = useState(existingProduct?.productcategory || existingProduct?.category || '');
@@ -44,6 +51,27 @@ export const AddProductScreen = ({ navigation, route }: any) => {
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+
+  useEffect(() => {
+    const loadProductCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/product_categories_fetch.php
+        const res = await fetchVendorProductCategories();
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          const names = res.data.map((c) => c.category).filter(Boolean);
+          if (names.length > 0) {
+            setCategoriesList(names);
+          }
+        }
+      } catch (e) {
+        console.warn('[AddProductScreen] Failed to fetch product categories, using fallback:', e);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadProductCategories();
+  }, []);
 
   const handlePickImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
@@ -120,7 +148,18 @@ export const AddProductScreen = ({ navigation, route }: any) => {
         Alert.alert(
           'Success',
           existingProduct ? 'Product updated successfully!' : 'Product added successfully!',
-          [{ text: 'OK', onPress: () => navigation?.goBack() }]
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                if (navigation?.canGoBack && navigation.canGoBack()) {
+                  navigation.goBack();
+                } else {
+                  navigation?.navigate('Home');
+                }
+              },
+            },
+          ]
         );
       } else {
         setServerError(response?.message || response?.error || 'Failed to save product. Please try again.');
@@ -146,6 +185,20 @@ export const AddProductScreen = ({ navigation, route }: any) => {
       >
         {/* Title Section */}
         <View style={styles.titleContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              if (navigation?.canGoBack && navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation?.navigate('Home');
+              }
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Icon name="arrow-left" size={22} color="#0F172A" />
+          </TouchableOpacity>
           <Typography variant="h1" style={styles.mainTitle}>
             {existingProduct ? 'Update Product' : 'Add Product'}
           </Typography>
@@ -227,32 +280,41 @@ export const AddProductScreen = ({ navigation, route }: any) => {
 
           {/* Quick Select Category Chips */}
           <View style={{ marginBottom: 4 }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
-              {QUICK_CATEGORIES.map((cat) => {
-                const isSelected = productCategory.toLowerCase() === cat.toLowerCase();
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => {
-                      setProductCategory(cat);
-                      if (fieldErrors.productCategory) setFieldErrors({ ...fieldErrors, productCategory: '' });
-                    }}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 5,
-                      borderRadius: 14,
-                      backgroundColor: isSelected ? '#8B0000' : '#FFFFFF',
-                      borderWidth: 1,
-                      borderColor: isSelected ? '#8B0000' : '#E2E8F0',
-                    }}
-                  >
-                    <Typography style={{ fontSize: 11, color: isSelected ? '#FFFFFF' : '#475569', fontFamily: isSelected ? 'Montserrat-Bold' : 'Montserrat-Medium' }}>
-                      {cat}
-                    </Typography>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {loadingCategories ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4, gap: 6 }}>
+                <ActivityIndicator size="small" color="#8B0000" />
+                <Typography style={{ fontSize: 11, color: '#64748B' }}>
+                  Loading product categories...
+                </Typography>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
+                {categoriesList.map((cat: string) => {
+                  const isSelected = productCategory.toLowerCase() === cat.toLowerCase();
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      onPress={() => {
+                        setProductCategory(cat);
+                        if (fieldErrors.productCategory) setFieldErrors({ ...fieldErrors, productCategory: '' });
+                      }}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 5,
+                        borderRadius: 14,
+                        backgroundColor: isSelected ? '#8B0000' : '#FFFFFF',
+                        borderWidth: 1,
+                        borderColor: isSelected ? '#8B0000' : '#E2E8F0',
+                      }}
+                    >
+                      <Typography style={{ fontSize: 11, color: isSelected ? '#FFFFFF' : '#475569', fontFamily: isSelected ? 'Montserrat-Bold' : 'Montserrat-Medium' }}>
+                        {cat}
+                      </Typography>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
           </View>
 
           {/* Product Description */}
@@ -475,6 +537,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 18,
     marginBottom: 26,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: 4,
+    padding: 6,
+    zIndex: 10,
   },
   mainTitle: {
     fontSize: 26,

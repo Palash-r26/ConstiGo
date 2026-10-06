@@ -22,6 +22,7 @@ export const VENDOR_ENDPOINTS = {
   SUPPORT: `${VENDOR_API_BASE}/support.php`,
   PROFILE: `${VENDOR_API_BASE}/profile.php`,
   PROFILE_UPDATE: `${VENDOR_API_BASE}/profile_update.php`,
+  PRODUCT_CATEGORIES_FETCH: `${VENDOR_API_BASE}/product_categories_fetch.php`,
 };
 
 // Generic helper to send POST requests to PHP vendor endpoints reliably
@@ -465,3 +466,22 @@ export const updateVendorProfile = async (data: VendorProfileUpdatePayload) => {
   });
   return result;
 };
+
+export interface VendorProductCategory {
+  id: string;
+  category: string;
+}
+
+/**
+ * 19. Product Categories API
+ * POST https://constigo.in/app/vendor/product_categories_fetch.php
+ */
+export const fetchVendorProductCategories = async () => {
+  return postVendorForm<{
+    status: string | boolean;
+    error?: string;
+    data?: VendorProductCategory[];
+    [key: string]: any;
+  }>(VENDOR_ENDPOINTS.PRODUCT_CATEGORIES_FETCH, {});
+};
+

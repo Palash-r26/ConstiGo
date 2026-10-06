@@ -6,9 +6,17 @@ import { AuthInput } from '../../components/AuthInput';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import Icon from 'react-native-vector-icons/Feather';
 import { sendForgotOtp, verifyForgotOtp } from '../../../infrastructure/api/vendorApi';
+import {
+  sendBuyerForgotOtp,
+  verifyBuyerForgotOtp,
+  isBuyerSuccess,
+} from '../../../infrastructure/api/buyerApi';
 import { forgotSendOtpSchema, forgotVerifyOtpSchema } from '../../../application/utils/validators';
 
-export const ForgotPasswordScreen = ({ navigation }: any) => {
+export const ForgotPasswordScreen = ({ route, navigation }: any) => {
+  const role = route?.params?.role || 'BUYER';
+  const isSupplier = role === 'SUPPLIER';
+
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
@@ -31,8 +39,14 @@ export const ForgotPasswordScreen = ({ navigation }: any) => {
 
     try {
       setIsLoading(true);
-      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/forgot_sendotp.php
-      const response = await sendForgotOtp(phone.trim());
+      let response: any;
+      if (isSupplier) {
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/forgot_sendotp.php
+        response = await sendForgotOtp(phone.trim());
+      } else {
+        // Call REAL PHP production endpoint: https://constigo.in/app/buyer/forgot_sendotp.php
+        response = await sendBuyerForgotOtp(phone.trim());
+      }
       console.log('[ForgotPasswordScreen] Send OTP Raw Response:', response);
 
       const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
@@ -66,13 +80,19 @@ export const ForgotPasswordScreen = ({ navigation }: any) => {
 
     try {
       setIsLoading(true);
-      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/forgot_verifyotp.php
-      const response = await verifyForgotOtp(phone.trim(), otp.trim());
+      let response: any;
+      if (isSupplier) {
+        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/forgot_verifyotp.php
+        response = await verifyForgotOtp(phone.trim(), otp.trim());
+      } else {
+        // Call REAL PHP production endpoint: https://constigo.in/app/buyer/forgot_verifyotp.php
+        response = await verifyBuyerForgotOtp(phone.trim(), otp.trim());
+      }
       console.log('[ForgotPasswordScreen] Verify OTP Raw Response:', response);
 
       const isSuccess = response?.status === true || response?.status === 'success' || response?.success === true || (response && !response?.error);
       if (isSuccess) {
-        navigation.navigate('ChangePassword', { phone: phone.trim() });
+        navigation.navigate('ChangePassword', { phone: phone.trim(), role });
       } else {
         setServerError(response?.message || response?.error || 'Invalid OTP. Please check and try again.');
       }

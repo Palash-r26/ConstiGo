@@ -15,8 +15,9 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import { useCartStore } from '../../../application/store/cartStore';
 import { cardPaymentSchema } from '../../../application/utils/validators';
 
-export const CheckoutScreen = ({ navigation }: any) => {
-  const { clearCart } = useCartStore();
+export const CheckoutScreen = ({ navigation, route }: any) => {
+  const { placeOrder, clearCart } = useCartStore();
+  const addressId = route?.params?.addressId || '3';
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -48,6 +49,11 @@ export const CheckoutScreen = ({ navigation }: any) => {
       }
     }
 
+    try {
+      await placeOrder(addressId);
+    } catch (err) {
+      console.warn('[Checkout] placeOrder error:', err);
+    }
     await clearCart();
     navigation.navigate('OrderSuccess');
   };
