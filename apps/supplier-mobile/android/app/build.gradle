@@ -136,6 +136,7 @@ tasks.configureEach { task ->
     if (task.name.startsWith("createBundle")) {
         task.doFirst {
             file("${layout.buildDirectory.get().asFile}/intermediates/sourcemaps/react/release").mkdirs()
+            file("${layout.buildDirectory.get().asFile}/generated/sourcemaps/react/release").mkdirs()
             file("${layout.buildDirectory.get().asFile}/generated/assets/react/release").mkdirs()
         }
     }
