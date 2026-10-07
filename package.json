@@ -1,0 +1,17 @@
+{
+  "name": "constigo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start:buyer": "npm --prefix apps/buyer-mobile start",
+    "start:supplier": "npm --prefix apps/supplier-mobile start",
+    "android:buyer": "npm --prefix apps/buyer-mobile run android",
+    "android:supplier": "npm --prefix apps/supplier-mobile run android",
+    "ios:buyer": "npm --prefix apps/buyer-mobile run ios",
+    "ios:supplier": "npm --prefix apps/supplier-mobile run ios"
+  }
+}
