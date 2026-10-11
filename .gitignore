@@ -1,48 +1,96 @@
-# Node.js
+# Dependencies
 node_modules/
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 package-lock.json
+**/package-lock.json
 yarn.lock
+**/yarn.lock
 
-# React Native
-mobile/.expo/
-mobile/android/app/build/
-mobile/android/.gradle/
-mobile/ios/Pods/
-mobile/ios/build/
-mobile/ios/*.xcworkspace
+# Build outputs & Bundles
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.expo/
+**/.expo/
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+*.jsbundle
 
-# Android
+# Android build & cache
+.gradle/
+**/.gradle/
+.cxx/
+**/.cxx/
+.kotlin/
+**/.kotlin/
 *.apk
 *.ap_
 *.aab
+*.ap_
 local.properties
-mobile/android/build/
-mobile/android/app/build/
+**/local.properties
+*.keystore
+!debug.keystore
+*.iml
 
-# Environment Variables
+# iOS / Xcode build & cache
+Pods/
+**/Pods/
+DerivedData/
+**/DerivedData/
+*.xcworkspace/
+!*.xcodeproj/project.xcworkspace/
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+**/.xcode.env.local
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/
+**/fastlane/test_output/
+
+# Environment variables & Secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-mobile/.env
-firebase-adminsdk.json
-backend/firebase-adminsdk.json
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*firebase-adminsdk*.json
+**/firebase-adminsdk*.json
 
-# MacOS
+# Operating System
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# IDEs and Editors
+# IDEs & Editors
 .idea/
+**/.idea/
 .vscode/
+**/.vscode/
 *.swp
+*.swo
 
-# Logs and databases
+# Logs & Databases
 *.log
 *.sqlite
+*.sqlite3
 
-# ConstiGo Specific
+# Tooling & Agent Artifacts
 brain/
 .system_generated/

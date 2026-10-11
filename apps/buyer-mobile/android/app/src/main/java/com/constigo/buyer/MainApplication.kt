@@ -1,4 +1,4 @@
-package com.mobile
+package com.constigo.buyer
 
 import android.app.Application
 import com.facebook.react.PackageList

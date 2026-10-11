@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Linking, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Linking, ActivityIndicator, Image } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
@@ -669,8 +669,16 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                       <TouchableOpacity className="absolute right-4 top-4 z-10" onPress={() => toggleWishlist(item._id)}>
                         <Icon name="heart" size={16} color={isFavorited(item._id) ? "#8B0000" : "#9CA3AF"} />
                       </TouchableOpacity>
-                      <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
-                        <Icon name="box" size={40} color="#9CA3AF" />
+                      <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center overflow-hidden">
+                        {item.images && item.images[0] ? (
+                          <Image
+                            source={{ uri: item.images[0] }}
+                            style={{ width: '100%', height: '100%', borderRadius: 16 }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Icon name="box" size={40} color="#9CA3AF" />
+                        )}
                       </View>
                       <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
                       <View className="flex-row items-end mb-3">
@@ -737,8 +745,16 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                       <TouchableOpacity className="absolute right-4 top-4 z-10" onPress={() => toggleWishlist(item._id)}>
                         <Icon name="heart" size={16} color={isFavorited(item._id) ? "#8B0000" : "#9CA3AF"} />
                       </TouchableOpacity>
-                      <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center">
-                        <Icon name="box" size={40} color="#9CA3AF" />
+                      <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center overflow-hidden">
+                        {item.images && item.images[0] ? (
+                          <Image
+                            source={{ uri: item.images[0] }}
+                            style={{ width: '100%', height: '100%', borderRadius: 16 }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Icon name="box" size={40} color="#9CA3AF" />
+                        )}
                       </View>
                       <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
                       <View className="flex-row items-end mb-3">

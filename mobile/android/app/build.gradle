@@ -131,3 +131,12 @@ project.ext.vectoricons = [
 ]
 
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+tasks.configureEach { task ->
+    if (task.name.startsWith("createBundle")) {
+        task.doFirst {
+            file("${layout.buildDirectory.get().asFile}/intermediates/sourcemaps/react/release").mkdirs()
+            file("${layout.buildDirectory.get().asFile}/generated/assets/react/release").mkdirs()
+        }
+    }
+}

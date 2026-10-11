@@ -23,6 +23,11 @@ export const VENDOR_ENDPOINTS = {
   PROFILE: `${VENDOR_API_BASE}/profile.php`,
   PROFILE_UPDATE: `${VENDOR_API_BASE}/profile_update.php`,
   PRODUCT_CATEGORIES_FETCH: `${VENDOR_API_BASE}/product_categories_fetch.php`,
+  ORDERS_ALL: `${VENDOR_API_BASE}/orders_all.php`,
+  ORDERS_ACCEPT: `${VENDOR_API_BASE}/orders_accept.php`,
+  ORDERS_ACCEPT_LIST: `${VENDOR_API_BASE}/orders_accept_list.php`,
+  ORDERS_DECLINE: `${VENDOR_API_BASE}/orders_decline.php`,
+  ORDERS_DECLINE_LIST: `${VENDOR_API_BASE}/orders_decline_list.php`,
 };
 
 // Generic helper to send POST requests to PHP vendor endpoints reliably
@@ -483,5 +488,106 @@ export const fetchVendorProductCategories = async () => {
     data?: VendorProductCategory[];
     [key: string]: any;
   }>(VENDOR_ENDPOINTS.PRODUCT_CATEGORIES_FETCH, {});
+};
+
+export interface VendorOrderActionPayload {
+  vendorid: string;
+  buyerid: string;
+  orderid: string;
+  productid: string;
+}
+
+export interface VendorOrderItem {
+  id?: string;
+  _id?: string;
+  orderid?: string;
+  order_id?: string;
+  buyerid?: string;
+  buyer_id?: string;
+  productid?: string;
+  product_id?: string;
+  productname?: string;
+  title?: string;
+  name?: string;
+  product_description?: string;
+  description?: string;
+  productcategory?: string;
+  category?: string;
+  type?: 'brick' | 'steel' | 'cement' | 'sand' | string;
+  subType?: string;
+  quantity?: string | number;
+  unitValue?: string;
+  unitLabel?: string;
+  estTotal?: string;
+  amount?: string | number;
+  total?: number;
+  price?: string | number;
+  status?: 'pending' | 'accepted' | 'declined' | string;
+  distance?: string;
+  badge?: string;
+  buyerName?: string;
+  date?: string;
+  [key: string]: any;
+}
+
+/**
+ * 20. Orders All API
+ * POST https://constigo.in/app/vendor/orders_all.php
+ * Variable: 'vendorid'
+ */
+export const fetchVendorOrdersAll = async (vendorid: string) => {
+  return postVendorForm<any>(VENDOR_ENDPOINTS.ORDERS_ALL, {
+    vendorid,
+  });
+};
+
+/**
+ * 21. Orders Accept Button API
+ * POST https://constigo.in/app/vendor/orders_accept.php
+ * Variables: 'vendorid', 'buyerid', 'orderid', 'productid'
+ */
+export const acceptVendorOrder = async (data: VendorOrderActionPayload) => {
+  return postVendorForm<any>(VENDOR_ENDPOINTS.ORDERS_ACCEPT, {
+    vendorid: data.vendorid,
+    buyerid: data.buyerid,
+    orderid: data.orderid,
+    productid: data.productid,
+  });
+};
+
+/**
+ * 22. Order Accept List API
+ * POST https://constigo.in/app/vendor/orders_accept_list.php
+ * Variable: 'vendorid'
+ */
+export const fetchVendorOrdersAcceptedList = async (vendorid: string) => {
+  return postVendorForm<any>(VENDOR_ENDPOINTS.ORDERS_ACCEPT_LIST, {
+    vendorid,
+  });
+};
+
+/**
+ * 23. Order Decline Button API
+ * POST https://constigo.in/app/vendor/orders_decline.php
+ * Variables: 'vendorid', 'buyerid', 'orderid', 'productid'
+ */
+export const declineVendorOrder = async (data: VendorOrderActionPayload) => {
+  return postVendorForm<any>(VENDOR_ENDPOINTS.ORDERS_DECLINE, {
+    vendorid: data.vendorid,
+    buyerid: data.buyerid,
+    orderid: data.orderid,
+    productid: data.productid,
+  });
+};
+
+/**
+ * 24. Order Decline List API
+ * POST https://constigo.in/app/vendor/orders_decline_list.php
+ * Variable: 'vendorid'
+ */
+export const fetchVendorOrdersDeclinedList = async (vendorid: string) => {
+  return postVendorForm<any>(VENDOR_ENDPOINTS.ORDERS_DECLINE_LIST, {
+    vendorid,
+  });
 };
 

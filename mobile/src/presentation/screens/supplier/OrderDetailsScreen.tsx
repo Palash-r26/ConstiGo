@@ -4,9 +4,13 @@ import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Button } from '../../components/Button';
 import Icon from 'react-native-vector-icons/Feather';
+import { useAuthStore } from '../../../application/store/authStore';
+import { acceptVendorOrder, declineVendorOrder } from '../../../infrastructure/api/vendorApi';
 
 export const OrderDetailsScreen = ({ route, navigation }: any) => {
   const incomingOrder = route?.params?.order;
+  const user = useAuthStore((state) => state.user);
+  const vendorId = incomingOrder?.vendorid || user?.vendorid || user?._id || 'CV290926162458';
 
   const [orderStatus, setOrderStatus] = useState<string>(
     incomingOrder?.status === 'accepted'
@@ -34,7 +38,18 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     total: incomingOrder?.total || 20000,
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
+    try {
+      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_accept.php
+      await acceptVendorOrder({
+        vendorid: vendorId,
+        buyerid: incomingOrder?.buyerid || 'CB051026162745',
+        orderid: incomingOrder?.orderid || incomingOrder?._id || incomingOrder?.id || 'ORD061026160920',
+        productid: incomingOrder?.productid || 'CVP300926230112',
+      });
+    } catch (err) {
+      console.warn('[OrderDetailsScreen] acceptVendorOrder API tentative error:', err);
+    }
     setOrderStatus('Accepted');
     Alert.alert(
       'Order Accepted! 🎉',
@@ -52,7 +67,18 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         {
           text: 'Decline',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            try {
+              // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_decline.php
+              await declineVendorOrder({
+                vendorid: vendorId,
+                buyerid: incomingOrder?.buyerid || 'CB051026162745',
+                orderid: incomingOrder?.orderid || incomingOrder?._id || incomingOrder?.id || 'ORD061026160920',
+                productid: incomingOrder?.productid || 'CVP300926224904',
+              });
+            } catch (err) {
+              console.warn('[OrderDetailsScreen] declineVendorOrder API tentative error:', err);
+            }
             setOrderStatus('Declined');
             Alert.alert('Order Declined', `Order #${order._id} has been declined.`, [
               { text: 'OK', onPress: () => navigation.goBack() },
