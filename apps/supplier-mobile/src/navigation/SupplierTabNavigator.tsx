@@ -15,6 +15,8 @@ import { AddProductScreen } from '../screens/supplier/AddProductScreen';
 import { AddMaterialScreen } from '../screens/supplier/AddMaterialScreen';
 import { OrderDetailsScreen } from '../screens/supplier/OrderDetailsScreen';
 import { NotificationsScreen } from '../screens/supplier/NotificationsScreen';
+import { WorkersScreen } from '../screens/supplier/WorkersScreen';
+import { WorkerSignUpScreen } from '../screens/auth/WorkerSignUpScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,7 +27,8 @@ export const SupplierTabNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
-        safeAreaInsets: { bottom: 0, top: 0, left: 0, right: 0 },
+        tabBarHideOnKeyboard: true,
+        safeAreaInsets: { bottom: 0 },
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
         tabBarIconStyle: styles.tabBarIcon,
@@ -68,6 +71,8 @@ export const SupplierStackNavigator = () => {
       <Stack.Screen name="AddMaterial" component={AddMaterialScreen} />
       <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="Workers" component={WorkersScreen} />
+      <Stack.Screen name="WorkerSignUp" component={WorkerSignUpScreen} />
     </Stack.Navigator>
   );
 };

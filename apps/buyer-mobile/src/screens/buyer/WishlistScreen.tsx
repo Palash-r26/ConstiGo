@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View,
   ScrollView,
@@ -6,9 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Typography } from '@constigo/shared';
-import { ScreenWrapper } from '@constigo/shared';
-import { Logo } from '@constigo/shared';
+import { Typography, ScreenWrapper, Logo, SafeImage } from '@constigo/shared';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useUserStore } from '../../store/userStore';
@@ -23,56 +21,14 @@ export const WishlistScreen = ({ navigation }: any) => {
     }, [])
   );
 
-  const mockWishlist = [
-    {
-      _id: '1',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'steel',
-    },
-    {
-      _id: '2',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'cement',
-    },
-    {
-      _id: '3',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'bricks',
-    },
-    {
-      _id: '4',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'steel',
-    },
-    {
-      _id: '5',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'cement',
-    },
-    {
-      _id: '6',
-      name: 'Product Name',
-      price: 'â‚¹ 350.00',
-      unit: 'per gram',
-      type: 'bricks',
-    },
-  ];
+  const wishlistItems: any[] = Array.isArray(profile?.wishlist) ? profile.wishlist : [];
 
   const renderIcon = (type: string) => {
-    if (type === 'cement') {
+    const t = (type || '').toLowerCase();
+    if (t.includes('cement')) {
       return <MaterialCommunityIcon name="sack" size={32} color="#D29A5C" />;
     }
-    if (type === 'bricks') {
+    if (t.includes('brick')) {
       return <MaterialCommunityIcon name="wall" size={32} color="#C26D45" />;
     }
     return <MaterialCommunityIcon name="view-parallel" size={32} color="#8A9BA8" />;
@@ -107,55 +63,94 @@ export const WishlistScreen = ({ navigation }: any) => {
       >
         {/* Title and Subtitle */}
         <Typography variant="h1" style={styles.title}>
-          Favourite
+          Favourites
         </Typography>
         <Typography variant="bodySmall" style={styles.subtitle}>
-          Your Favourite Item Is Here
+          {wishlistItems.length > 0
+            ? `${wishlistItems.length} saved item(s)`
+            : 'Your saved items appear here'}
         </Typography>
 
-        {/* 3-Column Grid */}
-        <View style={styles.gridContainer}>
-          {mockWishlist.map((item) => (
-            <View key={item._id} style={styles.gridCard}>
-              <TouchableOpacity
-                style={styles.heartButton}
-                activeOpacity={0.8}
-                onPress={() => toggleWishlist(item._id)}
-              >
-                <MaterialCommunityIcon name="cards-heart" size={14} color="#8B0000" />
-              </TouchableOpacity>
-
-              <View style={styles.thumbnailContainer}>
-                {renderIcon(item.type)}
-              </View>
-
-              <Typography variant="bodyBold" style={styles.productName}>
-                {item.name}
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#8B0000" />
+            <Typography variant="bodySmall" style={{ color: '#64748B', marginTop: 12 }}>
+              Loading favourites...
+            </Typography>
+          </View>
+        ) : wishlistItems.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Icon name="heart" size={54} color="#CBD5E1" />
+            <Typography variant="h2" style={{ marginTop: 14, color: '#1E293B' }}>
+              No Favourites Yet
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              Items you mark as favourite while exploring materials and suppliers will appear here.
+            </Typography>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Home')}
+              style={styles.browseButton}
+            >
+              <Typography variant="bodyMedium" style={{ color: '#FFFFFF', fontFamily: 'Montserrat-Bold' }}>
+                Browse Catalog
               </Typography>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* 3-Column Grid */
+          <View style={styles.gridContainer}>
+            {wishlistItems.map((item) => {
+              const itemId = item._id || item.id || item.productid;
+              const imgUri = item.productimage || item.image || (Array.isArray(item.images) && item.images[0]);
+              const priceNum = Number(item.price || item.product_price || 0);
 
-              <View style={styles.priceRow}>
-                <Typography variant="bodyBold" style={styles.priceBold}>
-                  {item.price}{' '}
-                </Typography>
-                <Typography variant="bodySmall" style={styles.unitText}>
-                  {item.unit}
-                </Typography>
-              </View>
+              return (
+                <View key={itemId} style={styles.gridCard}>
+                  <TouchableOpacity
+                    style={styles.heartButton}
+                    activeOpacity={0.8}
+                    onPress={() => toggleWishlist(itemId, item.vendorid || item.supplier?._id)}
+                  >
+                    <MaterialCommunityIcon name="cards-heart" size={14} color="#8B0000" />
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.quotationButton}
-                activeOpacity={0.8}
-                onPress={() =>
-                  navigation.navigate('SupplierListing', { product: item })
-                }
-              >
-                <Typography variant="bodyMedium" style={styles.quotationText}>
-                  Get Quatation
-                </Typography>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+                  <View style={styles.thumbnailContainer}>
+                    {imgUri ? (
+                      <SafeImage uri={imgUri} style={{ width: 44, height: 44, borderRadius: 10 }} fallbackIconName="box" />
+                    ) : (
+                      renderIcon(item.category || item.name)
+                    )}
+                  </View>
+
+                  <Typography variant="bodyBold" style={styles.productName} numberOfLines={1}>
+                    {item.name || item.productname}
+                  </Typography>
+
+                  <View style={styles.priceRow}>
+                    <Typography variant="bodyBold" style={styles.priceBold}>
+                      ₹ {priceNum.toFixed(2)}{' '}
+                    </Typography>
+                    <Typography variant="bodySmall" style={styles.unitText}>
+                      {item.unit ? `per ${item.unit}` : ''}
+                    </Typography>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.quotationButton}
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      navigation.navigate('SupplierListing', { product: item })
+                    }
+                  >
+                    <Typography variant="bodyMedium" style={styles.quotationText}>
+                      Get Quotation
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </ScreenWrapper>
   );
@@ -190,95 +185,107 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 120,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 22,
+    fontFamily: 'BalooBhai2-Bold',
+    color: '#000000',
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 6,
   },
   subtitle: {
     fontSize: 12,
-    color: '#8A8A8E',
+    color: '#666666',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 2,
     marginBottom: 20,
+  },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+  },
+  browseButton: {
+    marginTop: 20,
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 12,
     justifyContent: 'space-between',
-    gap: 8,
   },
   gridCard: {
-    width: '31.5%',
+    width: '31%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 8,
+    borderRadius: 16,
+    padding: 10,
     alignItems: 'center',
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
-    marginBottom: 10,
+    position: 'relative',
+    marginBottom: 4,
   },
   heartButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    zIndex: 10,
+    zIndex: 1,
   },
   thumbnailContainer: {
-    width: 54,
-    height: 54,
+    width: 50,
+    height: 50,
+    backgroundColor: '#F7F7F7',
     borderRadius: 12,
-    backgroundColor: '#F7F8FA',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 14,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   productName: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 12,
+    color: '#000000',
     textAlign: 'center',
+    marginBottom: 4,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
     flexWrap: 'wrap',
-    marginVertical: 4,
   },
   priceBold: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#8B0000',
+    fontSize: 11,
+    color: '#000000',
   },
   unitText: {
-    fontSize: 7,
+    fontSize: 9,
     color: '#8A8A8E',
   },
   quotationButton: {
-    backgroundColor: '#8B0000',
-    borderRadius: 14,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
     width: '100%',
+    backgroundColor: '#8B0000',
+    borderRadius: 12,
+    paddingVertical: 6,
     alignItems: 'center',
-    marginTop: 2,
   },
   quotationText: {
     color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '700',
+    fontSize: 10,
+    fontFamily: 'Montserrat-Bold',
   },
 });
-

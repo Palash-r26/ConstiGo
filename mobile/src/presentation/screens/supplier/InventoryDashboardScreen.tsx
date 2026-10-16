@@ -4,7 +4,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Image,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -13,6 +12,7 @@ import {
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../../application/store/authStore';
@@ -26,16 +26,25 @@ import {
 
 export const InventoryDashboardScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
-  const vendorId = user?.vendorid || user?._id || 'CV290926162458';
+  const vendorId = user?.vendorid || user?._id;
 
   const [inventory, setInventory] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'AVAILABLE' | 'UNAVAILABLE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const fetchInventory = async (filter = activeFilter) => {
+    if (!vendorId) {
+      setIsLoading(false);
+      setInventory([]);
+      setLoadError('Please log in with your supplier account to manage inventory.');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setLoadError(null);
       let response;
       if (filter === 'AVAILABLE') {
         response = await fetchVendorAvailableProducts(vendorId);
@@ -44,8 +53,6 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
       } else {
         response = await fetchVendorAllProducts(vendorId);
       }
-
-      console.log(`[InventoryDashboard] Products List Raw Response (${filter}):`, response);
 
       let list: any[] = [];
       if (Array.isArray(response)) {
@@ -57,8 +64,10 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
       }
 
       setInventory(list);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[InventoryDashboard] Failed to fetch inventory:', error);
+      setLoadError(error?.message || 'Failed to load inventory from server');
+      setInventory([]);
     } finally {
       setIsLoading(false);
     }
@@ -99,29 +108,24 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
       );
 
       await updateVendorProduct({
-        vendorid: vendorId,
-        productid: productId,
-        productname: item.productname || item.name || '',
-        productcategory: item.productcategory || item.category || '',
-        stock: String(item.stock || item.stockQty || '1'),
-        product_description: item.product_description || item.description || '',
-        product_price: String(item.product_price || item.price || '0'),
-        discount_price: String(item.discount_price || '0'),
+        id: productId,
         product_status: nextStatus,
-        productStatus: nextStatus === 'available' ? 'in_stock' : 'out_of_stock',
-        delivery_available: item.delivery_available || 'yes',
-        warranty_details: item.warranty_details || '1 Year Product Warranty',
+        productname: item.productname || item.name,
+        category: item.productcategory || item.category,
+        price: item.product_price || item.price,
+        stock: item.stock || item.stockQty,
       });
-    } catch (error) {
-      console.error('[InventoryDashboard] Failed to toggle availability:', error);
-      fetchInventory(activeFilter);
+    } catch (err) {
+      console.warn('[InventoryDashboard] Status update failed:', err);
+      Alert.alert('Notice', 'Unable to synchronize availability change to server.');
+      fetchInventory();
     }
   };
 
   const handleDeleteProduct = (productId: string) => {
     Alert.alert(
       'Delete Product',
-      'Are you sure you want to delete this product from your inventory?',
+      'Are you sure you want to remove this item from your active inventory catalogue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -129,12 +133,14 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteVendorProduct(vendorId, productId);
+              await deleteVendorProduct(productId);
               setInventory((prev) =>
                 prev.filter((p) => (p.productid || p.id || p._id) !== productId)
               );
+              Alert.alert('Success', 'Product deleted successfully.');
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to delete product.');
+              console.warn('[InventoryDashboard] Delete product error:', err);
+              Alert.alert('Error', err?.message || 'Could not delete product.');
             }
           },
         },
@@ -143,30 +149,28 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
   };
 
   const filteredInventory = inventory.filter((item) => {
-    const name = item.productname || item.name || '';
-    const category = item.productcategory || item.category || '';
-    return (
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    const name = (item.productname || item.name || '').toLowerCase();
+    const cat = (item.productcategory || item.category || '').toLowerCase();
+    return name.includes(q) || cat.includes(q);
   });
 
   return (
-    <ScreenWrapper className="bg-[#F8FAFC]">
-      <SupplierTopHeader
-        onProfilePress={() => navigation?.navigate('Profile')}
-        onNotificationPress={() => navigation?.navigate('Notifications')}
-      />
+    <ScreenWrapper>
+      {/* Top Header */}
+      <SupplierTopHeader navigation={navigation} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
+        {/* Hero Banner / CTA */}
         <View style={styles.heroCard}>
           <Typography variant="h1" style={styles.heroTitle}>
-            My Inventory
+            Manage Your Inventory
           </Typography>
-          <Typography variant="bodyDefault" style={styles.heroSubtitle}>
-            Manage your material stock, pricing, and visibility
+          <Typography variant="bodyMedium" style={styles.heroSubtitle}>
+            Update your stock levels, availability, and pricing in real time.
           </Typography>
+
           <TouchableOpacity
             style={styles.addProductButton}
             activeOpacity={0.85}
@@ -178,6 +182,29 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
             </Typography>
           </TouchableOpacity>
         </View>
+
+        {/* Site Labor & Workers Hub Quick Access */}
+        <TouchableOpacity
+          style={styles.workersHubCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('Workers')}
+        >
+          <View style={styles.workersHubLeft}>
+            <View style={styles.workersHubBadge}>
+              <Icon name="users" size={12} color="#8B0000" style={{ marginRight: 4 }} />
+              <Typography style={styles.workersHubBadgeText}>SITE LABOR & WORKERS</Typography>
+            </View>
+            <Typography variant="bodyBold" style={styles.workersHubTitle}>
+              Need Helpers for Material Shifting?
+            </Typography>
+            <Typography style={styles.workersHubDesc}>
+              Find & call verified site helpers, masons, and fabricators
+            </Typography>
+          </View>
+          <View style={styles.workersHubArrow}>
+            <Icon name="arrow-right" size={18} color="#8B0000" />
+          </View>
+        </TouchableOpacity>
 
         {/* Search & Filters */}
         <View style={styles.filterCard}>
@@ -255,7 +282,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
               <View
                 style={[
                   styles.dot,
-                  { backgroundColor: activeFilter === 'UNAVAILABLE' ? '#FECDD3' : '#EF4444' },
+                  { backgroundColor: activeFilter === 'UNAVAILABLE' ? '#FCA5A5' : '#EF4444' },
                 ]}
               />
               <Typography
@@ -271,13 +298,28 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* Loading Spinner */}
+        {/* Loading / Error / Empty States */}
         {isLoading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color="#8B0000" />
             <Typography variant="bodySmall" style={styles.loadingText}>
               Loading inventory...
             </Typography>
+          </View>
+        ) : loadError ? (
+          <View style={styles.centerContainer}>
+            <Icon name="alert-circle" size={44} color="#EF4444" />
+            <Typography variant="bodyBold" style={{ marginTop: 12, color: '#111827' }}>
+              Unable to load inventory
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              {loadError}
+            </Typography>
+            <TouchableOpacity onPress={() => fetchInventory(activeFilter)} style={styles.retryButton}>
+              <Typography variant="bodyMedium" style={{ color: '#FFFFFF', fontSize: 13 }}>
+                Retry
+              </Typography>
+            </TouchableOpacity>
           </View>
         ) : filteredInventory.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -304,21 +346,24 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
                 item.product_status === 'available' ||
                 item.isAvailable === true ||
                 (!item.productStatus && item.product_status !== 'unavailable' && typeof item.stock === 'number' && item.stock > 0);
+              const imgUri = item.productimage || item.image || (Array.isArray(item.images) && item.images[0]);
 
               return (
                 <View key={productId} style={styles.productCard}>
                   <View style={styles.productHeaderRow}>
-                    {item.productimage || item.image ? (
-                      <Image
-                        source={{ uri: item.productimage || item.image }}
-                        style={styles.productImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.productImagePlaceholder}>
-                        <Icon name="box" size={26} color="#8B0000" />
-                      </View>
-                    )}
+                    <View style={styles.productImageWrapper}>
+                      {imgUri ? (
+                        <SafeImage
+                          uri={imgUri}
+                          style={styles.productImage}
+                          fallbackIconName="box"
+                        />
+                      ) : (
+                        <View style={styles.productImagePlaceholder}>
+                          <Icon name="box" size={26} color="#8B0000" />
+                        </View>
+                      )}
+                    </View>
 
                     <View style={styles.productDetailsBlock}>
                       <View style={styles.productTitleRow}>
@@ -500,24 +545,20 @@ const styles = StyleSheet.create({
   },
   chip: {
     flex: 1,
-    height: 38,
-    borderRadius: 19,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   activeChip: {
     backgroundColor: '#8B0000',
-    shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: '#8B0000',
   },
   inactiveChip: {
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
+    backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
   },
   chipText: {
@@ -528,77 +569,88 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Bold',
   },
   inactiveChipText: {
-    color: '#475569',
-    fontFamily: 'Montserrat-SemiBold',
+    color: '#64748B',
+    fontFamily: 'Montserrat-Medium',
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginRight: 6,
+    marginRight: 5,
   },
   centerContainer: {
-    paddingVertical: 48,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
   },
   loadingText: {
     color: '#64748B',
-    marginTop: 10,
-    fontFamily: 'Montserrat-Medium',
+    marginTop: 12,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   emptyContainer: {
-    paddingVertical: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingVertical: 50,
+    paddingHorizontal: 20,
   },
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 18,
     color: '#0F172A',
-    fontFamily: 'BalooBhai2-Bold',
+    marginBottom: 6,
   },
   emptySubtitle: {
+    fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    marginTop: 4,
-    fontFamily: 'Montserrat-Medium',
   },
   listContainer: {
-    paddingHorizontal: 20,
-    gap: 14,
+    marginHorizontal: 20,
+    gap: 16,
   },
   productCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
+    borderRadius: 24,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowRadius: 5,
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
   productHeaderRow: {
     flexDirection: 'row',
-    gap: 14,
     marginBottom: 14,
+  },
+  productImageWrapper: {
+    width: 76,
+    height: 76,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginRight: 14,
   },
   productImage: {
     width: 76,
     height: 76,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
   },
   productImagePlaceholder: {
     width: 76,
@@ -608,7 +660,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#FECACA',
   },
   productDetailsBlock: {
     flex: 1,
@@ -622,40 +674,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0F172A',
     flex: 1,
+    marginRight: 6,
     lineHeight: 20,
-    fontFamily: 'BalooBhai2-Bold',
   },
   deleteIconButton: {
-    padding: 4,
-    marginLeft: 6,
+    padding: 2,
   },
   categoryText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#64748B',
     marginTop: 2,
-    fontFamily: 'Montserrat-Medium',
   },
   statusBadgeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
+    marginTop: 6,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   badgeInStock: {
     backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
   },
   badgeOutOfStock: {
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
+    backgroundColor: '#FEF2F2',
   },
   badgeDot: {
     width: 6,
@@ -664,10 +709,9 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   warrantyText: {
-    fontSize: 11,
-    color: '#64748B',
+    fontSize: 10,
+    color: '#94A3B8',
     marginTop: 4,
-    fontFamily: 'Montserrat-Medium',
   },
   statsRow: {
     flexDirection: 'row',
@@ -727,5 +771,52 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontFamily: 'Montserrat-Bold',
+  },
+  workersHubCard: {
+    backgroundColor: '#FEF2F2',
+    marginHorizontal: 20,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  workersHubLeft: {
+    flex: 1,
+    marginRight: 10,
+  },
+  workersHubBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  workersHubBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat-Bold',
+    color: '#8B0000',
+    letterSpacing: 0.5,
+  },
+  workersHubTitle: {
+    fontSize: 14,
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  workersHubDesc: {
+    fontSize: 11,
+    color: '#64748B',
+    lineHeight: 15,
+  },
+  workersHubArrow: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
 });

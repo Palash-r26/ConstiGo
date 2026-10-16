@@ -1,78 +1,95 @@
 import React from 'react';
-import { View, ScrollView, TextInput, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import { View, ScrollView, TextInput, ActivityIndicator, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import { useHomeStore, Product } from '../../../application/store/homeStore';
+import { fetchBuyerWorkers } from '../../../infrastructure/api/buyerApi';
+import { fetchWorkers } from '../../../infrastructure/api/workerApi';
 
-const SERVICE_WORKERS = [
-  {
-    _id: 'w1',
-    name: 'Ramesh Sharma',
-    category: 'Plumber',
-    rating: '4.8 (95)',
-    distance: '1.8 km',
-    serviceCharge: '₹ 400 / service',
-    visitingCharge: '₹ 150',
-    experience: '8 yrs exp',
-  },
-  {
-    _id: 'w2',
-    name: 'Manoj Kumar (Mistry)',
-    category: 'Mistry / Mason',
-    rating: '4.9 (132)',
-    distance: '2.4 km',
-    serviceCharge: '₹ 900 / day',
-    visitingCharge: '₹ 200',
-    experience: '12 yrs exp',
-  },
-  {
-    _id: 'w3',
-    name: 'Sunil Verma',
-    category: 'Electrician',
-    rating: '4.7 (80)',
-    distance: '3.1 km',
-    serviceCharge: '₹ 350 / service',
-    visitingCharge: '₹ 100',
-    experience: '6 yrs exp',
-  },
-  {
-    _id: 'w4',
-    name: 'Irfan Khan',
-    category: 'Carpenter',
-    rating: '4.8 (64)',
-    distance: '2.9 km',
-    serviceCharge: '₹ 800 / day',
-    visitingCharge: '₹ 200',
-    experience: '10 yrs exp',
-  },
-  {
-    _id: 'w5',
-    name: 'Rajesh Painter',
-    category: 'Painter',
-    rating: '4.6 (52)',
-    distance: '3.5 km',
-    serviceCharge: '₹ 750 / day',
-    visitingCharge: '₹ 150',
-    experience: '7 yrs exp',
-  },
-];
+export interface SearchWorkerItem {
+  _id: string;
+  name: string;
+  category: string;
+  phone: string;
+  serviceCharge: string;
+  visitingCharge: string;
+}
 
 export const SearchScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const { products, isLoading } = useHomeStore();
+  const [liveWorkers, setLiveWorkers] = React.useState<SearchWorkerItem[]>([]);
+  const [loadingWorkers, setLoadingWorkers] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!searchQuery.trim()) {
+      setLiveWorkers([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        setLoadingWorkers(true);
+        let res: any;
+        try {
+          res = await fetchBuyerWorkers(searchQuery.trim());
+        } catch {
+          res = await fetchWorkers(searchQuery.trim());
+        }
+
+        if (res && res.data && Array.isArray(res.data)) {
+          const mapped: SearchWorkerItem[] = res.data.map((item: any, idx: number) => ({
+            _id: String(item.workerid || item.id || `w_${idx}`),
+            name: item.fullname || 'Verified Worker',
+            category: item.skill || 'Skilled Labor',
+            phone: item.phone || '',
+            serviceCharge: item.service_charge ? `₹ ${item.service_charge}` : '₹ 500 / day',
+            visitingCharge: item.visit_charge ? `₹ ${item.visit_charge}` : '₹ 150',
+          }));
+          setLiveWorkers(mapped);
+        } else {
+          setLiveWorkers([]);
+        }
+      } catch (err) {
+        console.warn('[SearchScreen] Worker search error:', err);
+        setLiveWorkers([]);
+      } finally {
+        setLoadingWorkers(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   const filteredProducts = products.filter((p: Product) => {
+    if (!searchQuery.trim()) return true;
     const catName = typeof p.category === 'object' ? (p.category as any).name : p.category;
-    return p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-           catName?.toLowerCase().includes(searchQuery.toLowerCase());
+    return (
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      catName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
-  const filteredWorkers = SERVICE_WORKERS.filter((w) => {
-    if (!searchQuery.trim()) return false;
-    const q = searchQuery.toLowerCase();
-    return w.name.toLowerCase().includes(q) || w.category.toLowerCase().includes(q);
-  });
+  const handleCallWorker = (phone: string, workerName: string) => {
+    if (!phone || !phone.trim()) {
+      Alert.alert('Contact Worker', `No contact number is currently listed for ${workerName}.`);
+      return;
+    }
+    const phoneUrl = `tel:${phone.replace(/\s+/g, '')}`;
+    Linking.canOpenURL(phoneUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(phoneUrl);
+        } else {
+          Alert.alert('Phone Call', `Call worker at: ${phone}`);
+        }
+      })
+      .catch(() => {
+        Alert.alert('Phone Call', `Call worker at: ${phone}`);
+      });
+  };
 
   return (
     <ScreenWrapper className="bg-white">
@@ -101,26 +118,28 @@ export const SearchScreen = ({ navigation }: any) => {
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, gap: 16 }} showsVerticalScrollIndicator={false}>
-          {filteredWorkers.length > 0 && (
+          {loadingWorkers ? (
+            <View className="py-2 flex-row items-center justify-center">
+              <ActivityIndicator size="small" color="#8B0000" />
+              <Typography variant="bodySmall" className="text-text-secondary ml-2">Searching workers...</Typography>
+            </View>
+          ) : liveWorkers.length > 0 ? (
             <View className="mb-2">
               <Typography variant="h2" style={{ fontSize: 16 }} className="mb-3">
-                Services & Workers
+                Services & Workers ({liveWorkers.length})
               </Typography>
               <View className="gap-y-3">
-                {filteredWorkers.map((worker) => (
-                  <View key={worker._id} className="bg-surface rounded-2xl p-4 shadow-sm shadow-gray-200 flex-row items-center justify-between">
-                    <View className="flex-1">
+                {liveWorkers.map((worker) => (
+                  <View key={worker._id} className="bg-surface rounded-2xl p-4 shadow-sm shadow-gray-200 flex-row items-center justify-between border border-gray-100">
+                    <View className="flex-1 mr-3">
                       <Typography variant="bodyBold" className="text-sm text-[#111827]">{worker.name}</Typography>
                       <Typography variant="bodySmall" className="text-xs text-primary">{worker.category} • {worker.serviceCharge}</Typography>
                       <Typography style={{ fontSize: 10, color: '#8A8A8E' }}>Visiting: {worker.visitingCharge}</Typography>
                     </View>
                     <TouchableOpacity
-                      onPress={() => {
-                        const phone = (worker as any).phone || '+91 98765 43210';
-                        const phoneUrl = `tel:${phone.replace(/\s+/g, '')}`;
-                        Linking.openURL(phoneUrl).catch(() => {});
-                      }}
+                      onPress={() => handleCallWorker(worker.phone, worker.name)}
                       className="bg-primary rounded-full px-4 py-1.5 flex-row items-center"
+                      activeOpacity={0.8}
                     >
                       <Icon name="phone" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
                       <Typography variant="bodyMedium" className="text-white text-xs">Call</Typography>
@@ -129,9 +148,9 @@ export const SearchScreen = ({ navigation }: any) => {
                 ))}
               </View>
             </View>
-          )}
+          ) : null}
 
-          {filteredProducts.length === 0 && filteredWorkers.length === 0 ? (
+          {filteredProducts.length === 0 && liveWorkers.length === 0 && !loadingWorkers ? (
             <View className="items-center mt-10">
               <Icon name="search" size={48} color="#E5E5EA" className="mb-4" />
               <Typography variant="bodyMedium" className="text-text-secondary text-center">
@@ -142,18 +161,23 @@ export const SearchScreen = ({ navigation }: any) => {
             <>
               {filteredProducts.length > 0 && (
                 <Typography variant="h2" style={{ fontSize: 16 }} className="mb-1">
-                  Materials
+                  Materials ({filteredProducts.length})
                 </Typography>
               )}
               {filteredProducts.map((item: Product) => (
                 <TouchableOpacity 
                   key={item._id} 
                   onPress={() => navigation.navigate('SupplierListing', { product: item })}
-                  className="bg-surface rounded-3xl p-4 shadow-sm shadow-gray-200 flex-row items-center"
+                  className="bg-surface rounded-3xl p-4 shadow-sm shadow-gray-200 flex-row items-center border border-gray-100"
+                  activeOpacity={0.85}
                 >
-                  <View className="w-16 h-16 bg-input-bg rounded-2xl justify-center items-center mr-4">
-                     <Icon name="box" size={24} color="#8A8A8E" />
-                  </View>
+                  <SafeImage
+                    uri={item.images && item.images[0] ? item.images[0] : item.productimage}
+                    style={{ width: 64, height: 64, borderRadius: 16, marginRight: 16 }}
+                    resizeMode="cover"
+                    fallbackIconName="box"
+                    fallbackIconSize={26}
+                  />
                   <View className="flex-1">
                     <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
                     <Typography variant="bodySmall" className="text-text-secondary mb-1">

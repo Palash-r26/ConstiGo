@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -6,6 +6,7 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
@@ -40,36 +41,20 @@ export const AddressManagerScreen = ({ navigation }: any) => {
   const [isDefault, setIsDefault] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
-  const mockAddresses = [
-    {
-      _id: '1',
-      name: 'Rashmi Singh',
-      addressLine1: 'H.no 654/89 Rajan Garh, opp. post office, Mirzzapur',
-      addressLine2: 'Uttar Pradesh 525412',
-      location: 'Mirzzapur, Uttar Pradesh',
-      country: 'India',
-      phone: '+91 85025 55168',
-      isDefault: true,
-    },
-    {
-      _id: '2',
-      name: 'Rashmi Singh',
-      addressLine1: 'H.no 654/89 Rajan Garh, opp. post office, Mirzzapur',
-      addressLine2: 'Uttar Pradesh 525412',
-      location: 'Mirzzapur, Uttar Pradesh',
-      country: 'India',
-      phone: '+91 85025 55168',
-      isDefault: false,
-    },
-  ];
+  const [addressList, setAddressList] = useState<any[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [addressList, setAddressList] = useState<any[]>(mockAddresses);
-  const [loadingList, setLoadingList] = useState(false);
-
-  const loadAddressList = async () => {
-    const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
+  const loadAddressList = useCallback(async () => {
+    const buyerId = (profile as any)?.buyerid || profile?._id;
+    if (!buyerId) {
+      setLoadingList(false);
+      setAddressList([]);
+      return;
+    }
     try {
       setLoadingList(true);
+      setLoadError(null);
       const res = await fetchBuyerAddressList(buyerId);
       let list: any[] = [];
       if (Array.isArray(res)) {
@@ -79,22 +64,26 @@ export const AddressManagerScreen = ({ navigation }: any) => {
       } else if (res && Array.isArray(res.addresses)) {
         list = res.addresses;
       }
-      if (list.length > 0) {
-        setAddressList(list);
-      }
-    } catch (e) {
+      setAddressList(list);
+    } catch (e: any) {
       console.warn('[AddressManager] Failed to fetch address list:', e);
+      setLoadError(e?.message || 'Failed to load delivery addresses');
     } finally {
       setLoadingList(false);
     }
-  };
-
-  React.useEffect(() => {
-    loadAddressList();
   }, [profile]);
 
+  useEffect(() => {
+    loadAddressList();
+  }, [loadAddressList]);
+
   const handleEditPress = async (addr: any) => {
-    setEditingAddressId(addr._id || addr.id || '3');
+    const targetId = addr._id || addr.id;
+    if (!targetId) {
+      Alert.alert('Error', 'Unable to locate address reference.');
+      return;
+    }
+    setEditingAddressId(String(targetId));
     setName(addr.name || addr.fullname || '');
     setEmail(addr.email || profile?.email || '');
     setPhone(addr.phone || '');
@@ -107,7 +96,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
     setIsAdding(true);
 
     try {
-      const res = await fetchBuyerAddressEdit(addr._id || addr.id || '3');
+      const res = await fetchBuyerAddressEdit(String(targetId));
       if (res && res.data) {
         const d = res.data;
         if (d.fullname) setName(d.fullname);
@@ -145,10 +134,15 @@ export const AddressManagerScreen = ({ navigation }: any) => {
   };
 
   const handleSetDefault = async (addr: any) => {
-    const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
+    const buyerId = (profile as any)?.buyerid || profile?._id;
+    const targetId = addr._id || addr.id;
+    if (!buyerId || !targetId) {
+      Alert.alert('Notice', 'Unable to update default address. Missing identifier.');
+      return;
+    }
     try {
       await updateBuyerAddress({
-        id: addr._id || addr.id || '3',
+        id: String(targetId),
         buyerid: buyerId,
         fullname: addr.fullname || addr.name || '',
         email: addr.email || profile?.email || '',
@@ -165,6 +159,20 @@ export const AddressManagerScreen = ({ navigation }: any) => {
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update default address.');
     }
+  };
+
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPhone('');
+    setFlat('');
+    setArea('');
+    setPincode('');
+    setCity('');
+    setState('');
+    setIsDefault(false);
+    setFieldErrors({});
+    setEditingAddressId(null);
   };
 
   const handleSave = async () => {
@@ -197,9 +205,14 @@ export const AddressManagerScreen = ({ navigation }: any) => {
       return;
     }
 
+    const buyerId = (profile as any)?.buyerid || profile?._id;
+    if (!buyerId) {
+      Alert.alert('Authentication Required', 'Please log in to save addresses.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const buyerId = (profile as any)?.buyerid || profile?._id || 'CB051026162745';
       const addressPayload = {
         buyerid: buyerId,
         fullname: formData.name,
@@ -226,8 +239,8 @@ export const AddressManagerScreen = ({ navigation }: any) => {
 
       await fetchProfile();
       await loadAddressList();
+      resetForm();
       setIsAdding(false);
-      setEditingAddressId(null);
     } catch (err: any) {
       console.error('[AddressManager] Save error:', err);
       Alert.alert('Error', err.message || 'Failed to save address. Please try again.');
@@ -265,11 +278,11 @@ export const AddressManagerScreen = ({ navigation }: any) => {
       >
         {/* Screen Title */}
         <Typography variant="h1" style={styles.pageTitle}>
-          {isAdding ? 'Add Address' : 'Confirm Address'}
+          {isAdding ? (editingAddressId ? 'Edit Address' : 'Add Address') : 'Confirm Address'}
         </Typography>
 
         {isAdding ? (
-          /* Page 10: Add Address Form */
+          /* Add / Edit Address Form */
           <View style={styles.formCard}>
             <View>
               <TextInput
@@ -349,7 +362,7 @@ export const AddressManagerScreen = ({ navigation }: any) => {
 
             <View>
               <TextInput
-                placeholder="Enter your Area, Street, Sector, Village"
+                placeholder="Enter Street, Sector, Area"
                 placeholderTextColor={fieldErrors.area ? '#EF4444' : '#8A8A8E'}
                 style={[styles.inputPill, fieldErrors.area && styles.inputError]}
                 value={area}
@@ -365,49 +378,47 @@ export const AddressManagerScreen = ({ navigation }: any) => {
               ) : null}
             </View>
 
-            <View style={styles.twoColumnRow}>
-              <View style={styles.halfInput}>
-                <TextInput
-                  placeholder="Pincode"
-                  placeholderTextColor={fieldErrors.pincode ? '#EF4444' : '#8A8A8E'}
-                  style={[styles.inputPill, fieldErrors.pincode && styles.inputError]}
-                  value={pincode}
-                  onChangeText={(t) => {
-                    setPincode(t);
-                    if (fieldErrors.pincode) setFieldErrors({ ...fieldErrors, pincode: '' });
-                  }}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-                {fieldErrors.pincode ? (
-                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
-                    {fieldErrors.pincode}
-                  </Typography>
-                ) : null}
-              </View>
-
-              <View style={styles.halfInput}>
-                <TextInput
-                  placeholder="Town/City"
-                  placeholderTextColor={fieldErrors.city ? '#EF4444' : '#8A8A8E'}
-                  style={[styles.inputPill, fieldErrors.city && styles.inputError]}
-                  value={city}
-                  onChangeText={(t) => {
-                    setCity(t);
-                    if (fieldErrors.city) setFieldErrors({ ...fieldErrors, city: '' });
-                  }}
-                />
-                {fieldErrors.city ? (
-                  <Typography variant="bodySmall" style={styles.inlineErrorText}>
-                    {fieldErrors.city}
-                  </Typography>
-                ) : null}
-              </View>
+            <View>
+              <TextInput
+                placeholder="Enter Pincode"
+                placeholderTextColor={fieldErrors.pincode ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.pincode && styles.inputError]}
+                value={pincode}
+                onChangeText={(t) => {
+                  setPincode(t);
+                  if (fieldErrors.pincode) setFieldErrors({ ...fieldErrors, pincode: '' });
+                }}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+              {fieldErrors.pincode ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.pincode}
+                </Typography>
+              ) : null}
             </View>
 
             <View>
               <TextInput
-                placeholder="Enter your State"
+                placeholder="Enter City"
+                placeholderTextColor={fieldErrors.city ? '#EF4444' : '#8A8A8E'}
+                style={[styles.inputPill, fieldErrors.city && styles.inputError]}
+                value={city}
+                onChangeText={(t) => {
+                  setCity(t);
+                  if (fieldErrors.city) setFieldErrors({ ...fieldErrors, city: '' });
+                }}
+              />
+              {fieldErrors.city ? (
+                <Typography variant="bodySmall" style={styles.inlineErrorText}>
+                  {fieldErrors.city}
+                </Typography>
+              ) : null}
+            </View>
+
+            <View>
+              <TextInput
+                placeholder="Enter State"
                 placeholderTextColor={fieldErrors.state ? '#EF4444' : '#8A8A8E'}
                 style={[styles.inputPill, fieldErrors.state && styles.inputError]}
                 value={state}
@@ -438,21 +449,81 @@ export const AddressManagerScreen = ({ navigation }: any) => {
               </Typography>
             </TouchableOpacity>
 
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
+              <TouchableOpacity
+                style={[styles.primaryActionButton, { flex: 1 }]}
+                activeOpacity={0.8}
+                onPress={handleSave}
+                disabled={isLoading}
+              >
+                <Typography variant="bodyMedium" style={styles.primaryActionText}>
+                  {isLoading ? 'Saving...' : editingAddressId ? 'Update Address' : 'Save Address'}
+                </Typography>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                activeOpacity={0.8}
+                onPress={() => {
+                  resetForm();
+                  setIsAdding(false);
+                }}
+              >
+                <Typography variant="bodyMedium" style={styles.cancelButtonText}>
+                  Cancel
+                </Typography>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : loadingList ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#8B0000" />
+            <Typography variant="bodySmall" style={{ color: '#64748B', marginTop: 12 }}>
+              Loading delivery addresses...
+            </Typography>
+          </View>
+        ) : loadError ? (
+          <View style={styles.centerContainer}>
+            <Icon name="alert-circle" size={44} color="#EF4444" />
+            <Typography variant="bodyBold" style={{ marginTop: 12, color: '#111827' }}>
+              Unable to load addresses
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              {loadError}
+            </Typography>
+            <TouchableOpacity onPress={loadAddressList} style={styles.retryButton}>
+              <Typography variant="bodyMedium" style={{ color: '#FFFFFF', fontSize: 13 }}>
+                Retry
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        ) : addressList.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Icon name="map-pin" size={44} color="#CBD5E1" />
+            <Typography variant="bodyBold" style={{ marginTop: 12, color: '#111827' }}>
+              No Saved Addresses
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              You don't have any saved delivery addresses yet. Add one to expedite your checkout.
+            </Typography>
             <TouchableOpacity
-              style={styles.primaryActionButton}
+              style={[styles.addNewButton, { marginTop: 20 }]}
               activeOpacity={0.8}
-              onPress={handleSave}
-              disabled={isLoading}
+              onPress={() => {
+                resetForm();
+                setIsAdding(true);
+              }}
             >
-              <Typography variant="bodyMedium" style={styles.primaryActionText}>
-                {isLoading ? 'Saving...' : 'Update Now'}
+              <Icon name="plus" size={18} color="#8B0000" />
+              <Typography variant="bodyMedium" style={styles.addNewButtonText}>
+                Add Delivery Address
               </Typography>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.addressListContainer}>
             {addressList.map((addr) => {
-              const addrId = String(addr.id || addr._id || '3');
+              const addrId = String(addr.id || addr._id);
               const displayName = addr.fullname || addr.name || 'Saved Address';
               const line1 = addr.address1 || addr.addressLine1 || '';
               const line2 = addr.address2 || addr.addressLine2 || '';
@@ -540,7 +611,10 @@ export const AddressManagerScreen = ({ navigation }: any) => {
             <TouchableOpacity
               style={styles.addNewButton}
               activeOpacity={0.8}
-              onPress={() => setIsAdding(true)}
+              onPress={() => {
+                resetForm();
+                setIsAdding(true);
+              }}
             >
               <Icon name="plus" size={18} color="#8B0000" />
               <Typography variant="bodyMedium" style={styles.addNewButtonText}>
@@ -584,160 +658,160 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 120,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 20,
+    fontFamily: 'BalooBhai2-Bold',
+    color: '#000000',
+    marginBottom: 16,
     textAlign: 'center',
-    marginVertical: 18,
+  },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 20,
-    gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    gap: 12,
   },
   inputPill: {
-    backgroundColor: '#F0F2F5',
+    height: 50,
+    backgroundColor: '#FFFFFF',
     borderRadius: 25,
     paddingHorizontal: 20,
-    paddingVertical: 13,
-    fontSize: 13,
-    color: '#111827',
+    fontSize: 14,
+    color: '#000000',
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: '#EFEFEF',
   },
   inputError: {
     borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
   },
   inlineErrorText: {
     color: '#EF4444',
-    fontSize: 11,
+    fontSize: 12,
+    marginLeft: 16,
     marginTop: 4,
-    marginLeft: 12,
-    fontFamily: 'Montserrat-Medium',
-  },
-  twoColumnRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfInput: {
-    flex: 1,
   },
   defaultCheckboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginVertical: 4,
-    paddingHorizontal: 4,
+    gap: 10,
+    marginTop: 6,
+    paddingHorizontal: 8,
   },
   defaultCheckboxText: {
-    fontSize: 13,
-    color: '#8B0000',
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#333333',
   },
   primaryActionButton: {
+    height: 50,
     backgroundColor: '#8B0000',
     borderRadius: 25,
-    paddingVertical: 14,
-    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    alignItems: 'center',
   },
   primaryActionText: {
     color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Montserrat-Bold',
+  },
+  cancelButton: {
+    height: 50,
+    paddingHorizontal: 20,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#4B5563',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Montserrat-Medium',
   },
   addressListContainer: {
     gap: 16,
   },
   addressCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 3,
     elevation: 2,
+    gap: 4,
   },
   addressCardName: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 6,
+    fontFamily: 'BalooBhai2-Bold',
+    color: '#000000',
   },
   addressCardLine: {
-    fontSize: 12,
-    color: '#4B5563',
+    fontSize: 13,
+    color: '#555555',
     lineHeight: 18,
   },
   addressCardPhone: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#111827',
-    marginTop: 6,
-    marginBottom: 12,
+    fontSize: 13,
+    color: '#777777',
+    marginTop: 4,
   },
   addressCardBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
   },
   addressActionButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 16,
   },
   editButton: {
-    backgroundColor: '#F0F2F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   editButtonText: {
-    color: '#8A8A8E',
-    fontSize: 11,
-    fontWeight: '600',
+    color: '#8B0000',
+    fontFamily: 'Montserrat-SemiBold',
   },
   removeButton: {
-    backgroundColor: '#8B0000',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   removeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
+    color: '#888888',
+    fontFamily: 'Montserrat-Regular',
   },
   setDefaultButton: {
     paddingVertical: 4,
   },
   setDefaultText: {
     color: '#8B0000',
-    fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Montserrat-Medium',
   },
   addNewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
     paddingVertical: 14,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 25,
     borderWidth: 1,
-    borderStyle: 'dashed',
     borderColor: '#8B0000',
     gap: 8,
     marginTop: 8,
@@ -745,6 +819,6 @@ const styles = StyleSheet.create({
   addNewButtonText: {
     color: '#8B0000',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Montserrat-Bold',
   },
 });

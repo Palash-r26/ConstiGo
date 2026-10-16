@@ -3,3 +3,4 @@ export * from './Typography';
 export * from './Button';
 export * from './AuthInput';
 export * from './ScreenWrapper';
+export * from './SafeImage';

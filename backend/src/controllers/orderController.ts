@@ -6,10 +6,36 @@ import { AuthRequest } from '../middlewares/authMiddleware.js';
 
 export const getMyOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const orders = await Order.find({ buyer: req.user?.id }).populate('orderItems.product').sort('-createdAt');
+    const userId = req.user?._id || req.user?.id;
+    const orders = await Order.find({ buyer: userId }).populate('orderItems.product').sort('-createdAt');
     res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+export const getOrderById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('orderItems.product')
+      .populate('supplier', 'name email businessInfo phone');
+    if (!order) {
+      res.status(404).json({ success: false, message: 'Order not found' });
+      return;
+    }
+    const userId = req.user?._id?.toString() || req.user?.id?.toString();
+    if (
+      order.buyer.toString() !== userId &&
+      order.supplier?._id?.toString() !== userId &&
+      order.supplier?.toString() !== userId &&
+      req.user?.role !== 'ADMIN'
+    ) {
+      res.status(403).json({ success: false, message: 'Not authorized to view this order' });
+      return;
+    }
+    res.status(200).json({ success: true, data: order });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
 

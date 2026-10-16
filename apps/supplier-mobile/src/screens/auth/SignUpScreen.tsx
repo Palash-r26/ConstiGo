@@ -233,7 +233,7 @@ export const SignUpScreen = ({ navigation }: any) => {
           className="mb-6 rounded-full shadow-md"
         />
 
-        <View className="flex-row justify-center items-center">
+        <View className="flex-row justify-center items-center mb-5">
           <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">Already registered?</Typography>
           <Button 
             variant="link" 
@@ -242,6 +242,19 @@ export const SignUpScreen = ({ navigation }: any) => {
             textClassName="text-sm"
             className="py-0"
           />
+        </View>
+
+        <View className="items-center pt-3 border-t border-gray-100">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('WorkerSignUp')}
+            className="flex-row items-center bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-full"
+            activeOpacity={0.8}
+          >
+            <Icon name="tool" size={16} color="#8B0000" style={{ marginRight: 6 }} />
+            <Typography variant="bodySemiBold" className="text-xs text-[#111827]">
+              Want to offer trade services? <Typography variant="bodyBold" className="text-primary text-xs">Register as Worker</Typography>
+            </Typography>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ScreenWrapper>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { Typography, Button, AuthInput, ScreenWrapper, Logo, useAuthStore, loginSchema, LoginFormData } from '@constigo/shared';
 import Icon from 'react-native-vector-icons/Feather';
 import { checkVendorLogin, checkCompanyStatus } from '../../services/api/vendorApi';
@@ -65,81 +65,115 @@ export const SignInScreen = ({ navigation }: any) => {
   };
 
   return (
-    <ScreenWrapper className="px-6 bg-white">
-      <View className="items-center mb-10 mt-8">
-        <Logo size="md" style={{ marginBottom: 24 }} />
-        <Typography variant="h1Black" className="text-3xl text-[#111827] text-center mb-2">
-          SUPPLIER PORTAL
-        </Typography>
-        <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
-          Log in to manage your inventory, view orders,{'\n'}and respond to customer requests
-        </Typography>
-      </View>
+    <ScreenWrapper className="bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 24,
+            paddingVertical: 32,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header & Logo */}
+          <View className="items-center mb-6">
+            <Logo size="md" style={{ marginBottom: 16 }} />
+            <Typography variant="h1Black" className="text-3xl text-[#111827] text-center mb-1">
+              SUPPLIER PORTAL
+            </Typography>
+            <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
+              Log in to manage your inventory, view orders,{'\n'}and respond to customer requests
+            </Typography>
+          </View>
 
-      <View className="gap-y-4 mb-4">
-        {error ? <Typography className="text-red-500 text-center">{error}</Typography> : null}
-        
-        <Controller
-          control={control}
-          name="identity"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AuthInput 
-              placeholder="email id or phone number" 
-              leftIcon="mail" 
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.identity?.message}
-              autoCapitalize="none"
+          {/* Form Inputs */}
+          <View className="gap-y-4 mb-4">
+            {error ? <Typography className="text-red-500 text-center mb-1">{error}</Typography> : null}
+            
+            <Controller
+              control={control}
+              name="identity"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AuthInput 
+                  placeholder="email id or phone number" 
+                  leftIcon="mail" 
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.identity?.message}
+                  autoCapitalize="none"
+                />
+              )}
             />
-          )}
-        />
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AuthInput 
-              placeholder="*******************" 
-              isPassword 
-              leftIcon="lock" 
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.password?.message}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AuthInput 
+                  placeholder="*******************" 
+                  isPassword 
+                  leftIcon="lock" 
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.password?.message}
+                />
+              )}
             />
-          )}
-        />
-      </View>
+          </View>
 
-      <View className="flex-row justify-between items-center mb-8 px-1">
-        <View className="flex-row items-center">
-          <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
-            <Icon name="check" size={12} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-          <Typography variant="bodyBold" className="text-sm text-primary">Forget Password ?</Typography>
-        </TouchableOpacity>
-      </View>
+          {/* Remember Me & Forgot Password */}
+          <View className="flex-row justify-between items-center mb-6 px-1">
+            <View className="flex-row items-center">
+              <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
+                <Icon name="check" size={12} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+              <Typography variant="bodyBold" className="text-sm text-primary">Forget Password ?</Typography>
+            </TouchableOpacity>
+          </View>
 
-      <Button 
-        title="Sign In as Supplier" 
-        onPress={handleSubmit(handleLogin)} 
-        isLoading={isLoading}
-        className="mb-8 rounded-full shadow-md"
-      />
+          {/* Sign In Button */}
+          <Button 
+            title="Sign In as Supplier" 
+            onPress={handleSubmit(handleLogin)} 
+            isLoading={isLoading}
+            className="rounded-full shadow-md mb-6"
+          />
 
-      <View className="flex-row justify-center items-center">
-        <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">Don't have an account?</Typography>
-        <Button 
-          variant="link" 
-          title="Sign Up" 
-          onPress={() => navigation.navigate('SignUp')} 
-          textClassName="text-sm"
-          className="py-0"
-        />
-      </View>
+          {/* Sign Up Link */}
+          <View className="flex-row justify-center items-center mb-4">
+            <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">Don't have an account?</Typography>
+            <Button 
+              variant="link" 
+              title="Sign Up" 
+              onPress={() => navigation.navigate('SignUp')} 
+              textClassName="text-sm"
+              className="py-0"
+            />
+          </View>
+
+          {/* Worker Registration Link */}
+          <View className="items-center pt-1">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('WorkerSignUp')}
+              className="py-1"
+              activeOpacity={0.7}
+            >
+              <Typography variant="bodySmall" className="text-xs text-text-secondary text-center">
+                Looking for work? <Typography variant="bodyBold" className="text-primary text-xs">Register as Worker</Typography>
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 };

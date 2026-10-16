@@ -31,7 +31,8 @@ export const BuyerTabNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
-        safeAreaInsets: { bottom: 0, top: 0, left: 0, right: 0 },
+        tabBarHideOnKeyboard: true,
+        safeAreaInsets: { bottom: 0 },
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
         tabBarIconStyle: styles.tabBarIcon,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { Button } from '../../components/Button';
 import { AuthInput } from '../../components/AuthInput';
@@ -104,110 +104,129 @@ export const SignInScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <ScreenWrapper className="px-6 bg-white">
-      {/* Custom Header Back Button */}
-      <View className="flex-row items-center mt-4 mb-8">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10 py-2">
-          <Icon name="chevron-left" size={28} color="#111827" />
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Typography variant="bodyBold" className="text-center text-xl text-[#111827]">Sign In</Typography>
-        </View>
-      </View>
+    <ScreenWrapper className="bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'space-between',
+            paddingHorizontal: 24,
+            paddingTop: 8,
+            paddingBottom: 24,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View>
+            {/* Custom Header Back Button */}
+            <View className="flex-row items-center mt-2 mb-6">
+              <TouchableOpacity onPress={() => navigation.goBack()} className="absolute z-10 py-2">
+                <Icon name="chevron-left" size={28} color="#111827" />
+              </TouchableOpacity>
+              <View className="flex-1">
+                <Typography variant="bodyBold" className="text-center text-xl text-[#111827]">Sign In</Typography>
+              </View>
+            </View>
 
-      <View className="items-center mb-10">
-        <Logo size="md" style={{ marginBottom: 24 }} />
-        {isSupplier ? (
-          <>
-            <Typography variant="h1Black" className="text-3xl text-[#111827] text-center mb-2">
-              SUPPLIER PORTAL
-            </Typography>
-            <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
-              Log in to manage your inventory, view orders,{'\n'}and respond to quote requests
-            </Typography>
-          </>
-        ) : (
-          <>
-            <Typography
-              variant="h1Black"
-              className="text-center mb-2"
-              style={{ fontSize: 34, lineHeight: 40, letterSpacing: -0.5 }}
-              color="#111827"
-            >
-              Welcome Back!
-            </Typography>
-            <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
-              Enter your credentials to access your{'\n'}buyer dashboard
-            </Typography>
-          </>
-        )}
-      </View>
+            <View className="items-center mb-8">
+              <Logo size="md" style={{ marginBottom: 20 }} />
+              {isSupplier ? (
+                <>
+                  <Typography variant="h1Black" className="text-3xl text-[#111827] text-center mb-2">
+                    SUPPLIER PORTAL
+                  </Typography>
+                  <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
+                    Log in to manage your inventory, view orders,{'\n'}and respond to quote requests
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography
+                    variant="h1Black"
+                    className="text-center mb-2"
+                    style={{ fontSize: 32, lineHeight: 38, letterSpacing: -0.5 }}
+                    color="#111827"
+                  >
+                    Welcome Back!
+                  </Typography>
+                  <Typography variant="bodySmall" className="text-sm text-text-secondary text-center px-4 leading-5">
+                    Enter your credentials to access your{'\n'}buyer dashboard
+                  </Typography>
+                </>
+              )}
+            </View>
 
-      <View className="gap-y-4 mb-4">
-        {error ? <Typography className="text-red-500 text-center">{error}</Typography> : null}
-        
-        <Controller
-          control={control}
-          name="identity"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AuthInput 
-              placeholder="email id or phone number" 
-              leftIcon="mail" 
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.identity?.message}
-              autoCapitalize="none"
+            <View className="gap-y-4 mb-4">
+              {error ? <Typography className="text-red-500 text-center mb-1">{error}</Typography> : null}
+              
+              <Controller
+                control={control}
+                name="identity"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AuthInput 
+                    placeholder="email id or phone number" 
+                    leftIcon="mail" 
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.identity?.message}
+                    autoCapitalize="none"
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AuthInput 
+                    placeholder="*******************" 
+                    isPassword 
+                    leftIcon="lock" 
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.password?.message}
+                  />
+                )}
+              />
+            </View>
+
+            <View className="flex-row justify-between items-center mb-8 px-1">
+              <View className="flex-row items-center">
+                {/* Checkbox */}
+                <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
+                  <Icon name="check" size={12} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { role })}>
+                <Typography variant="bodyBold" className="text-sm text-primary">Forget Password ?</Typography>
+              </TouchableOpacity>
+            </View>
+
+            <Button 
+              title={`Sign In as ${isSupplier ? 'Supplier' : 'Buyer'}`} 
+              onPress={handleSubmit(handleLogin)} 
+              isLoading={isLoading}
+              className="rounded-full shadow-md"
             />
-          )}
-        />
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AuthInput 
-              placeholder="*******************" 
-              isPassword 
-              leftIcon="lock" 
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.password?.message}
+          </View>
+
+          <View className="flex-row justify-center items-center pt-8 pb-2">
+            <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">Don't have an account?</Typography>
+            <Button 
+              variant="link" 
+              title="Sign Up" 
+              onPress={() => navigation.navigate('SignUp', { role })} 
+              textClassName="text-sm"
+              className="py-0"
             />
-          )}
-        />
-      </View>
-
-      <View className="flex-row justify-between items-center mb-8 px-1">
-        <View className="flex-row items-center">
-          {/* Checkbox */}
-          <TouchableOpacity className="w-5 h-5 rounded-full bg-primary justify-center items-center mr-2">
-            <Icon name="check" size={12} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Typography variant="bodySemiBold" className="text-xs text-text-primary">Remember me</Typography>
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { role })}>
-          <Typography variant="bodyBold" className="text-sm text-primary">Forget Password ?</Typography>
-        </TouchableOpacity>
-      </View>
-
-      <Button 
-        title={`Sign In as ${isSupplier ? 'Supplier' : 'Buyer'}`} 
-        onPress={handleSubmit(handleLogin)} 
-        isLoading={isLoading}
-        className="mb-8 rounded-full shadow-md"
-      />
-
-      <View className="flex-row justify-center items-center">
-        <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">Don't have an account?</Typography>
-        <Button 
-          variant="link" 
-          title="Sign Up" 
-          onPress={() => navigation.navigate('SignUp', { role })} 
-          textClassName="text-sm"
-          className="py-0"
-        />
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 };

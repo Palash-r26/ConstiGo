@@ -8,6 +8,7 @@ import {
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCartStore } from '../../../application/store/cartStore';
@@ -21,31 +22,6 @@ export const CartScreen = ({ navigation }: any) => {
       fetchCart();
     }, [])
   );
-
-  const mockCartItems = [
-    {
-      _id: '1',
-      productid: 'CVP300926224904',
-      category: 'Bricks',
-      name: 'Jindal Red Bricks Type I',
-      price: '₹ 20,000/-',
-      subPrice: '₹10 Each',
-      isFavorite: true,
-      type: 'bricks',
-    },
-    {
-      _id: '2',
-      productid: 'CVP300926224905',
-      category: 'Steel',
-      name: 'JSW Steel & Iron Type II',
-      price: '₹ 4,800/-',
-      subPrice: '₹80 per kg',
-      isFavorite: false,
-      type: 'steel',
-    },
-  ];
-
-  const displayItems = cartItems.length > 0 ? cartItems : mockCartItems;
 
   const renderIcon = (type: string) => {
     if (type?.toLowerCase().includes('brick')) {
@@ -91,97 +67,123 @@ export const CartScreen = ({ navigation }: any) => {
         <Typography variant="bodySmall" style={styles.subtitle}>
           {cartItems.length > 0
             ? `${cartItems.length} Item(s) In Your Cart`
-            : 'Two Item Is In Your Cart'}
+            : 'Your cart is currently empty'}
         </Typography>
 
-        {/* Cart Items List */}
-        <View style={styles.listContainer}>
-          {displayItems.map((item: any) => {
-            const itemId = item._id || item.id || item.productid;
-            const itemName = item.productname || item.name;
-            const itemCategory = item.product_category || item.category || 'Materials';
-            const itemPrice = item.price
-              ? (typeof item.price === 'number' ? `₹ ${item.price}/-` : item.price)
-              : (item.amount ? `₹ ${item.amount}/-` : '₹ 400/-');
-            const itemSub = item.quantity ? `Qty: ${item.quantity}` : (item.subPrice || 'In Stock');
+        {cartItems.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="shopping-bag" size={54} color="#CBD5E1" />
+            <Typography variant="h2" style={{ marginTop: 14, color: '#1E293B' }}>
+              Your Cart is Empty
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              Browse construction materials and equipment to add them to your cart.
+            </Typography>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Home')}
+              style={styles.startShoppingButton}
+            >
+              <Typography variant="bodyMedium" style={{ color: '#FFFFFF', fontFamily: 'Montserrat-Bold' }}>
+                Browse Catalog
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {/* Cart Items List */}
+            <View style={styles.listContainer}>
+              {cartItems.map((item: any) => {
+                const itemId = item._id || item.id || item.productid;
+                const itemName = item.productname || item.name || 'Construction Item';
+                const itemCategory = item.product_category || item.category || 'Materials';
+                const priceNum = Number(item.amount || item.price || 0);
+                const itemPrice = `₹ ${priceNum.toLocaleString('en-IN')}/-`;
+                const itemSub = item.quantity ? `Qty: ${item.quantity}` : (item.subPrice || 'In Stock');
+                const imgUri = item.productimage || item.image;
 
-            return (
-              <View key={itemId} style={styles.cartCard}>
-                <View style={styles.cardMainRow}>
-                  {/* Thumbnail */}
-                  <View style={styles.thumbnailContainer}>
-                    {renderIcon(item.type || itemCategory)}
-                  </View>
-
-                  {/* Details */}
-                  <View style={styles.detailsContainer}>
-                    <View style={styles.topDetailsRow}>
-                      <View style={styles.textDetails}>
-                        <Typography variant="bodySmall" style={styles.categoryText}>
-                          {itemCategory}
-                        </Typography>
-                        <Typography variant="bodyBold" style={styles.productName}>
-                          {itemName}
-                        </Typography>
+                return (
+                  <View key={itemId} style={styles.cartCard}>
+                    <View style={styles.cardMainRow}>
+                      {/* Thumbnail */}
+                      <View style={styles.thumbnailContainer}>
+                        {imgUri ? (
+                          <SafeImage uri={imgUri} style={{ width: 68, height: 68, borderRadius: 16 }} fallbackIconName="box" />
+                        ) : (
+                          renderIcon(item.type || itemCategory)
+                        )}
                       </View>
 
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.heartButton}
-                      >
-                        <MaterialCommunityIcon
-                          name={item.isFavorite ? 'cards-heart' : 'heart-outline'}
-                          size={18}
-                          color={item.isFavorite ? '#E05656' : '#8A8A8E'}
-                        />
-                      </TouchableOpacity>
-                    </View>
+                      {/* Details */}
+                      <View style={styles.detailsContainer}>
+                        <View style={styles.topDetailsRow}>
+                          <View style={styles.textDetails}>
+                            <Typography variant="bodySmall" style={styles.categoryText}>
+                              {itemCategory}
+                            </Typography>
+                            <Typography variant="bodyBold" style={styles.productName}>
+                              {itemName}
+                            </Typography>
+                          </View>
 
-                    {/* Price Row */}
-                    <View style={styles.priceRow}>
-                      <Typography variant="bodyBold" style={styles.priceText}>
-                        {itemPrice}{' '}
-                      </Typography>
-                      <Typography variant="bodySmall" style={styles.subPriceText}>
-                        {itemSub}
-                      </Typography>
-                    </View>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.heartButton}
+                          >
+                            <MaterialCommunityIcon
+                              name={item.isFavorite ? 'cards-heart' : 'heart-outline'}
+                              size={18}
+                              color={item.isFavorite ? '#E05656' : '#8A8A8E'}
+                            />
+                          </TouchableOpacity>
+                        </View>
 
-                    {/* Rating & Delete Button Row */}
-                    <View style={styles.bottomRow}>
-                      <View style={styles.starsRow}>
-                        {[...Array(5)].map((_, idx) => (
-                          <Icon key={idx} name="star" size={12} color="#F5A623" />
-                        ))}
+                        {/* Price Row */}
+                        <View style={styles.priceRow}>
+                          <Typography variant="bodyBold" style={styles.priceText}>
+                            {itemPrice}{' '}
+                          </Typography>
+                          <Typography variant="bodySmall" style={styles.subPriceText}>
+                            {itemSub}
+                          </Typography>
+                        </View>
+
+                        {/* Rating & Delete Button Row */}
+                        <View style={styles.bottomRow}>
+                          <View style={styles.starsRow}>
+                            {[...Array(5)].map((_, idx) => (
+                              <Icon key={idx} name="star" size={12} color="#F5A623" />
+                            ))}
+                          </View>
+
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            activeOpacity={0.8}
+                            onPress={() => removeItem(itemId)}
+                          >
+                            <Typography variant="bodySmall" style={styles.deleteText}>
+                              Delete
+                            </Typography>
+                          </TouchableOpacity>
+                        </View>
                       </View>
-
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        activeOpacity={0.8}
-                        onPress={() => removeItem(itemId)}
-                      >
-                        <Typography variant="bodySmall" style={styles.deleteText}>
-                          Delete
-                        </Typography>
-                      </TouchableOpacity>
                     </View>
                   </View>
-                </View>
-              </View>
-            );
-          })}
-        </View>
+                );
+              })}
+            </View>
 
-        {/* Proceed to Checkout Button */}
-        <TouchableOpacity
-          style={styles.checkoutButton}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('Checkout')}
-        >
-          <Typography variant="bodyMedium" style={styles.checkoutButtonText}>
-            Proceed to Checkout {subTotal > 0 ? `(₹ ${subTotal})` : ''}
-          </Typography>
-        </TouchableOpacity>
+            {/* Proceed to Checkout Button */}
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Checkout')}
+            >
+              <Typography variant="bodyMedium" style={styles.checkoutButtonText}>
+                Proceed to Checkout {subTotal > 0 ? `(₹ ${subTotal.toLocaleString('en-IN')})` : ''}
+              </Typography>
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </ScreenWrapper>
   );
@@ -221,43 +223,59 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 22,
+    fontFamily: 'BalooBhai2-Bold',
+    color: '#000000',
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 6,
   },
   subtitle: {
     fontSize: 12,
-    color: '#8A8A8E',
+    color: '#666666',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 2,
     marginBottom: 20,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+  },
+  startShoppingButton: {
+    marginTop: 20,
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
   },
   listContainer: {
     gap: 16,
   },
   cartCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 16,
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 2,
   },
   cardMainRow: {
     flexDirection: 'row',
-    gap: 14,
   },
   thumbnailContainer: {
-    width: 76,
-    height: 76,
-    borderRadius: 18,
-    backgroundColor: '#F0F4F8',
+    width: 72,
+    height: 72,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 14,
+    overflow: 'hidden',
   },
   detailsContainer: {
     flex: 1,
@@ -270,6 +288,7 @@ const styles = StyleSheet.create({
   },
   textDetails: {
     flex: 1,
+    marginRight: 8,
   },
   categoryText: {
     fontSize: 11,
@@ -277,12 +296,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   productName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 14,
+    color: '#000000',
+    lineHeight: 18,
   },
   heartButton: {
-    paddingLeft: 8,
+    padding: 4,
   },
   priceRow: {
     flexDirection: 'row',
@@ -291,34 +310,30 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#28A745',
+    color: '#000000',
   },
   subPriceText: {
     fontSize: 11,
-    color: '#E05656',
-    fontWeight: '600',
+    color: '#8A8A8E',
   },
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
   starsRow: {
     flexDirection: 'row',
     gap: 2,
   },
   deleteButton: {
-    backgroundColor: '#8B0000',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
   },
   deleteText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    color: '#E05656',
+    fontFamily: 'Montserrat-SemiBold',
   },
   checkoutButton: {
     backgroundColor: '#8B0000',
@@ -328,14 +343,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 24,
     shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     elevation: 3,
   },
   checkoutButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Montserrat-Bold',
   },
 });

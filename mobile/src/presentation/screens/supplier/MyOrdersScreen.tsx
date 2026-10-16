@@ -4,7 +4,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Alert,
   ActivityIndicator,
   RefreshControl,
@@ -12,6 +11,7 @@ import {
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { SupplierTopHeader } from '../../components/SupplierTopHeader';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuthStore } from '../../../application/store/authStore';
 import {
@@ -40,93 +40,38 @@ export interface SupplierOrder {
   type: 'brick' | 'steel' | 'cement' | 'sand' | string;
   buyerName?: string;
   date?: string;
+  productImage?: string;
 }
-
-const INITIAL_ORDERS: SupplierOrder[] = [
-  {
-    id: '1',
-    _id: 'ORD-1092',
-    orderid: 'ORD061026160920',
-    buyerid: 'CB051026162745',
-    productid: 'CVP300926230112',
-    title: 'Jindal Red Bricks',
-    subType: 'Type I/II Red Clay',
-    distance: '3.5 km far',
-    badge: 'Genuine Customer',
-    unitLabel: 'Number of Items',
-    unitValue: '2000 Pcs',
-    estTotal: 'Est. total: ₹ 20,000.00 (₹10 each)',
-    total: 20000,
-    status: 'pending',
-    type: 'brick',
-    buyerName: 'Palash Sharma Construction',
-    date: 'Today, 11:30 AM',
-  },
-  {
-    id: '2',
-    _id: 'ORD-1093',
-    orderid: 'ORD061026160921',
-    buyerid: 'CB051026162745',
-    productid: 'CVP300926224904',
-    title: 'JSW Steel & TMT Bars',
-    subType: '12mm Fe-550D High Grade',
-    distance: '1.5 km far',
-    badge: 'Genuine Customer',
-    unitLabel: 'Item In Kg.',
-    unitValue: '600 kg',
-    estTotal: 'Est. total: ₹ 48,000.00 (₹80 per kg)',
-    total: 48000,
-    status: 'pending',
-    type: 'steel',
-    buyerName: 'Rajesh Infrastructure Ltd',
-    date: 'Today, 09:15 AM',
-  },
-  {
-    id: '3',
-    _id: 'ORD-1090',
-    orderid: 'ORD061026160922',
-    buyerid: 'CB051026162745',
-    productid: 'CVP300926230112',
-    title: 'UltraTech Super Cement',
-    subType: 'PPC Grade 53',
-    distance: '4.2 km far',
-    badge: 'Verified Builder',
-    unitLabel: 'Bags (50kg)',
-    unitValue: '100 Bags',
-    estTotal: 'Est. total: ₹ 38,500.00 (₹385 per bag)',
-    total: 38500,
-    status: 'accepted',
-    type: 'cement',
-    buyerName: 'Apex Developers',
-    date: 'Yesterday, 04:20 PM',
-  },
-];
 
 export const MyOrdersScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
-  const vendorId = user?.vendorid || user?._id || 'CV290926162458';
+  const vendorId = user?.vendorid || user?._id;
 
   const [activeTab, setActiveTab] = useState<'all' | 'accepted' | 'declined'>('all');
-  const [orders, setOrders] = useState<SupplierOrder[]>(INITIAL_ORDERS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [orders, setOrders] = useState<SupplierOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadOrders = useCallback(async (tab = activeTab) => {
+    if (!vendorId) {
+      setIsLoading(false);
+      setOrders([]);
+      setLoadError('Please log in with your supplier account to view incoming orders.');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setLoadError(null);
       let response: any;
       if (tab === 'accepted') {
-        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_accept_list.php
         response = await fetchVendorOrdersAcceptedList(vendorId);
       } else if (tab === 'declined') {
-        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_decline_list.php
         response = await fetchVendorOrdersDeclinedList(vendorId);
       } else {
-        // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_all.php
         response = await fetchVendorOrdersAll(vendorId);
       }
-
-      console.log(`[MyOrdersScreen] Orders Fetch Raw Response (${tab}):`, response);
 
       let rawList: any[] = [];
       if (Array.isArray(response)) {
@@ -150,34 +95,37 @@ export const MyOrdersScreen = ({ navigation }: any) => {
           const prodName = item.productname || item.name || item.product_name || `Order #${item.orderid || idx + 1}`;
           const pType = (item.productcategory || item.category || item.type || 'brick').toLowerCase();
           const inferredType = pType.includes('steel') ? 'steel' : pType.includes('cement') ? 'cement' : 'brick';
+          const itemAmount = Number(item.amount || item.total || item.product_price || 0);
 
           return {
             id: String(item.orderid || item.id || idx + 1),
             _id: String(item.orderid || item._id || item.id || `ORD-${idx + 1000}`),
-            orderid: String(item.orderid || item._id || item.id || 'ORD061026160920'),
-            buyerid: String(item.buyerid || item.buyer_id || 'CB051026162745'),
-            productid: String(item.productid || item.product_id || 'CVP300926230112'),
+            orderid: String(item.orderid || item._id || item.id || ''),
+            buyerid: String(item.buyerid || item.buyer_id || ''),
+            productid: String(item.productid || item.product_id || ''),
             title: prodName,
-            subType: item.product_description || item.subType || item.productcategory || 'Standard Grade',
-            distance: item.distance || '2.5 km far',
-            badge: item.badge || 'Genuine Customer',
+            subType: item.product_description || item.subType || item.productcategory || 'Standard Material',
+            distance: item.distance || 'Service Area',
+            badge: item.badge || 'Verified Buyer',
             unitLabel: item.unitLabel || 'Quantity',
-            unitValue: item.quantity ? `${item.quantity} Units` : item.unitValue || '10 Units',
-            estTotal: item.amount ? `Est. total: ₹ ${item.amount}` : item.estTotal || 'Est. total: ₹ 5,000.00',
-            total: Number(item.amount || item.total || item.product_price || 5000),
+            unitValue: item.quantity ? `${item.quantity} Units` : item.unitValue || '1 Unit',
+            estTotal: itemAmount > 0 ? `Est. total: ₹ ${itemAmount.toLocaleString('en-IN')}` : 'Price on request',
+            total: itemAmount,
             status: normalizedStatus,
             type: inferredType,
             buyerName: item.buyer_name || item.buyerName || item.fullname || 'ConstiGo Buyer',
             date: item.created_at || item.date || 'Today',
+            productImage: item.productimage || item.image,
           };
         });
         setOrders(mapped);
       } else {
-        setOrders(INITIAL_ORDERS);
+        setOrders([]);
       }
-    } catch (err) {
-      console.warn('[MyOrdersScreen] Failed to load orders from API, using demo data:', err);
-      setOrders(INITIAL_ORDERS);
+    } catch (err: any) {
+      console.warn('[MyOrdersScreen] Failed to load orders from API:', err);
+      setLoadError(err?.message || 'Unable to retrieve orders from backend');
+      setOrders([]);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -194,32 +142,35 @@ export const MyOrdersScreen = ({ navigation }: any) => {
   };
 
   const handleAcceptOrder = async (order: SupplierOrder) => {
+    if (!vendorId) {
+      Alert.alert('Notice', 'Please log in to accept orders.');
+      return;
+    }
     try {
-      // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_accept.php
       await acceptVendorOrder({
         vendorid: vendorId,
-        buyerid: order.buyerid || 'CB051026162745',
-        orderid: order.orderid || order._id || order.id || 'ORD061026160920',
-        productid: order.productid || 'CVP300926230112',
+        buyerid: order.buyerid || '',
+        orderid: order.orderid || order._id || order.id,
+        productid: order.productid || '',
       });
-    } catch (err) {
-      console.warn('[MyOrdersScreen] acceptVendorOrder API tentative error:', err);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status: 'accepted' } : o))
+      );
+      Alert.alert(
+        'Order Accepted! 🎉',
+        `You accepted the order for ${order.title}. Buyer has been notified to proceed with delivery.`,
+        [
+          {
+            text: 'View Details',
+            onPress: () => navigation.navigate('OrderDetails', { order: { ...order, status: 'accepted', vendorid: vendorId } }),
+          },
+          { text: 'OK', style: 'default' },
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[MyOrdersScreen] acceptVendorOrder API error:', err);
+      Alert.alert('Notice', err?.message || 'Could not update order status on the server.');
     }
-
-    setOrders((prev) =>
-      prev.map((o) => (o.id === order.id ? { ...o, status: 'accepted' } : o))
-    );
-    Alert.alert(
-      'Order Accepted! 🎉',
-      `You accepted the order for ${order.title}. Buyer has been notified to proceed with delivery.`,
-      [
-        {
-          text: 'View Details',
-          onPress: () => navigation.navigate('OrderDetails', { order: { ...order, status: 'accepted', vendorid: vendorId } }),
-        },
-        { text: 'OK', style: 'default' },
-      ]
-    );
   };
 
   const handleDeclineOrder = (order: SupplierOrder) => {
@@ -232,20 +183,22 @@ export const MyOrdersScreen = ({ navigation }: any) => {
           text: 'Decline',
           style: 'destructive',
           onPress: async () => {
+            if (!vendorId) return;
             try {
-              // Call REAL PHP production endpoint: https://constigo.in/app/vendor/orders_decline.php
               await declineVendorOrder({
                 vendorid: vendorId,
-                buyerid: order.buyerid || 'CB051026162745',
-                orderid: order.orderid || order._id || order.id || 'ORD061026160920',
-                productid: order.productid || 'CVP300926224904',
+                buyerid: order.buyerid || '',
+                orderid: order.orderid || order._id || order.id,
+                productid: order.productid || '',
               });
-            } catch (err) {
-              console.warn('[MyOrdersScreen] declineVendorOrder API tentative error:', err);
+              setOrders((prev) =>
+                prev.map((o) => (o.id === order.id ? { ...o, status: 'declined' } : o))
+              );
+              Alert.alert('Order Declined', `Order for ${order.title} has been declined.`);
+            } catch (err: any) {
+              console.warn('[MyOrdersScreen] declineVendorOrder API error:', err);
+              Alert.alert('Notice', err?.message || 'Failed to decline order.');
             }
-            setOrders((prev) =>
-              prev.map((o) => (o.id === order.id ? { ...o, status: 'declined' } : o))
-            );
           },
         },
       ]
@@ -258,31 +211,24 @@ export const MyOrdersScreen = ({ navigation }: any) => {
   });
 
   return (
-    <ScreenWrapper className="bg-[#F5F6FA]">
-      <SupplierTopHeader
-        onProfilePress={() => navigation?.navigate('Profile')}
-        onNotificationPress={() => navigation?.navigate('Notifications')}
-      />
+    <ScreenWrapper>
+      {/* Top Header */}
+      <SupplierTopHeader navigation={navigation} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#8B0000']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#8B0000']}
+            tintColor="#8B0000"
+          />
         }
       >
-        {/* Title Section */}
-        <View style={styles.titleContainer}>
-          <Typography variant="h1" style={styles.mainTitle}>
-            My Orders
-          </Typography>
-          <Typography variant="bodySmall" style={styles.subtitle}>
-            Manage incoming customer orders, accept and track delivery
-          </Typography>
-        </View>
-
-        {/* Filter Segmented Pill Container */}
-        <View style={styles.filterContainer}>
+        {/* Filter Pills */}
+        <View style={styles.filterTabsRow}>
           <TouchableOpacity
             style={[
               styles.filterTab,
@@ -347,15 +293,37 @@ export const MyOrdersScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        {/* Orders List */}
-        {filteredOrders.length === 0 ? (
+        {/* Loading / Error / Empty States */}
+        {isLoading ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color="#8B0000" />
+            <Typography variant="bodySmall" style={{ color: '#64748B', marginTop: 12 }}>
+              Loading supplier orders...
+            </Typography>
+          </View>
+        ) : loadError ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="alert-circle" size={48} color="#EF4444" />
+            <Typography variant="bodyBold" style={{ marginTop: 12, color: '#111827' }}>
+              Unable to load orders
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+              {loadError}
+            </Typography>
+            <TouchableOpacity onPress={() => loadOrders(activeTab)} style={styles.retryButton}>
+              <Typography variant="bodyMedium" style={{ color: '#FFFFFF', fontSize: 13 }}>
+                Retry
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        ) : filteredOrders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Icon name="package" size={48} color="#CBD5E1" />
             <Typography variant="bodyBold" style={styles.emptyTitle}>
               No {activeTab !== 'all' ? activeTab : ''} orders found
             </Typography>
             <Typography variant="bodySmall" style={styles.emptySubtitle}>
-              Incoming orders will appear here as soon as buyers place requests.
+              Incoming orders from buyers will appear here automatically.
             </Typography>
           </View>
         ) : (
@@ -365,13 +333,19 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                 key={order.id}
                 style={styles.orderCard}
                 activeOpacity={0.92}
-                onPress={() => navigation.navigate('OrderDetails', { order })}
+                onPress={() => navigation.navigate('OrderDetails', { order: { ...order, vendorid: vendorId } })}
               >
                 {/* Card Header Row */}
                 <View style={styles.cardHeaderRow}>
-                  {/* 3D Icon Box */}
+                  {/* Icon Box / Product Image */}
                   <View style={styles.productIconContainer}>
-                    {order.type === 'brick' ? (
+                    {order.productImage ? (
+                      <SafeImage
+                        uri={order.productImage}
+                        style={{ width: 56, height: 56, borderRadius: 12 }}
+                        fallbackIconName="box"
+                      />
+                    ) : order.type === 'brick' ? (
                       <View style={styles.brickIconPlaceholder}>
                         <Icon name="layers" size={26} color="#C2410C" />
                       </View>
@@ -448,7 +422,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                 {/* Divider */}
                 <View style={styles.cardDivider} />
 
-                {/* Card Middle: Unit Details + Mini Map */}
+                {/* Card Middle: Unit Details */}
                 <View style={styles.cardMiddleRow}>
                   <View style={styles.unitDetails}>
                     <Typography variant="bodySmall" style={styles.unitLabel}>
@@ -460,20 +434,6 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                     <Typography variant="bodySmall" style={styles.estTotal}>
                       {order.estTotal}
                     </Typography>
-                  </View>
-
-                  {/* Mini Route Map Preview */}
-                  <View style={styles.miniMapContainer}>
-                    <Image
-                      source={{
-                        uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&auto=format&fit=crop&q=60',
-                      }}
-                      style={styles.miniMapImage}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.mapPinDot}>
-                      <Icon name="map-pin" size={10} color="#DC2626" />
-                    </View>
                   </View>
                 </View>
 
@@ -508,7 +468,7 @@ export const MyOrdersScreen = ({ navigation }: any) => {
                       {order.status === 'accepted' ? '✓ Order Confirmed & In Progress' : '✕ Order Declined'}
                     </Typography>
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('OrderDetails', { order })}
+                      onPress={() => navigation.navigate('OrderDetails', { order: { ...order, vendorid: vendorId } })}
                       style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 }}
                     >
                       <Typography style={{ fontSize: 11, color: '#334155', fontFamily: 'Montserrat-SemiBold' }}>
@@ -529,90 +489,91 @@ export const MyOrdersScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 110,
+    paddingTop: 12,
+    paddingBottom: 100,
   },
-  titleContainer: {
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  mainTitle: {
-    fontSize: 26,
-    color: '#0F172A',
-    fontFamily: 'BalooBhai2-Bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    fontFamily: 'Montserrat-Medium',
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  filterContainer: {
+  filterTabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    padding: 6,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
     gap: 8,
+    marginBottom: 16,
   },
   filterTab: {
-    flex: 1,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
   },
   filterTabActive: {
     backgroundColor: '#8B0000',
+    borderColor: '#8B0000',
   },
   filterTabInactive: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   filterTabText: {
-    fontSize: 13,
+    fontSize: 12,
   },
   filterTabTextActive: {
     color: '#FFFFFF',
     fontFamily: 'Montserrat-Bold',
   },
   filterTabTextInactive: {
-    color: '#475569',
+    color: '#64748B',
     fontFamily: 'Montserrat-Medium',
   },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    color: '#1E293B',
+    marginTop: 12,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
   ordersList: {
-    gap: 16,
+    gap: 14,
   },
   orderCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 3,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 14,
   },
   productIconContainer: {
-    width: 65,
-    height: 65,
-    borderRadius: 16,
-    backgroundColor: '#F0F4F8',
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
   },
   brickIconPlaceholder: {
     alignItems: 'center',
@@ -626,21 +587,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productTitle: {
-    fontSize: 17,
-    color: '#0F172A',
+    fontSize: 15,
     fontFamily: 'Montserrat-Bold',
+    color: '#1E293B',
   },
   productType: {
-    fontSize: 14,
-    color: '#1E293B',
-    fontFamily: 'Montserrat-SemiBold',
-    marginTop: 1,
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
     marginTop: 6,
+    gap: 12,
   },
   metaItem: {
     flexDirection: 'row',
@@ -650,18 +610,17 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 11,
     color: '#64748B',
-    fontFamily: 'Montserrat-Medium',
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
   cardMiddleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   unitDetails: {
     flex: 1,
@@ -669,97 +628,47 @@ const styles = StyleSheet.create({
   unitLabel: {
     fontSize: 11,
     color: '#64748B',
-    fontFamily: 'Montserrat-Medium',
   },
   unitValue: {
-    fontSize: 22,
-    color: '#00B67A',
+    fontSize: 20,
     fontFamily: 'BalooBhai2-Bold',
-    lineHeight: 28,
+    color: '#00B14F',
+    marginVertical: 2,
   },
   estTotal: {
-    fontSize: 11,
-    color: '#64748B',
+    fontSize: 12,
+    color: '#475569',
     fontFamily: 'Montserrat-Medium',
-    marginTop: 2,
-  },
-  miniMapContainer: {
-    width: 110,
-    height: 55,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-    backgroundColor: '#E2E8F0',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  miniMapImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.85,
-  },
-  mapPinDot: {
-    position: 'absolute',
-    top: '30%',
-    left: '45%',
   },
   actionButtonsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    marginTop: 4,
   },
   acceptButton: {
     flex: 1,
-    backgroundColor: '#8B0000',
-    borderRadius: 22,
-    paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#8B0000',
+    paddingVertical: 10,
+    borderRadius: 14,
   },
   acceptButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Montserrat-Bold',
   },
   declineButton: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 22,
-    paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 10,
+    borderRadius: 14,
   },
   declineButtonText: {
-    color: '#64748B',
+    color: '#475569',
     fontSize: 13,
-    fontFamily: 'Montserrat-SemiBold',
-  },
-  emptyContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  emptyTitle: {
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: 'BalooBhai2-Bold',
-    marginTop: 12,
-    textTransform: 'capitalize',
-  },
-  emptySubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 6,
-    fontFamily: 'Montserrat-Medium',
   },
 });

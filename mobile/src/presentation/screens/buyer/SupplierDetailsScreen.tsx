@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking, ActivityIndicator } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RazorpayCheckout from 'react-native-razorpay';
@@ -13,10 +14,135 @@ import { RAZORPAY_KEY_ID } from '@env';
 export const SupplierDetailsScreen = ({ route, navigation }: any) => {
   const { product } = route.params || {};
   const { addToCart } = useCartStore();
+  const [isOrdering, setIsOrdering] = useState(false);
+
   const supplierName =
-    product?.name ||
     product?.supplier?.businessInfo?.companyName ||
-    'Titan Building Supplies,\nMaterial, Pvt. Ltd';
+    product?.supplier?.name ||
+    product?.vendorName ||
+    product?.business_name ||
+    product?.name ||
+    'Verified ConstiGo Supplier';
+
+  const supplierPhone =
+    product?.supplier?.phone ||
+    product?.supplier?.businessInfo?.contactPhone ||
+    product?.vendorPhone ||
+    product?.phone;
+
+  const supplierAddress =
+    product?.supplier?.businessInfo?.address ||
+    product?.supplier?.location?.address ||
+    product?.location ||
+    product?.distance ||
+    'Local Service Area';
+
+  const productImageUri =
+    product?.productimage ||
+    (Array.isArray(product?.images) && product?.images[0]) ||
+    product?.image;
+
+  const reviews = Array.isArray(product?.reviews)
+    ? product.reviews
+    : Array.isArray(product?.supplier?.reviews)
+    ? product.supplier.reviews
+    : [];
+
+  const handleCall = () => {
+    if (supplierPhone) {
+      Linking.openURL(`tel:${supplierPhone}`).catch(() => {
+        Alert.alert('Error', 'Unable to initiate call on this device.');
+      });
+    } else {
+      Alert.alert('Contact Supplier', 'Direct hotline: 1800-CONSTIGO');
+    }
+  };
+
+  const handleMap = () => {
+    const query = encodeURIComponent(`${supplierName} ${supplierAddress}`);
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`).catch(() => {
+      Alert.alert('Notice', 'Unable to open maps app.');
+    });
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!product || (!product._id && !product.productid && !product.id)) {
+      Alert.alert('Error', 'Product information is missing.');
+      return;
+    }
+
+    const prodId = product._id || product.productid || product.id;
+    const supId = product.supplier?._id || product.vendorid || 'supplier_default';
+    const prodPrice = Number(product.price || product.product_price || 0);
+
+    if (prodPrice <= 0) {
+      Alert.alert('Invalid Price', 'This product does not have a valid price configured.');
+      return;
+    }
+
+    try {
+      setIsOrdering(true);
+      const response = await apiClient.post('/orders/razorpay/create', {
+        supplier: supId,
+        orderItems: [
+          {
+            product: prodId,
+            name: product.name || 'Construction Material',
+            qty: 1,
+            price: prodPrice,
+          },
+        ],
+        shippingAddress: {
+          address: supplierAddress,
+          city: 'Standard Delivery Hub',
+          postalCode: '400001',
+          location: { type: 'Point', coordinates: [72.8777, 19.076] },
+        },
+        totalPrice: prodPrice,
+      });
+
+      const { razorpayOrder } = response.data;
+      if (!razorpayOrder || !razorpayOrder.id) {
+        throw new Error('Could not initiate payment order from server.');
+      }
+
+      const options = {
+        description: 'ConstiGo Material Order Payment',
+        currency: razorpayOrder.currency || 'INR',
+        key: RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        name: 'ConstiGo',
+        order_id: razorpayOrder.id,
+        theme: { color: '#8B0000' },
+      };
+
+      RazorpayCheckout.open(options)
+        .then(async (data: any) => {
+          try {
+            await apiClient.post('/orders/razorpay/verify', {
+              razorpay_order_id: data.razorpay_order_id,
+              razorpay_payment_id: data.razorpay_payment_id,
+              razorpay_signature: data.razorpay_signature,
+            });
+            navigation.navigate('OrderSuccess');
+          } catch (verErr: any) {
+            Alert.alert(
+              'Verification Notice',
+              'Payment was submitted. We are confirming it with the bank. Check My Orders for status.',
+              [{ text: 'OK', onPress: () => navigation.navigate('MyOrders') }]
+            );
+          }
+        })
+        .catch((checkoutErr: any) => {
+          console.warn('[SupplierDetailsScreen] Razorpay cancelled or error:', checkoutErr);
+          Alert.alert('Payment Incomplete', 'Payment was cancelled or unsuccessful. You can retry at any time.');
+        });
+    } catch (error: any) {
+      Alert.alert('Order Placement Failed', error?.response?.data?.message || error?.message || 'Unable to connect to order gateway.');
+    } finally {
+      setIsOrdering(false);
+    }
+  };
 
   return (
     <ScreenWrapper>
@@ -49,10 +175,20 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.productIconContainer}>
-              <MaterialCommunityIcon name="sack" size={32} color="#D29A5C" />
-              <View style={styles.shovelIconBadge}>
-                <MaterialCommunityIcon name="shovel" size={14} color="#8E7092" />
-              </View>
+              {productImageUri ? (
+                <SafeImage
+                  uri={productImageUri}
+                  style={{ width: 68, height: 68, borderRadius: 16 }}
+                  fallbackIconName="box"
+                />
+              ) : (
+                <>
+                  <MaterialCommunityIcon name="sack" size={32} color="#D29A5C" />
+                  <View style={styles.shovelIconBadge}>
+                    <MaterialCommunityIcon name="shovel" size={14} color="#8E7092" />
+                  </View>
+                </>
+              )}
             </View>
 
             <View style={styles.headerInfo}>
@@ -69,13 +205,13 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
                 <View style={styles.metaItem}>
                   <Icon name="map-pin" size={12} color="#E05656" />
                   <Typography variant="bodySmall" style={styles.metaText}>
-                    {product?.distance || '3.5 km'}
+                    {product?.distance || 'Verified Location'}
                   </Typography>
                 </View>
                 <View style={styles.metaItem}>
                   <Icon name="star" size={12} color="#F5A623" />
                   <Typography variant="bodySmall" style={styles.metaText}>
-                    {product?.rating || '4.8 (140)'}
+                    {product?.rating || '4.8 (Verified)'}
                   </Typography>
                 </View>
                 <View style={[styles.statusBadge, (product?.isAvailable !== false && product?.productStatus !== 'out_of_stock') ? styles.statusInStock : styles.statusOutOfStock]}>
@@ -88,26 +224,40 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           </View>
 
           <Typography variant="bodySmall" style={styles.supplierDescription}>
-            Verified Premium Supplier, Specializing in high-grade steel and industrial cement.
+            {product?.description ||
+              product?.supplier?.businessInfo?.description ||
+              'Verified supplier on ConstiGo. Quality certified materials direct to construction site.'}
           </Typography>
 
           {/* Action Buttons: Call, Message, Map */}
           <View style={styles.quickActionRow}>
-            <TouchableOpacity style={styles.quickActionButton} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.quickActionButton} activeOpacity={0.7} onPress={handleCall}>
               <MaterialCommunityIcon name="phone" size={18} color="#8B0000" />
               <Typography variant="bodyMedium" style={styles.quickActionText}>
                 Call
               </Typography>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickActionButton} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              activeOpacity={0.7}
+              onPress={() => {
+                if (supplierPhone) {
+                  Linking.openURL(`sms:${supplierPhone}`).catch(() => {
+                    Alert.alert('Notice', 'SMS application could not be opened.');
+                  });
+                } else {
+                  Alert.alert('Notice', 'Direct in-app messaging with this supplier will be enabled shortly.');
+                }
+              }}
+            >
               <MaterialCommunityIcon name="comment" size={18} color="#8B0000" />
               <Typography variant="bodyMedium" style={styles.quickActionText}>
                 Message
               </Typography>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickActionButton} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.quickActionButton} activeOpacity={0.7} onPress={handleMap}>
               <MaterialCommunityIcon name="map-marker-radius" size={18} color="#8B0000" />
               <Typography variant="bodyMedium" style={styles.quickActionText}>
                 Map
@@ -116,35 +266,49 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
           </View>
         </View>
 
-        {/* Recent Performance Card */}
+        {/* Recent Performance / Verified Feedback */}
         <View style={styles.card}>
           <Typography variant="h2" style={styles.sectionTitle}>
-            Recent Performance
+            Supplier Track Record
           </Typography>
 
-          {[1, 2].map((i) => (
-            <View key={i} style={styles.performanceItem}>
-              <View style={styles.performanceHeader}>
-                <Typography variant="bodyMedium" style={styles.performanceTitle}>
-                  Skyline Tower Project
-                </Typography>
-                <View style={styles.starsRow}>
-                  {[...Array(5)].map((_, idx) => (
-                    <Icon key={idx} name="star" size={12} color="#F5A623" />
-                  ))}
+          {reviews.length > 0 ? (
+            reviews.map((rev: any, idx: number) => (
+              <View key={rev._id || idx} style={styles.performanceItem}>
+                <View style={styles.performanceHeader}>
+                  <Typography variant="bodyMedium" style={styles.performanceTitle}>
+                    {rev.title || rev.userName || 'Verified Buyer'}
+                  </Typography>
+                  <View style={styles.starsRow}>
+                    {[...Array(Math.min(5, Math.max(1, Math.round(Number(rev.rating || 5)))))].map((_, starIdx) => (
+                      <Icon key={starIdx} name="star" size={12} color="#F5A623" />
+                    ))}
+                  </View>
                 </View>
+                <Typography variant="bodySmall" style={styles.performanceReview}>
+                  "{rev.comment || rev.reviewText || 'Prompt delivery and authentic materials according to specification.'}"
+                </Typography>
               </View>
-              <Typography variant="bodySmall" style={styles.performanceReview}>
-                "Delivered 500 tons of rebar ahead of schedule. Quality was strictly to spec. Will use again for Phase 2."
-              </Typography>
+            ))
+          ) : (
+            <View style={styles.verifiedRecordBox}>
+              <MaterialCommunityIcon name="shield-check" size={24} color="#00B14F" />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Typography variant="bodyMedium" style={{ fontWeight: '700', color: '#1E293B' }}>
+                  Platform Verified Supplier
+                </Typography>
+                <Typography variant="bodySmall" style={{ color: '#64748B', marginTop: 2 }}>
+                  Fulfills ConstiGo quality guarantee with zero recorded safety or specification disputes.
+                </Typography>
+              </View>
             </View>
-          ))}
+          )}
         </View>
 
         {/* Logistics Card */}
         <View style={styles.card}>
           <Typography variant="h2" style={styles.sectionTitle}>
-            Logistics
+            Logistics & Delivery
           </Typography>
 
           <View style={styles.logisticsRow}>
@@ -152,7 +316,7 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
               Estimated Delivery :
             </Typography>
             <Typography variant="bodyMedium" style={styles.logisticsValue}>
-              3-5 Business Days
+              {product?.estimatedDelivery || '1-3 Business Days'}
             </Typography>
           </View>
 
@@ -161,16 +325,16 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
               Delivery Method :
             </Typography>
             <Typography variant="bodyMedium" style={styles.logisticsValue}>
-              Flatbed Truck (Site Access Req.)
+              {product?.deliveryMethod || 'Flatbed Truck / Site Unload'}
             </Typography>
           </View>
 
           <View style={styles.logisticsRow}>
             <Typography variant="bodyMedium" style={styles.logisticsLabel}>
-              Shipping Cost :
+              Shipping Rate :
             </Typography>
             <Typography variant="bodyMedium" style={styles.logisticsValue}>
-              Included in Unit Price
+              {product?.shippingCost ? `₹ ${product.shippingCost}` : 'Included in Material Price'}
             </Typography>
           </View>
         </View>
@@ -178,85 +342,46 @@ export const SupplierDetailsScreen = ({ route, navigation }: any) => {
         {/* Bottom Dual Action Buttons */}
         <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
-            style={styles.confirmOrderButton}
+            style={[styles.confirmOrderButton, isOrdering && { opacity: 0.7 }]}
             activeOpacity={0.8}
-            onPress={async () => {
-              try {
-                if (!product) {
-                  navigation.navigate('OrderSuccess');
-                  return;
-                }
-
-                const response = await apiClient.post('/orders/razorpay/create', {
-                  supplier: product.supplier?._id || '1',
-                  orderItems: [
-                    {
-                      product: product._id,
-                      name: product.name,
-                      qty: 1,
-                      price: product.price || 385,
-                    },
-                  ],
-                  shippingAddress: {
-                    address: '123 Buyer St',
-                    city: 'Mumbai',
-                    postalCode: '400001',
-                    location: { type: 'Point', coordinates: [72.8777, 19.076] },
-                  },
-                  totalPrice: product.price || 385,
-                });
-
-                const { order, razorpayOrder } = response.data;
-
-                var options = {
-                  description: 'ConstiGo Order Payment',
-                  currency: razorpayOrder.currency,
-                  key: RAZORPAY_KEY_ID,
-                  amount: razorpayOrder.amount,
-                  name: 'ConstiGo',
-                  order_id: razorpayOrder.id,
-                  theme: { color: '#8B0000' },
-                };
-
-                RazorpayCheckout.open(options)
-                  .then(async (data: any) => {
-                    await apiClient.post('/orders/razorpay/verify', {
-                      razorpay_order_id: data.razorpay_order_id,
-                      razorpay_payment_id: data.razorpay_payment_id,
-                      razorpay_signature: data.razorpay_signature,
-                    });
-                    navigation.navigate('OrderSuccess');
-                  })
-                  .catch(() => {
-                    navigation.navigate('OrderSuccess');
-                  });
-              } catch (error) {
-                navigation.navigate('OrderSuccess');
-              }
-            }}
+            disabled={isOrdering}
+            onPress={handleConfirmOrder}
           >
-            <Typography variant="bodyMedium" style={styles.confirmOrderText}>
-              Confirm Order
-            </Typography>
+            {isOrdering ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Typography variant="bodyMedium" style={styles.confirmOrderText}>
+                Confirm Order
+              </Typography>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.addToCartButton}
             activeOpacity={0.8}
             onPress={async () => {
+              if (!product) {
+                Alert.alert('Notice', 'Product details are unavailable.');
+                return;
+              }
+              const prodId = product._id || product.productid || product.id;
+              const venId = product.supplier?._id || product.vendorid || 'vendor_default';
+              const name = product.name || 'Construction Material';
+              const price = Number(product.price || product.product_price || 0);
+
               try {
                 const success = await addToCart({
-                  productId: product?._id || product?.productid || 'CVP300926224904',
-                  vendorId: product?.supplier?._id || product?.vendorid || 'CV290926162458',
-                  productName: product?.name || 'Cement Grade I',
-                  amount: product?.price || 400,
+                  productId: prodId,
+                  vendorId: venId,
+                  productName: name,
+                  amount: price,
                   quantity: 1,
-                  category: product?.category || 'Cement',
+                  category: product.category || 'Materials',
                 });
                 if (success) {
                   Alert.alert(
                     'Added to Cart',
-                    `${product?.name || 'Item'} has been added to your cart.`,
+                    `${name} has been added to your cart.`,
                     [
                       { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
                       { text: 'Continue Shopping' },
@@ -318,33 +443,44 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 18,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
-    gap: 14,
+    alignItems: 'flex-start',
   },
   productIconContainer: {
     width: 68,
     height: 68,
-    borderRadius: 18,
-    backgroundColor: '#EDF3F7',
+    borderRadius: 16,
+    backgroundColor: '#F7F7F7',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    marginRight: 14,
+    overflow: 'hidden',
   },
   shovelIconBadge: {
     position: 'absolute',
-    left: 8,
-    top: 10,
+    bottom: 6,
+    right: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   headerInfo: {
     flex: 1,
-    justifyContent: 'center',
   },
   titleRow: {
     flexDirection: 'row',
@@ -352,11 +488,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   supplierTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 16,
+    color: '#000000',
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   verifiedBadge: {
     marginLeft: 6,
@@ -365,66 +500,93 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
     marginTop: 6,
+    flexWrap: 'wrap',
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    marginRight: 12,
   },
   metaText: {
-    fontSize: 12,
-    color: '#8A8A8E',
+    fontSize: 11,
+    color: '#666666',
+    marginLeft: 3,
+  },
+  statusBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  statusInStock: {
+    backgroundColor: '#E8F5E9',
+  },
+  statusOutOfStock: {
+    backgroundColor: '#FFEBEE',
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat-Bold',
+  },
+  statusTextIn: {
+    color: '#00B14F',
+  },
+  statusTextOut: {
+    color: '#D32F2F',
   },
   supplierDescription: {
-    fontSize: 11,
-    color: '#8A8A8E',
+    fontSize: 12,
+    color: '#666666',
+    lineHeight: 18,
     marginTop: 12,
     marginBottom: 16,
-    lineHeight: 16,
   },
   quickActionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 14,
   },
   quickActionButton: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 16,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 12,
+    paddingVertical: 10,
+    gap: 6,
     borderWidth: 1,
-    borderColor: '#8B0000',
-    backgroundColor: '#FFFFFF',
-    gap: 4,
+    borderColor: '#FFE0E0',
   },
   quickActionText: {
-    color: '#8B0000',
     fontSize: 12,
-    fontWeight: '600',
+    color: '#8B0000',
+    fontFamily: 'Montserrat-SemiBold',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
+    fontSize: 16,
+    fontFamily: 'BalooBhai2-Bold',
+    color: '#000000',
+    marginBottom: 12,
   },
   performanceItem: {
-    marginBottom: 14,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
   },
   performanceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   performanceTitle: {
-    color: '#8B0000',
     fontSize: 13,
-    fontWeight: '700',
+    color: '#333333',
+    fontFamily: 'Montserrat-SemiBold',
   },
   starsRow: {
     flexDirection: 'row',
@@ -432,93 +594,72 @@ const styles = StyleSheet.create({
   },
   performanceReview: {
     fontSize: 11,
-    color: '#8A8A8E',
+    color: '#666666',
     lineHeight: 16,
+    fontStyle: 'italic',
+  },
+  verifiedRecordBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+    borderRadius: 12,
+    padding: 12,
   },
   logisticsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   logisticsLabel: {
-    color: '#8B0000',
     fontSize: 13,
-    fontWeight: '600',
+    color: '#666666',
   },
   logisticsValue: {
-    color: '#111827',
     fontSize: 13,
-    fontWeight: '600',
+    color: '#000000',
+    fontFamily: 'Montserrat-SemiBold',
   },
   bottomButtonsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 4,
+    paddingTop: 8,
   },
   confirmOrderButton: {
     flex: 1,
     backgroundColor: '#8B0000',
-    borderRadius: 24,
+    borderRadius: 22,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   confirmOrderText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Montserrat-Bold',
   },
   addToCartButton: {
     flex: 1,
-    backgroundColor: '#F7F8FA',
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: '#8B0000',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#8B0000',
   },
   addToCartText: {
     color: '#8B0000',
     fontSize: 14,
-    fontWeight: '700',
-  },
-  downloadPdfButton: {
-    flex: 1,
-    backgroundColor: '#F7F8FA',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#8B0000',
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  downloadPdfText: {
-    color: '#8B0000',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginLeft: 6,
-  },
-  statusInStock: {
-    backgroundColor: '#ECFDF5',
-  },
-  statusOutOfStock: {
-    backgroundColor: '#FEF2F2',
-  },
-  statusText: {
-    fontSize: 10,
-    fontFamily: 'Montserrat-SemiBold',
-  },
-  statusTextIn: {
-    color: '#059669',
-  },
-  statusTextOut: {
-    color: '#DC2626',
+    fontFamily: 'Montserrat-Bold',
   },
 });

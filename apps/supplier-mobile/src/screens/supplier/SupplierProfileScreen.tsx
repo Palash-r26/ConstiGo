@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -377,6 +377,26 @@ export const SupplierProfileScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        {/* Quick Hub: Site Labor & Workers */}
+        <TouchableOpacity
+          style={styles.workersHubProfileCard}
+          activeOpacity={0.85}
+          onPress={() => navigation?.navigate('Workers')}
+        >
+          <View style={styles.workersHubProfileIcon}>
+            <Icon name="users" size={20} color="#8B0000" />
+          </View>
+          <View style={{ flex: 1, marginHorizontal: 12 }}>
+            <Typography variant="bodyBold" style={{ fontSize: 14, color: '#111827' }}>
+              Site Labor & Workers Hub
+            </Typography>
+            <Typography variant="bodySmall" style={{ fontSize: 11, color: '#6B7280' }}>
+              Browse & call helpers, masons & fabricators
+            </Typography>
+          </View>
+          <Icon name="chevron-right" size={18} color="#9CA3AF" />
+        </TouchableOpacity>
+
         {/* Update Button */}
         <TouchableOpacity
           style={[styles.updateButton, isLoading && { opacity: 0.7 }]}
@@ -572,6 +592,29 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 15,
     fontFamily: 'Montserrat-Bold',
+  },
+  workersHubProfileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  workersHubProfileIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

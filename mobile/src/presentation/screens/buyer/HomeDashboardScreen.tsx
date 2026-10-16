@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Linking, ActivityIndicator, Image } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Linking, ActivityIndicator } from 'react-native';
 import { Typography } from '../../components/Typography';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Logo } from '../../components/Logo';
+import { SafeImage } from '../../components/SafeImage';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,7 +19,6 @@ export interface ServiceCategory {
   iconName: string;
   iconType: 'feather' | 'material';
   description: string;
-  availableCount: number;
 }
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
@@ -28,7 +28,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'wrench',
     iconType: 'feather',
     description: 'Pipe fittings, repairs & leakage solutions',
-    availableCount: 2,
   },
   {
     id: 'mistry',
@@ -36,7 +35,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'home',
     iconType: 'feather',
     description: 'Brickwork, plastering & foundation work',
-    availableCount: 2,
   },
   {
     id: 'electrician',
@@ -44,7 +42,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'zap',
     iconType: 'feather',
     description: 'Wiring, MCBs, lighting & appliance setup',
-    availableCount: 2,
   },
   {
     id: 'carpenter',
@@ -52,7 +49,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'box',
     iconType: 'feather',
     description: 'Doors, windows, modular wood fittings',
-    availableCount: 2,
   },
   {
     id: 'painter',
@@ -60,7 +56,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'edit-3',
     iconType: 'feather',
     description: 'Wall painting, whitewashing & polishing',
-    availableCount: 2,
   },
   {
     id: 'tiles',
@@ -68,7 +63,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'grid',
     iconType: 'feather',
     description: 'Flooring tiles, granite & marble laying',
-    availableCount: 1,
   },
   {
     id: 'welder',
@@ -76,7 +70,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'shield',
     iconType: 'feather',
     description: 'Gates, grills, railings & metal structure',
-    availableCount: 1,
   },
   {
     id: 'helper',
@@ -84,7 +77,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     iconName: 'users',
     iconType: 'feather',
     description: 'Material shifting, loading & site support',
-    availableCount: 1,
   },
 ];
 
@@ -101,178 +93,6 @@ export interface ServiceWorker {
   distance: string;
   experience: string;
 }
-
-export const SERVICE_WORKERS: ServiceWorker[] = [
-  {
-    _id: 'w1',
-    name: 'Ramesh Sharma',
-    category: 'Plumber',
-    categoryId: 'plumber',
-    email: 'ramesh.sharma.plumb@gmail.com',
-    phone: '+91 98765 43210',
-    serviceCharge: '₹ 400 / service',
-    visitingCharge: '₹ 150',
-    rating: '4.8 (95)',
-    distance: '1.8 km',
-    experience: '8 yrs exp',
-  },
-  {
-    _id: 'w2',
-    name: 'Dinesh Gupta',
-    category: 'Plumber',
-    categoryId: 'plumber',
-    email: 'dinesh.gupta.plumbing@gmail.com',
-    phone: '+91 98234 56789',
-    serviceCharge: '₹ 350 / service',
-    visitingCharge: '₹ 100',
-    rating: '4.7 (62)',
-    distance: '2.5 km',
-    experience: '5 yrs exp',
-  },
-  {
-    _id: 'w3',
-    name: 'Manoj Kumar (Raj Mistry)',
-    category: 'Mistry / Mason',
-    categoryId: 'mistry',
-    email: 'manoj.kumar.mistry@gmail.com',
-    phone: '+91 95899 08555',
-    serviceCharge: '₹ 900 / day',
-    visitingCharge: '₹ 200',
-    rating: '4.9 (132)',
-    distance: '2.4 km',
-    experience: '12 yrs exp',
-  },
-  {
-    _id: 'w4',
-    name: 'Bhola Yadav',
-    category: 'Mistry / Mason',
-    categoryId: 'mistry',
-    email: 'bhola.mason.work@gmail.com',
-    phone: '+91 97123 45670',
-    serviceCharge: '₹ 850 / day',
-    visitingCharge: '₹ 150',
-    rating: '4.6 (78)',
-    distance: '3.0 km',
-    experience: '10 yrs exp',
-  },
-  {
-    _id: 'w5',
-    name: 'Sunil Verma',
-    category: 'Electrician',
-    categoryId: 'electrician',
-    email: 'sunil.verma.electric@gmail.com',
-    phone: '+91 98112 34567',
-    serviceCharge: '₹ 350 / service',
-    visitingCharge: '₹ 100',
-    rating: '4.7 (80)',
-    distance: '3.1 km',
-    experience: '6 yrs exp',
-  },
-  {
-    _id: 'w6',
-    name: 'Amit Patel',
-    category: 'Electrician',
-    categoryId: 'electrician',
-    email: 'amit.power.services@gmail.com',
-    phone: '+91 94250 88990',
-    serviceCharge: '₹ 400 / service',
-    visitingCharge: '₹ 120',
-    rating: '4.8 (110)',
-    distance: '2.1 km',
-    experience: '9 yrs exp',
-  },
-  {
-    _id: 'w7',
-    name: 'Irfan Khan',
-    category: 'Carpenter',
-    categoryId: 'carpenter',
-    email: 'irfan.woodcraft@gmail.com',
-    phone: '+91 98930 11223',
-    serviceCharge: '₹ 800 / day',
-    visitingCharge: '₹ 200',
-    rating: '4.8 (64)',
-    distance: '2.9 km',
-    experience: '10 yrs exp',
-  },
-  {
-    _id: 'w8',
-    name: 'Harish Sharma',
-    category: 'Carpenter',
-    categoryId: 'carpenter',
-    email: 'harish.carpentry@gmail.com',
-    phone: '+91 97550 44332',
-    serviceCharge: '₹ 750 / day',
-    visitingCharge: '₹ 150',
-    rating: '4.5 (45)',
-    distance: '4.2 km',
-    experience: '7 yrs exp',
-  },
-  {
-    _id: 'w9',
-    name: 'Rajesh Painter',
-    category: 'Painter',
-    categoryId: 'painter',
-    email: 'rajesh.paints.indore@gmail.com',
-    phone: '+91 98260 77889',
-    serviceCharge: '₹ 750 / day',
-    visitingCharge: '₹ 150',
-    rating: '4.6 (52)',
-    distance: '3.5 km',
-    experience: '7 yrs exp',
-  },
-  {
-    _id: 'w10',
-    name: 'Vikram Singh',
-    category: 'Painter',
-    categoryId: 'painter',
-    email: 'vikram.colors.art@gmail.com',
-    phone: '+91 99810 55443',
-    serviceCharge: '₹ 700 / day',
-    visitingCharge: '₹ 100',
-    rating: '4.7 (38)',
-    distance: '2.8 km',
-    experience: '5 yrs exp',
-  },
-  {
-    _id: 'w11',
-    name: 'Kailash Yadav',
-    category: 'Tile & Marble Setter',
-    categoryId: 'tiles',
-    email: 'kailash.marble.tiles@gmail.com',
-    phone: '+91 98933 66778',
-    serviceCharge: '₹ 850 / day',
-    visitingCharge: '₹ 200',
-    rating: '4.9 (88)',
-    distance: '2.2 km',
-    experience: '11 yrs exp',
-  },
-  {
-    _id: 'w12',
-    name: 'Salim Mansoori',
-    category: 'Welder / Fabricator',
-    categoryId: 'welder',
-    email: 'salim.metal.fabrication@gmail.com',
-    phone: '+91 97520 88112',
-    serviceCharge: '₹ 800 / day',
-    visitingCharge: '₹ 150',
-    rating: '4.8 (70)',
-    distance: '3.7 km',
-    experience: '9 yrs exp',
-  },
-  {
-    _id: 'w13',
-    name: 'Raju Lodhi',
-    category: 'Labor / Helper',
-    categoryId: 'helper',
-    email: 'raju.sitehelper@gmail.com',
-    phone: '+91 98270 33221',
-    serviceCharge: '₹ 500 / day',
-    visitingCharge: '₹ 50',
-    rating: '4.6 (40)',
-    distance: '1.5 km',
-    experience: '4 yrs exp',
-  },
-];
 
 export const HomeDashboardScreen = ({ navigation }: any) => {
   const categories = ['All', 'Cement', 'Steel', 'Bricks', 'Services', 'Sand'];
@@ -329,6 +149,43 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
 
   const [apiWorkers, setApiWorkers] = React.useState<ServiceWorker[]>([]);
   const [loadingWorkers, setLoadingWorkers] = React.useState(false);
+  const [featuredWorkers, setFeaturedWorkers] = React.useState<ServiceWorker[]>([]);
+  const [loadingFeaturedWorkers, setLoadingFeaturedWorkers] = React.useState(false);
+
+  React.useEffect(() => {
+    const loadFeaturedWorkers = async () => {
+      try {
+        setLoadingFeaturedWorkers(true);
+        let res: any;
+        try {
+          res = await fetchBuyerWorkers('all');
+        } catch {
+          res = await fetchWorkers();
+        }
+        if (res && res.data && Array.isArray(res.data)) {
+          const mapped: ServiceWorker[] = res.data.map((item: WorkerItem) => ({
+            _id: item.workerid || String(item.id),
+            name: item.fullname,
+            category: item.skill,
+            categoryId: 'services',
+            email: '',
+            phone: item.phone,
+            serviceCharge: item.service_charge ? `₹ ${item.service_charge} / service` : '₹ 500 / service',
+            visitingCharge: item.visit_charge ? `₹ ${item.visit_charge}` : '₹ 200',
+            rating: '4.8 (Verified)',
+            distance: item.location || 'Local',
+            experience: 'Verified Worker',
+          }));
+          setFeaturedWorkers(mapped);
+        }
+      } catch (err) {
+        console.warn('[HomeDashboardScreen] Failed to load featured workers:', err);
+      } finally {
+        setLoadingFeaturedWorkers(false);
+      }
+    };
+    loadFeaturedWorkers();
+  }, []);
 
   React.useEffect(() => {
     if (selectedServiceCategory || activeCategory === 'Services') {
@@ -372,14 +229,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
     }
   }, [selectedServiceCategory, activeCategory]);
 
-  // Filtered workers when a category is selected
-  const defaultCategoryWorkers = selectedServiceCategory
-    ? SERVICE_WORKERS.filter(
-        (w) => w.categoryId === selectedServiceCategory || w.category.toLowerCase().includes(selectedServiceCategory.toLowerCase())
-      )
-    : SERVICE_WORKERS;
-
-  const workersForSelectedCategory = apiWorkers.length > 0 ? apiWorkers : defaultCategoryWorkers;
+  const workersForSelectedCategory = apiWorkers;
 
   const currentCategoryObj = SERVICE_CATEGORIES.find(
     (c) => c.id === selectedServiceCategory || c.name === selectedServiceCategory
@@ -498,7 +348,7 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
 
                           <View className="flex-row items-center justify-between pt-2 mt-2 border-t border-gray-100">
                             <Typography style={{ fontSize: 11, color: '#8B0000', fontFamily: 'Montserrat-SemiBold' }}>
-                              {cat.availableCount} Workers
+                              Verified
                             </Typography>
                             <Icon name="arrow-right" size={14} color="#8B0000" />
                           </View>
@@ -670,15 +520,12 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                         <Icon name="heart" size={16} color={isFavorited(item._id) ? "#8B0000" : "#9CA3AF"} />
                       </TouchableOpacity>
                       <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center overflow-hidden">
-                        {item.images && item.images[0] ? (
-                          <Image
-                            source={{ uri: item.images[0] }}
-                            style={{ width: '100%', height: '100%', borderRadius: 16 }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <Icon name="box" size={40} color="#9CA3AF" />
-                        )}
+                        <SafeImage
+                          uri={item.images && item.images[0] ? item.images[0] : item.productimage}
+                          style={{ width: '100%', height: '100%', borderRadius: 16 }}
+                          resizeMode="cover"
+                          fallbackIconName="box"
+                        />
                       </View>
                       <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
                       <View className="flex-row items-end mb-3">
@@ -701,32 +548,49 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                 </View>
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }} className="mb-8">
-                  {SERVICE_WORKERS.map((worker) => (
-                    <View 
-                      key={`srv-${worker._id}`}
-                      className="bg-surface rounded-3xl p-4 w-52 shadow-sm shadow-gray-200"
-                    >
-                      <View className="h-24 bg-input-bg rounded-2xl mb-3 justify-center items-center p-3">
-                        <Icon name="tool" size={32} color="#8B0000" />
-                        <Typography variant="bodyBold" className="text-xs text-[#111827] mt-1">
-                          {worker.category}
-                        </Typography>
-                      </View>
-                      <Typography variant="bodySemiBold" className="mb-0.5 text-sm" numberOfLines={1}>
-                        {worker.name}
-                      </Typography>
-                      <Typography variant="bodyBold" className="text-primary text-xs mb-3 mt-1">
-                        {worker.serviceCharge}
-                      </Typography>
-                      <TouchableOpacity 
-                        onPress={() => handleCallWorker(worker.phone)}
-                        className="bg-primary rounded-full py-2 flex-row items-center justify-center"
-                      >
-                        <Icon name="phone" size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
-                        <Typography variant="bodyMedium" className="text-white text-xs">Call Now</Typography>
-                      </TouchableOpacity>
+                  {loadingFeaturedWorkers ? (
+                    <View className="py-6 px-10 items-center justify-center">
+                      <ActivityIndicator size="small" color="#8B0000" />
+                      <Typography variant="bodySmall" className="text-text-secondary mt-2">Loading services...</Typography>
                     </View>
-                  ))}
+                  ) : featuredWorkers.length === 0 ? (
+                    <View className="bg-surface rounded-3xl p-5 w-72 shadow-sm shadow-gray-200 border border-gray-100 items-center justify-center">
+                      <Icon name="users" size={30} color="#9CA3AF" className="mb-2" />
+                      <Typography variant="bodyBold" className="text-sm text-[#111827] text-center mb-1">
+                        Verified Labor Marketplace
+                      </Typography>
+                      <Typography variant="bodySmall" className="text-text-secondary text-center text-xs">
+                        Tap "See All" to browse categories and connect directly with local contractors.
+                      </Typography>
+                    </View>
+                  ) : (
+                    featuredWorkers.map((worker) => (
+                      <View 
+                        key={`srv-${worker._id}`}
+                        className="bg-surface rounded-3xl p-4 w-52 shadow-sm shadow-gray-200"
+                      >
+                        <View className="h-24 bg-input-bg rounded-2xl mb-3 justify-center items-center p-3">
+                          <Icon name="tool" size={32} color="#8B0000" />
+                          <Typography variant="bodyBold" className="text-xs text-[#111827] mt-1">
+                            {worker.category}
+                          </Typography>
+                        </View>
+                        <Typography variant="bodySemiBold" className="mb-0.5 text-sm" numberOfLines={1}>
+                          {worker.name}
+                        </Typography>
+                        <Typography variant="bodyBold" className="text-primary text-xs mb-3 mt-1">
+                          {worker.serviceCharge}
+                        </Typography>
+                        <TouchableOpacity 
+                          onPress={() => handleCallWorker(worker.phone)}
+                          className="bg-primary rounded-full py-2 flex-row items-center justify-center"
+                        >
+                          <Icon name="phone" size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
+                          <Typography variant="bodyMedium" className="text-white text-xs">Call Now</Typography>
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  )}
                 </ScrollView>
 
                 {/* Best In Deals */}
@@ -746,15 +610,12 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
                         <Icon name="heart" size={16} color={isFavorited(item._id) ? "#8B0000" : "#9CA3AF"} />
                       </TouchableOpacity>
                       <View className="h-32 bg-input-bg rounded-2xl mb-3 justify-center items-center overflow-hidden">
-                        {item.images && item.images[0] ? (
-                          <Image
-                            source={{ uri: item.images[0] }}
-                            style={{ width: '100%', height: '100%', borderRadius: 16 }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <Icon name="box" size={40} color="#9CA3AF" />
-                        )}
+                        <SafeImage
+                          uri={item.images && item.images[0] ? item.images[0] : item.productimage}
+                          style={{ width: '100%', height: '100%', borderRadius: 16 }}
+                          resizeMode="cover"
+                          fallbackIconName="box"
+                        />
                       </View>
                       <Typography variant="bodySemiBold" className="mb-1" numberOfLines={1}>{item.name}</Typography>
                       <View className="flex-row items-end mb-3">
