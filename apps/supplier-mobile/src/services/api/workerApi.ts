@@ -90,6 +90,7 @@ export interface WorkerItem {
   location: string;
   service_charge: string;
   visit_charge: string;
+  image?: string;
 }
 
 export interface WorkerApiResponse<T = any> {

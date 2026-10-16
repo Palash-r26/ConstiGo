@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { Typography } from '@constigo/shared';
 import { ScreenWrapper } from '@constigo/shared';
@@ -31,6 +32,7 @@ export const AddProductScreen = ({ navigation, route }: any) => {
 
   const [categoriesList, setCategoriesList] = useState<string[]>(DEFAULT_CATEGORIES);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoryDropdownVisible, setCategoryDropdownVisible] = useState(false);
 
   const [productName, setProductName] = useState(existingProduct?.productname || existingProduct?.name || '');
   const [productCategory, setProductCategory] = useState(existingProduct?.productcategory || existingProduct?.category || '');
@@ -237,9 +239,9 @@ export const AddProductScreen = ({ navigation, route }: any) => {
           {/* Category & Stock */}
           <View style={styles.row}>
             <View style={styles.halfWidth}>
-              <View style={[styles.pillInputContainer, fieldErrors.productCategory && styles.inputError]}>
+              <View style={[styles.pillInputContainer, fieldErrors.productCategory && styles.inputError, { flexDirection: 'row', alignItems: 'center', paddingRight: 10 }]}>
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { flex: 1, paddingRight: 4 }]}
                   placeholder="Product Category"
                   placeholderTextColor={fieldErrors.productCategory ? '#EF4444' : '#9CA3AF'}
                   value={productCategory}
@@ -248,6 +250,13 @@ export const AddProductScreen = ({ navigation, route }: any) => {
                     if (fieldErrors.productCategory) setFieldErrors({ ...fieldErrors, productCategory: '' });
                   }}
                 />
+                <TouchableOpacity
+                  onPress={() => setCategoryDropdownVisible(true)}
+                  style={{ padding: 4 }}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="chevron-down" size={18} color="#8B0000" />
+                </TouchableOpacity>
               </View>
               {fieldErrors.productCategory ? (
                 <Typography variant="bodySmall" style={styles.inlineErrorText}>
@@ -524,6 +533,74 @@ export const AddProductScreen = ({ navigation, route }: any) => {
         {/* Bottom Home Indicator */}
         <View style={styles.bottomIndicator} />
       </ScrollView>
+
+      {/* Category Dropdown Modal */}
+      <Modal
+        visible={categoryDropdownVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCategoryDropdownVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setCategoryDropdownVisible(false)}
+        >
+          <View style={styles.modalCard} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Typography variant="bodyBold" style={{ fontSize: 16, color: '#0F172A' }}>
+                  Select Product Category
+                </Typography>
+                <Typography variant="bodySmall" style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  Choose from standard categories or enter custom
+                </Typography>
+              </View>
+              <TouchableOpacity
+                onPress={() => setCategoryDropdownVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="x" size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+              {categoriesList.map((cat) => {
+                const isSelected = productCategory.toLowerCase() === cat.toLowerCase();
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => {
+                      setProductCategory(cat);
+                      if (fieldErrors.productCategory) setFieldErrors({ ...fieldErrors, productCategory: '' });
+                      setCategoryDropdownVisible(false);
+                    }}
+                    style={[
+                      styles.categoryOptionItem,
+                      isSelected && styles.categoryOptionItemSelected,
+                    ]}
+                  >
+                    <Typography
+                      variant="bodyMedium"
+                      style={[
+                        styles.categoryOptionText,
+                        isSelected && styles.categoryOptionTextSelected,
+                      ]}
+                    >
+                      {cat}
+                    </Typography>
+                    {isSelected ? (
+                      <Icon name="check-circle" size={18} color="#8B0000" />
+                    ) : (
+                      <View style={styles.unselectedCircle} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </ScreenWrapper>
   );
 };
@@ -704,6 +781,67 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    width: '100%',
+    padding: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 8,
+  },
+  modalCloseButton: {
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+  },
+  categoryOptionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  categoryOptionItemSelected: {
+    backgroundColor: '#FFF5F5',
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    color: '#334155',
+    fontFamily: 'Montserrat-Medium',
+  },
+  categoryOptionTextSelected: {
+    color: '#8B0000',
+    fontFamily: 'Montserrat-Bold',
+  },
+  unselectedCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
   },
 });
 

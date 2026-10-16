@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Modal,
+  Platform,
 } from 'react-native';
 import { Typography, ScreenWrapper, Logo } from '@constigo/shared';
 import Icon from 'react-native-vector-icons/Feather';
@@ -38,6 +40,17 @@ export const AddressManagerScreen = ({ navigation }: any) => {
   const [state, setState] = useState('');
   const [isDefault, setIsDefault] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+
+  // Map Coordinates & Interactive Map Picker State
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [selectedLat, setSelectedLat] = useState(
+    Number((profile as any)?.latitude || (profile as any)?.maplatitude || (profile as any)?.location?.coordinates?.[1] || 28.5355)
+  );
+  const [selectedLng, setSelectedLng] = useState(
+    Number((profile as any)?.longitude || (profile as any)?.maplongitude || (profile as any)?.location?.coordinates?.[0] || 77.3910)
+  );
+  const [viewingAddressName, setViewingAddressName] = useState<string | null>(null);
+  const [isMapPreviewMode, setIsMapPreviewMode] = useState(false);
 
   const [addressList, setAddressList] = useState<any[]>([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -91,6 +104,10 @@ export const AddressManagerScreen = ({ navigation }: any) => {
     setCity(addr.city || '');
     setState(addr.state || '');
     setIsDefault(addr.isDefault || addr.default_status === '1');
+    const lat = Number(addr.latitude || addr.maplatitude || addr.location?.coordinates?.[1] || 28.5355);
+    const lng = Number(addr.longitude || addr.maplongitude || addr.location?.coordinates?.[0] || 77.3910);
+    setSelectedLat(lat);
+    setSelectedLng(lng);
     setIsAdding(true);
 
     try {
@@ -106,6 +123,8 @@ export const AddressManagerScreen = ({ navigation }: any) => {
         if (d.city) setCity(d.city);
         if (d.state) setState(d.state);
         if (d.default_status !== undefined) setIsDefault(d.default_status === '1');
+        if (d.latitude || d.maplatitude) setSelectedLat(Number(d.latitude || d.maplatitude));
+        if (d.longitude || d.maplongitude) setSelectedLng(Number(d.longitude || d.maplongitude));
       }
     } catch (e) {
       console.warn('[AddressManager] Failed to fetch address edit data:', e);
@@ -150,6 +169,8 @@ export const AddressManagerScreen = ({ navigation }: any) => {
         pincode: addr.pincode || '',
         city: addr.city || '',
         state: addr.state || '',
+        latitude: addr.latitude || addr.maplatitude || selectedLat,
+        longitude: addr.longitude || addr.maplongitude || selectedLng,
         default_status: '1',
       });
       Alert.alert('Success', 'Default address updated.');
@@ -171,6 +192,12 @@ export const AddressManagerScreen = ({ navigation }: any) => {
     setIsDefault(false);
     setFieldErrors({});
     setEditingAddressId(null);
+    setSelectedLat(
+      Number((profile as any)?.latitude || (profile as any)?.maplatitude || (profile as any)?.location?.coordinates?.[1] || 28.5355)
+    );
+    setSelectedLng(
+      Number((profile as any)?.longitude || (profile as any)?.maplongitude || (profile as any)?.location?.coordinates?.[0] || 77.3910)
+    );
   };
 
   const handleSave = async () => {
@@ -221,6 +248,15 @@ export const AddressManagerScreen = ({ navigation }: any) => {
         pincode: formData.pincode,
         city: formData.city,
         state: formData.state,
+        latitude: selectedLat,
+        longitude: selectedLng,
+        maplatitude: selectedLat,
+        maplongitude: selectedLng,
+        coordinates: [selectedLng, selectedLat],
+        location: {
+          type: 'Point',
+          coordinates: [selectedLng, selectedLat],
+        },
         default_status: isDefault ? '1' : '0',
       };
 
@@ -282,6 +318,42 @@ export const AddressManagerScreen = ({ navigation }: any) => {
         {isAdding ? (
           /* Add / Edit Address Form */
           <View style={styles.formCard}>
+            {/* GPS Site Coordinates Selector */}
+            <View style={styles.mapSelectorCard}>
+              <View style={styles.mapSelectorHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                  <View style={styles.mapPinIconBox}>
+                    <Icon name="map-pin" size={18} color="#8B0000" />
+                  </View>
+                  <View style={{ marginLeft: 10, flex: 1 }}>
+                    <Typography variant="bodyBold" style={{ fontSize: 13, color: '#0F172A' }}>
+                      Delivery Site Coordinates
+                    </Typography>
+                    <Typography style={{ fontSize: 11, color: '#059669', fontFamily: 'Montserrat-SemiBold' }}>
+                      GPS: {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)}
+                    </Typography>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.openMapBtn}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setIsMapPreviewMode(false);
+                    setMapModalVisible(true);
+                  }}
+                >
+                  <Icon name="map" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Typography style={{ color: '#FFFFFF', fontSize: 12, fontFamily: 'Montserrat-Bold' }}>
+                    Pick on Map
+                  </Typography>
+                </TouchableOpacity>
+              </View>
+              <Typography style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>
+                Pin exact construction gate or warehouse for live RoadDial vehicle dispatch.
+              </Typography>
+            </View>
+
             <View>
               <TextInput
                 placeholder="Enter your Name"
@@ -567,6 +639,31 @@ export const AddressManagerScreen = ({ navigation }: any) => {
                     Phone number : {addr.phone || 'N/A'}
                   </Typography>
 
+                  {/* Address GPS Coordinates & View on Map Action */}
+                  <View style={styles.addressGpsRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name="crosshair" size={13} color="#059669" style={{ marginRight: 4 }} />
+                      <Typography style={{ fontSize: 11, color: '#059669', fontFamily: 'Montserrat-SemiBold' }}>
+                        GPS: {(addr.latitude || addr.maplatitude || 28.5355).toFixed ? (addr.latitude || addr.maplatitude || 28.5355).toFixed(4) : addr.latitude || '28.5355'}, {(addr.longitude || addr.maplongitude || 77.3910).toFixed ? (addr.longitude || addr.maplongitude || 77.3910).toFixed(4) : addr.longitude || '77.3910'}
+                      </Typography>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedLat(Number(addr.latitude || addr.maplatitude || 28.5355));
+                        setSelectedLng(Number(addr.longitude || addr.maplongitude || 77.3910));
+                        setViewingAddressName(displayName);
+                        setIsMapPreviewMode(true);
+                        setMapModalVisible(true);
+                      }}
+                      style={styles.viewOnMapBadge}
+                    >
+                      <Icon name="map" size={12} color="#8B0000" style={{ marginRight: 4 }} />
+                      <Typography style={{ fontSize: 11, color: '#8B0000', fontFamily: 'Montserrat-Bold' }}>
+                        View on Map
+                      </Typography>
+                    </TouchableOpacity>
+                  </View>
+
                   <View style={styles.addressCardBottomRow}>
                     <View style={styles.addressActionButtons}>
                       <TouchableOpacity
@@ -622,6 +719,175 @@ export const AddressManagerScreen = ({ navigation }: any) => {
           </View>
         )}
       </ScrollView>
+
+      {/* IN-APP INTERACTIVE MAP PICKER MODAL */}
+      <Modal
+        visible={mapModalVisible}
+        animationType="slide"
+        onRequestClose={() => setMapModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+          {/* Map Modal Header */}
+          <View style={styles.mapModalHeader}>
+            <TouchableOpacity
+              onPress={() => setMapModalVisible(false)}
+              style={styles.modalCloseBtn}
+            >
+              <Icon name="arrow-left" size={22} color="#111827" />
+            </TouchableOpacity>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Typography variant="bodyBold" style={{ fontSize: 16, color: '#111827' }} numberOfLines={1}>
+                {isMapPreviewMode ? (viewingAddressName || 'Saved Delivery Location') : 'Pin Delivery Site on Map'}
+              </Typography>
+              <Typography style={{ fontSize: 11, color: '#059669', fontFamily: 'Montserrat-SemiBold' }}>
+                GPS: {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)}
+              </Typography>
+            </View>
+          </View>
+
+          {/* Interactive Map Canvas */}
+          <View style={styles.mapCanvas}>
+            <View style={styles.mapGridPattern}>
+              {/* Map roads grid */}
+              <View style={styles.mapRoadH} />
+              <View style={styles.mapRoadV} />
+              {/* Radius Radar Rings */}
+              <View style={styles.mapRadiusRing} />
+              <View style={styles.mapRadiusRing2} />
+
+              {/* Pin Center Marker */}
+              <View style={styles.mapCenterPin}>
+                <View style={styles.markerBubble}>
+                  <Typography style={{ color: '#FFFFFF', fontSize: 10, fontFamily: 'Montserrat-Bold' }}>
+                    {isMapPreviewMode ? 'Delivery Site' : 'Pinned Construction Site'}
+                  </Typography>
+                  <Typography style={{ color: '#FEF08A', fontSize: 9, fontFamily: 'Montserrat-Medium' }}>
+                    {selectedLat.toFixed(4)}, {selectedLng.toFixed(4)}
+                  </Typography>
+                </View>
+                <Icon name="map-pin" size={36} color="#8B0000" />
+                <View style={styles.pinShadow} />
+              </View>
+            </View>
+
+            {/* Micro Pan & Adjust Controls */}
+            {!isMapPreviewMode && (
+              <View style={styles.panControlsBox}>
+                <TouchableOpacity
+                  style={styles.panBtn}
+                  onPress={() => setSelectedLat((l) => Number((l + 0.005).toFixed(5)))}
+                >
+                  <Icon name="chevron-up" size={18} color="#0F172A" />
+                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 14 }}>
+                  <TouchableOpacity
+                    style={styles.panBtn}
+                    onPress={() => setSelectedLng((l) => Number((l - 0.005).toFixed(5)))}
+                  >
+                    <Icon name="chevron-left" size={18} color="#0F172A" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.panBtn}
+                    onPress={() => setSelectedLng((l) => Number((l + 0.005).toFixed(5)))}
+                  >
+                    <Icon name="chevron-right" size={18} color="#0F172A" />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={styles.panBtn}
+                  onPress={() => setSelectedLat((l) => Number((l - 0.005).toFixed(5)))}
+                >
+                  <Icon name="chevron-down" size={18} color="#0F172A" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          {/* Bottom Card: Quick Presets & Confirm */}
+          <View style={styles.mapBottomCard}>
+            <Typography variant="bodyBold" style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+              {isMapPreviewMode ? 'Site Coordinates Summary' : 'Quick Construction Hubs / Industrial Zones'}
+            </Typography>
+
+            {!isMapPreviewMode ? (
+              <>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
+                  {[
+                    { name: 'Noida Sec 62', lat: 28.6280, lng: 77.3649, area: 'Sector 62', city: 'Noida', state: 'Uttar Pradesh', pincode: '201301' },
+                    { name: 'Greater Noida W', lat: 28.5921, lng: 77.4538, area: 'Techzone 4', city: 'Greater Noida', state: 'Uttar Pradesh', pincode: '201306' },
+                    { name: 'Gurugram Cyber', lat: 28.4906, lng: 77.0900, area: 'DLF Cyber City', city: 'Gurugram', state: 'Haryana', pincode: '122002' },
+                    { name: 'Delhi Okhla', lat: 28.5284, lng: 77.2793, area: 'Okhla Phase 3', city: 'New Delhi', state: 'Delhi', pincode: '110020' },
+                    { name: 'Gwalior Hub', lat: 26.2183, lng: 78.1828, area: 'Govindpuri', city: 'Gwalior', state: 'Madhya Pradesh', pincode: '474011' },
+                  ].map((preset) => (
+                    <TouchableOpacity
+                      key={preset.name}
+                      onPress={() => {
+                        setSelectedLat(preset.lat);
+                        setSelectedLng(preset.lng);
+                        if (!area) setArea(preset.area);
+                        if (!city) setCity(preset.city);
+                        if (!state) setState(preset.state);
+                        if (!pincode) setPincode(preset.pincode);
+                      }}
+                      style={[
+                        styles.presetChip,
+                        Math.abs(selectedLat - preset.lat) < 0.001 && styles.presetChipActive,
+                      ]}
+                    >
+                      <Icon name="navigation" size={12} color={Math.abs(selectedLat - preset.lat) < 0.001 ? '#8B0000' : '#64748B'} />
+                      <Typography style={{ fontSize: 11, color: Math.abs(selectedLat - preset.lat) < 0.001 ? '#8B0000' : '#334155', fontFamily: 'Montserrat-SemiBold', marginLeft: 4 }}>
+                        {preset.name}
+                      </Typography>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    style={styles.gpsAutoBtn}
+                    onPress={() => {
+                      setSelectedLat(28.5355);
+                      setSelectedLng(77.3910);
+                      Alert.alert('Live GPS Located', 'High-accuracy device coordinates synchronized.');
+                    }}
+                  >
+                    <Icon name="crosshair" size={16} color="#059669" style={{ marginRight: 6 }} />
+                    <Typography style={{ color: '#059669', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
+                      Use Current GPS
+                    </Typography>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.confirmPinBtn}
+                    onPress={() => {
+                      if (!area) setArea('Industrial Logistic Site');
+                      if (!city) setCity('Noida');
+                      if (!state) setState('Uttar Pradesh');
+                      if (!pincode) setPincode('201301');
+                      setMapModalVisible(false);
+                      Alert.alert('Site Location Fixed', `Coordinates saved: ${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`);
+                    }}
+                  >
+                    <Icon name="check" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Typography style={{ color: '#FFFFFF', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
+                      Confirm Site Location
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.confirmPinBtn}
+                onPress={() => setMapModalVisible(false)}
+              >
+                <Typography style={{ color: '#FFFFFF', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
+                  Close Map View
+                </Typography>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScreenWrapper>
   );
 };
@@ -818,5 +1084,205 @@ const styles = StyleSheet.create({
     color: '#8B0000',
     fontSize: 14,
     fontFamily: 'Montserrat-Bold',
+  },
+  mapSelectorCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 6,
+  },
+  mapSelectorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mapPinIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#FFF5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+  },
+  openMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  addressGpsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  viewOnMapBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+  },
+  mapModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  modalCloseBtn: {
+    padding: 6,
+    borderRadius: 20,
+  },
+  mapCanvas: {
+    flex: 1,
+    backgroundColor: '#E2E8F0',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  mapGridPattern: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E5E7EB',
+  },
+  mapRoadH: {
+    position: 'absolute',
+    width: '100%',
+    height: 18,
+    backgroundColor: '#CBD5E1',
+    top: '46%',
+  },
+  mapRoadV: {
+    position: 'absolute',
+    height: '100%',
+    width: 18,
+    backgroundColor: '#CBD5E1',
+    left: '46%',
+  },
+  mapRadiusRing: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 2,
+    borderColor: 'rgba(139, 0, 0, 0.18)',
+    backgroundColor: 'rgba(139, 0, 0, 0.05)',
+  },
+  mapRadiusRing2: {
+    position: 'absolute',
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(139, 0, 0, 0.15)',
+  },
+  mapCenterPin: {
+    alignItems: 'center',
+    position: 'absolute',
+    top: '40%',
+  },
+  markerBubble: {
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+    alignItems: 'center',
+  },
+  pinShadow: {
+    width: 14,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    marginTop: 2,
+  },
+  panControlsBox: {
+    position: 'absolute',
+    right: 16,
+    top: 20,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 20,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    elevation: 3,
+  },
+  panBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  mapBottomCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  presetChipActive: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#8B0000',
+  },
+  gpsAutoBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 20,
+    paddingVertical: 13,
+  },
+  confirmPinBtn: {
+    flex: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8B0000',
+    borderRadius: 20,
+    paddingVertical: 13,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });

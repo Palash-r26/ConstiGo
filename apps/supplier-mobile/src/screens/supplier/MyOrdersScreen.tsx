@@ -210,7 +210,10 @@ export const MyOrdersScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper>
       {/* Top Header */}
-      <SupplierTopHeader navigation={navigation} />
+      <SupplierTopHeader
+        onProfilePress={() => navigation?.navigate('Profile')}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

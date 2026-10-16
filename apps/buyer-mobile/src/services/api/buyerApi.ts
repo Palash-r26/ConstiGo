@@ -151,6 +151,15 @@ export interface BuyerAddressAddPayload {
   city: string;
   state: string;
   default_status: string | number;
+  latitude?: number;
+  longitude?: number;
+  maplatitude?: number;
+  maplongitude?: number;
+  coordinates?: number[];
+  location?: {
+    type: string;
+    coordinates: number[];
+  };
 }
 
 export interface BuyerAddressUpdatePayload extends BuyerAddressAddPayload {
@@ -174,6 +183,11 @@ export interface BuyerShoppingCartPayload {
 export interface BuyerPlaceOrderPayload {
   buyerid: string;
   addressid: string | number;
+  latitude?: number;
+  longitude?: number;
+  coordinates?: number[];
+  fleetType?: string;
+  transitDistanceKm?: number;
 }
 
 export interface BuyerWishlistPayload {
@@ -201,6 +215,19 @@ export interface BuyerProfileUpdatePayload {
   dob?: string;
   email: string;
   phone: string;
+  latitude?: number;
+  longitude?: number;
+  maplatitude?: number;
+  maplongitude?: number;
+  coordinates?: number[];
+  location?: {
+    type: string;
+    coordinates: number[];
+  };
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
 }
 
 export interface BuyerApiResponse<T = any> {

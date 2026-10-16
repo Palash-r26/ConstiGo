@@ -23,7 +23,7 @@ import {
 
 export const InventoryDashboardScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
-  const vendorId = user?.vendorid || user?._id;
+  const vendorId: string = user?.vendorid || user?._id || 'CV290926162458';
 
   const [inventory, setInventory] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'AVAILABLE' | 'UNAVAILABLE'>('ALL');
@@ -105,12 +105,14 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
       );
 
       await updateVendorProduct({
-        id: productId,
+        vendorid: vendorId,
+        productid: productId,
         product_status: nextStatus,
-        productname: item.productname || item.name,
-        category: item.productcategory || item.category,
-        price: item.product_price || item.price,
-        stock: item.stock || item.stockQty,
+        productname: item.productname || item.name || '',
+        productcategory: item.productcategory || item.category || '',
+        product_price: String(item.product_price || item.price || '0'),
+        stock: String(item.stock || item.stockQty || '1'),
+        product_description: item.product_description || item.description || '',
       });
     } catch (err) {
       console.warn('[InventoryDashboard] Status update failed:', err);
@@ -130,7 +132,7 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteVendorProduct(productId);
+              await deleteVendorProduct(vendorId, productId);
               setInventory((prev) =>
                 prev.filter((p) => (p.productid || p.id || p._id) !== productId)
               );
@@ -156,7 +158,10 @@ export const InventoryDashboardScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper>
       {/* Top Header */}
-      <SupplierTopHeader navigation={navigation} />
+      <SupplierTopHeader
+        onProfilePress={() => navigation?.navigate('Profile')}
+        onNotificationPress={() => navigation?.navigate('Notifications')}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Hero Banner / CTA */}

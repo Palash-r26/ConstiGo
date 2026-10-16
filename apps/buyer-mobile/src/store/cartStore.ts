@@ -47,7 +47,10 @@ interface CartState {
   ) => Promise<boolean>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   removeItem: (productId: string) => Promise<void>;
-  placeOrder: (addressId: string | number) => Promise<any>;
+  placeOrder: (
+    addressId: string | number,
+    options?: { latitude?: number; longitude?: number; fleetType?: string }
+  ) => Promise<any>;
   clearCart: () => Promise<void>;
 }
 
@@ -165,7 +168,10 @@ export const useCartStore = create<CartState>((set) => ({
     });
   },
 
-  placeOrder: async (addressId: string | number) => {
+  placeOrder: async (
+    addressId: string | number,
+    options?: { latitude?: number; longitude?: number; fleetType?: string }
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const authUser = useAuthStore.getState().user;
@@ -173,6 +179,11 @@ export const useCartStore = create<CartState>((set) => ({
       const res = await placeBuyerOrder({
         buyerid: buyerId,
         addressid: addressId,
+        latitude: options?.latitude,
+        longitude: options?.longitude,
+        coordinates:
+          options?.latitude && options?.longitude ? [options.longitude, options.latitude] : undefined,
+        fleetType: options?.fleetType,
       });
       set({ items: [], subTotal: 0, isLoading: false });
       return res;
