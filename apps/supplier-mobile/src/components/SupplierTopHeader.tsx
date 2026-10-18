@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 6 : 8,
-    paddingBottom: 10,
-    minHeight: 56,
+    paddingTop: Platform.OS === 'android' ? 2 : 4,
+    paddingBottom: 8,
+    minHeight: 50,
   },
   avatarButton: {
     width: 40,
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
   logoWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+    transform: [{ translateY: -2 }],
   },
   bellButton: {
     width: 40,

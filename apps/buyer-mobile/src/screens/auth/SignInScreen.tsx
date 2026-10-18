@@ -63,9 +63,10 @@ export const SignInScreen = ({ navigation }: any) => {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             paddingHorizontal: 24,
-            paddingVertical: 32,
+            paddingTop: 16,
+            paddingBottom: 32,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

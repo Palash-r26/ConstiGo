@@ -259,14 +259,14 @@ export const HomeDashboardScreen = ({ navigation }: any) => {
     <ScreenWrapper>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         {/* Top Header: avatar left, logo centered, notifications right */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 6, paddingBottom: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 2, paddingBottom: 8 }}>
           <TouchableOpacity 
             onPress={() => navigation.navigate('Profile')}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#8B0000', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#8B0000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3 }}
           >
             <Icon name="user" size={19} color="#FFFFFF" />
           </TouchableOpacity>
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ alignItems: 'center', justifyContent: 'center', transform: [{ translateY: -2 }] }}>
             <Logo size="sm" />
           </View>
           <TouchableOpacity 

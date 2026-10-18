@@ -73,16 +73,37 @@ export const SignInScreen = ({ navigation }: any) => {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             paddingHorizontal: 24,
-            paddingVertical: 32,
+            paddingTop: 12,
+            paddingBottom: 40,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header & Logo */}
+          {/* Top Back Navigation to Role Select */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('RoleSelect')}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: '#F8FAFC',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#E2E8F0',
+              }}
+              activeOpacity={0.7}
+            >
+              <Icon name="arrow-left" size={20} color="#111827" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Header & Logo - Shifted upwards without large negative gap */}
           <View className="items-center mb-6">
-            <Logo size="md" style={{ marginBottom: 16 }} />
+            <Logo size="md" style={{ marginBottom: 12 }} />
             <Typography variant="h1Black" className="text-3xl text-[#111827] text-center mb-1">
               SUPPLIER PORTAL
             </Typography>
@@ -158,19 +179,6 @@ export const SignInScreen = ({ navigation }: any) => {
               textClassName="text-sm"
               className="py-0"
             />
-          </View>
-
-          {/* Worker Registration Link */}
-          <View className="items-center pt-1">
-            <TouchableOpacity
-              onPress={() => navigation.navigate('WorkerSignUp')}
-              className="py-1"
-              activeOpacity={0.7}
-            >
-              <Typography variant="bodySmall" className="text-xs text-text-secondary text-center">
-                Looking for work? <Typography variant="bodyBold" className="text-primary text-xs">Register as Worker</Typography>
-              </Typography>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

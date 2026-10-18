@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { Typography } from '@constigo/shared';
 import { Button } from '@constigo/shared';
@@ -114,7 +114,7 @@ export const AddMaterialScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper>
       {/* Top Header */}
-      <View className="flex-row justify-between items-center px-6 py-4 mb-2">
+      <View className="flex-row justify-between items-center px-6 pt-1 pb-2 mb-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="w-8 h-8 rounded-full bg-primary justify-center items-center">
           <Icon name="chevron-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>

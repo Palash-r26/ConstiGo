@@ -6,20 +6,24 @@ import { View, ActivityIndicator } from 'react-native';
 
 // Screens
 import { SplashScreen } from '../screens/auth/SplashScreen';
+import { RoleSelectScreen } from '../screens/auth/RoleSelectScreen';
 import { SignInScreen } from '../screens/auth/SignInScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import { ChangePasswordScreen } from '../screens/auth/ChangePasswordScreen';
 import { WorkerSignUpScreen } from '../screens/auth/WorkerSignUpScreen';
+import { WorkerSignInScreen } from '../screens/auth/WorkerSignInScreen';
 
 // Navigators
-import { SupplierStackNavigator } from './SupplierTabNavigator';
+import { SupplierStackNavigator, WorkerStackNavigator } from './SupplierTabNavigator';
 
 const AuthStack = createNativeStackNavigator();
 
 const AuthNavigator = () => (
-  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+  <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="RoleSelect">
+    <AuthStack.Screen name="RoleSelect" component={RoleSelectScreen} />
     <AuthStack.Screen name="SignIn" component={SignInScreen} />
+    <AuthStack.Screen name="WorkerSignIn" component={WorkerSignInScreen} />
     <AuthStack.Screen name="SignUp" component={SignUpScreen} />
     <AuthStack.Screen name="WorkerSignUp" component={WorkerSignUpScreen} />
     <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
@@ -45,7 +49,11 @@ export const RootNavigator = () => {
   return (
     <NavigationContainer>
       {token && user ? (
-        <SupplierStackNavigator />
+        user.role === 'WORKER' ? (
+          <WorkerStackNavigator />
+        ) : (
+          <SupplierStackNavigator />
+        )
       ) : (
         <AuthNavigator />
       )}

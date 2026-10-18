@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   avatarButton: {
     width: 44,

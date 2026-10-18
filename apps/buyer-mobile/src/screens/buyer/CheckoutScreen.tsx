@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { Typography, ScreenWrapper, Logo } from '@constigo/shared';
 import Icon from 'react-native-vector-icons/Feather';
@@ -21,7 +23,11 @@ import {
   updateBuyerAddress,
   deleteBuyerAddress,
 } from '../../services/api/buyerApi';
-import { getCurrentDeviceLocation } from '../../services/locationService';
+import {
+  getCurrentDeviceLocation,
+  reverseGeocode,
+  searchLocationByQuery,
+} from '../../services/locationService';
 import { addressManagerSchema } from '@constigo/shared';
 
 export const CheckoutScreen = ({ navigation }: any) => {
@@ -51,10 +57,172 @@ export const CheckoutScreen = ({ navigation }: any) => {
 
   // Map Picker & Preview Modal State
   const [mapModalVisible, setMapModalVisible] = useState(false);
-  const [selectedLat, setSelectedLat] = useState<number>(28.5355);
-  const [selectedLng, setSelectedLng] = useState<number>(77.3910);
+  const [selectedLat, setSelectedLat] = useState<number>(28.5976);
+  const [selectedLng, setSelectedLng] = useState<number>(77.3842);
   const [isMapPreviewMode, setIsMapPreviewMode] = useState(false);
   const [previewAddressTitle, setPreviewAddressTitle] = useState('');
+
+  // Interactive Gesture & Animated State for Map
+  const coordsRef = useRef({ lat: 28.5976, lng: 77.3842 });
+  const pinAnim = useRef(new Animated.Value(0)).current;
+  const panX = useRef(new Animated.Value(0)).current;
+  const panY = useRef(new Animated.Value(0)).current;
+  const [isDragging, setIsDragging] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [mapSearchText, setMapSearchText] = useState('');
+  const [mapSearchResults, setMapSearchResults] = useState<any[]>([]);
+  const [isSearchingMap, setIsSearchingMap] = useState(false);
+  const [locatingMapGps, setLocatingMapGps] = useState(false);
+  const searchDebounceRef = useRef<any>(null);
+
+  useEffect(() => {
+    coordsRef.current = { lat: selectedLat, lng: selectedLng };
+  }, [selectedLat, selectedLng]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 2 || Math.abs(gestureState.dy) > 2;
+      },
+      onPanResponderGrant: () => {
+        setIsDragging(true);
+        Animated.timing(pinAnim, {
+          toValue: -18,
+          duration: 120,
+          useNativeDriver: true,
+        }).start();
+      },
+      onPanResponderMove: (_, gestureState) => {
+        panX.setValue(gestureState.dx);
+        panY.setValue(gestureState.dy);
+
+        const step = 0.00008 / zoomScale;
+        const liveLat = coordsRef.current.lat + gestureState.dy * step;
+        const liveLng = coordsRef.current.lng - gestureState.dx * step;
+        setSelectedLat(Number(liveLat.toFixed(5)));
+        setSelectedLng(Number(liveLng.toFixed(5)));
+      },
+      onPanResponderRelease: async (_, gestureState) => {
+        setIsDragging(false);
+        Animated.spring(pinAnim, {
+          toValue: 0,
+          friction: 4,
+          tension: 70,
+          useNativeDriver: true,
+        }).start();
+        Animated.spring(panX, { toValue: 0, friction: 5, useNativeDriver: true }).start();
+        Animated.spring(panY, { toValue: 0, friction: 5, useNativeDriver: true }).start();
+
+        const step = 0.00008 / zoomScale;
+        const endLat = Number((coordsRef.current.lat + gestureState.dy * step).toFixed(5));
+        const endLng = Number((coordsRef.current.lng - gestureState.dx * step).toFixed(5));
+        coordsRef.current = { lat: endLat, lng: endLng };
+        setSelectedLat(endLat);
+        setSelectedLng(endLng);
+
+        try {
+          const geo = await reverseGeocode(endLat, endLng);
+          if (geo.address) {
+            setPreviewAddressTitle(geo.address);
+            if (geo.city) setCity(geo.city);
+            if (geo.state) setState(geo.state);
+            if (geo.pincode) setPincode(geo.pincode);
+            if (geo.address) setArea(geo.address);
+          }
+        } catch {
+          // ignore
+        }
+      },
+    })
+  ).current;
+
+  const handleMicroPan = async (dLat: number, dLng: number) => {
+    Animated.sequence([
+      Animated.timing(pinAnim, { toValue: -12, duration: 80, useNativeDriver: true }),
+      Animated.spring(pinAnim, { toValue: 0, friction: 4, useNativeDriver: true }),
+    ]).start();
+
+    const newLat = Number((selectedLat + dLat).toFixed(5));
+    const newLng = Number((selectedLng + dLng).toFixed(5));
+    coordsRef.current = { lat: newLat, lng: newLng };
+    setSelectedLat(newLat);
+    setSelectedLng(newLng);
+
+    try {
+      const geo = await reverseGeocode(newLat, newLng);
+      if (geo.address) {
+        setPreviewAddressTitle(geo.address);
+        if (geo.city) setCity(geo.city);
+        if (geo.state) setState(geo.state);
+        if (geo.pincode) setPincode(geo.pincode);
+        if (geo.address) setArea(geo.address);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMapSearchTextChange = (text: string) => {
+    setMapSearchText(text);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!text || text.trim().length < 2) {
+      setMapSearchResults([]);
+      setIsSearchingMap(false);
+      return;
+    }
+    setIsSearchingMap(true);
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await searchLocationByQuery(text.trim());
+        setMapSearchResults(res);
+      } catch {
+        setMapSearchResults([]);
+      } finally {
+        setIsSearchingMap(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectMapSearchResult = (item: any) => {
+    setMapSearchResults([]);
+    setMapSearchText('');
+    const lat = Number(item.latitude.toFixed(5));
+    const lng = Number(item.longitude.toFixed(5));
+    setSelectedLat(lat);
+    setSelectedLng(lng);
+    coordsRef.current = { lat, lng };
+    setPreviewAddressTitle(item.address);
+    if (item.city) setCity(item.city);
+    if (item.state) setState(item.state);
+    if (item.pincode) setPincode(item.pincode);
+    if (item.address) setArea(item.address);
+  };
+
+  const handleMapUseCurrentGps = async () => {
+    setLocatingMapGps(true);
+    try {
+      const loc = await getCurrentDeviceLocation();
+      const lat = parseFloat(loc.latitude);
+      const lng = parseFloat(loc.longitude);
+      setSelectedLat(lat);
+      setSelectedLng(lng);
+      coordsRef.current = { lat, lng };
+      setPreviewAddressTitle(loc.address || `${loc.city}, ${loc.state}`);
+      if (loc.address) setArea(loc.address);
+      if (loc.city) setCity(loc.city);
+      if (loc.state) setState(loc.state);
+      if (loc.pincode) setPincode(loc.pincode);
+      Alert.alert(
+        'Real GPS Synchronized 📍',
+        `Live device location locked:\n${loc.address || `${loc.city}, ${loc.state}`}`
+      );
+    } catch (e: any) {
+      Alert.alert('GPS Notice', 'Unable to detect device GPS. Please drag pin on the map.');
+    } finally {
+      setLocatingMapGps(false);
+    }
+  };
 
   const loadAddresses = useCallback(async () => {
     const buyerId = (profile as any)?.buyerid || profile?._id;
@@ -83,13 +251,13 @@ export const CheckoutScreen = ({ navigation }: any) => {
             fullname: `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() || 'My Site',
             name: `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() || 'My Site',
             address1: (profile as any)?.address || 'Construction Site Delivery Gate',
-            address2: (profile as any)?.city || 'Noida Logistics Hub',
-            city: (profile as any)?.city || 'Noida',
-            state: (profile as any)?.state || 'Uttar Pradesh',
-            pincode: (profile as any)?.pincode || '201301',
+            address2: (profile as any)?.city || 'Regional Logistics Hub',
+            city: (profile as any)?.city || 'Bhopal',
+            state: (profile as any)?.state || 'Madhya Pradesh',
+            pincode: (profile as any)?.pincode || '462001',
             phone: profile?.phone || '9876543210',
-            latitude: (profile as any)?.latitude || 28.5355,
-            longitude: (profile as any)?.longitude || 77.3910,
+            latitude: (profile as any)?.latitude || 23.2505,
+            longitude: (profile as any)?.longitude || 77.4065,
             isDefault: true,
           },
         ];
@@ -143,8 +311,9 @@ export const CheckoutScreen = ({ navigation }: any) => {
       setSelectedAddressId('live_gps_current');
       setSelectedLat(lat);
       setSelectedLng(lng);
+      coordsRef.current = { lat, lng };
       Alert.alert(
-        'GPS Location Selected',
+        'GPS Location Selected 📍',
         `Truck dispatch locked to your live coordinates:\n${loc.address || `${loc.city}, ${loc.state}`}`
       );
     } catch (e: any) {
@@ -164,8 +333,8 @@ export const CheckoutScreen = ({ navigation }: any) => {
     setCity('Noida');
     setState('Uttar Pradesh');
     setIsDefault(true);
-    setSelectedLat(28.5355);
-    setSelectedLng(77.3910);
+    setSelectedLat(28.5976);
+    setSelectedLng(77.3842);
     setEditingAddressId(null);
     setFieldErrors({});
     setAddModalVisible(true);
@@ -757,61 +926,154 @@ export const CheckoutScreen = ({ navigation }: any) => {
                 {isMapPreviewMode ? (previewAddressTitle || 'Site Location') : 'Pin Delivery Site on Map'}
               </Typography>
               <Typography style={{ fontSize: 11, color: '#059669', fontFamily: 'Montserrat-SemiBold' }}>
-                GPS: {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)}
+                GPS: {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)} {isDragging ? '(Moving...)' : ''}
               </Typography>
             </View>
           </View>
 
-          {/* Map Canvas */}
-          <View style={styles.mapCanvas}>
-            <View style={styles.mapGridPattern}>
+          {/* Search Bar on Map (Road-Dial Pattern) */}
+          {!isMapPreviewMode && (
+            <View style={styles.mapSearchContainer}>
+              <View style={styles.mapSearchBar}>
+                <Icon name="search" size={16} color="#64748B" style={{ marginRight: 8 }} />
+                <TextInput
+                  placeholder="Search city, sector, landmark (e.g. Bhopal, Noida)..."
+                  placeholderTextColor="#94A3B8"
+                  value={mapSearchText}
+                  onChangeText={handleMapSearchTextChange}
+                  style={styles.mapSearchInput}
+                />
+                {isSearchingMap ? (
+                  <ActivityIndicator size="small" color="#8B0000" />
+                ) : mapSearchText ? (
+                  <TouchableOpacity onPress={() => { setMapSearchText(''); setMapSearchResults([]); }}>
+                    <Icon name="x" size={16} color="#64748B" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Floating search suggestions */}
+              {mapSearchResults.length > 0 && (
+                <View style={styles.mapSearchResultsCard}>
+                  <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
+                    {mapSearchResults.map((resItem, idx) => (
+                      <TouchableOpacity
+                        key={`${resItem.latitude}_${resItem.longitude}_${idx}`}
+                        style={styles.mapSearchItem}
+                        onPress={() => handleSelectMapSearchResult(resItem)}
+                      >
+                        <Icon name="map-pin" size={14} color="#8B0000" style={{ marginRight: 8, marginTop: 2 }} />
+                        <View style={{ flex: 1 }}>
+                          <Typography style={{ fontSize: 12, color: '#0F172A', fontFamily: 'Montserrat-SemiBold' }}>
+                            {resItem.address}
+                          </Typography>
+                          <Typography style={{ fontSize: 10, color: '#64748B' }}>
+                            {resItem.city ? `${resItem.city}, ` : ''}{resItem.state || ''}
+                          </Typography>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Interactive Map Canvas with Pan & Touch Drag */}
+          <View style={styles.mapCanvas} {...(!isMapPreviewMode ? panResponder.panHandlers : {})}>
+            <Animated.View
+              style={[
+                styles.mapGridPattern,
+                {
+                  transform: [
+                    { translateX: panX },
+                    { translateY: panY },
+                    { scale: zoomScale },
+                  ],
+                },
+              ]}
+            >
               <View style={styles.mapRoadH} />
               <View style={styles.mapRoadV} />
               <View style={styles.mapRadiusRing} />
               <View style={styles.mapRadiusRing2} />
+            </Animated.View>
 
-              <View style={styles.mapCenterPin}>
-                <View style={styles.markerBubble}>
-                  <Typography style={{ color: '#FFFFFF', fontSize: 10, fontFamily: 'Montserrat-Bold' }}>
-                    {isMapPreviewMode ? 'Delivery Site' : 'Pinned Delivery Site'}
-                  </Typography>
-                  <Typography style={{ color: '#FEF08A', fontSize: 9, fontFamily: 'Montserrat-Medium' }}>
-                    {selectedLat.toFixed(4)}, {selectedLng.toFixed(4)}
-                  </Typography>
-                </View>
-                <Icon name="map-pin" size={36} color="#8B0000" />
-                <View style={styles.pinShadow} />
+            {/* Center Pinned Site Marker with Lift/Drop Spring */}
+            <Animated.View
+              style={[
+                styles.mapCenterPin,
+                {
+                  transform: [{ translateY: pinAnim }],
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <View style={[styles.markerBubble, isDragging && { backgroundColor: '#B91C1C' }]}>
+                <Typography style={{ color: '#FFFFFF', fontSize: 10, fontFamily: 'Montserrat-Bold' }}>
+                  {isDragging ? '📍 Moving Location...' : (isMapPreviewMode ? 'Delivery Site' : 'Pinned Delivery Site')}
+                </Typography>
+                <Typography style={{ color: '#FEF08A', fontSize: 9, fontFamily: 'Montserrat-Medium' }}>
+                  {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)}
+                </Typography>
               </View>
-            </View>
+              <Icon name="map-pin" size={40} color="#8B0000" />
+              <View style={[styles.pinShadow, isDragging && { opacity: 0.15, transform: [{ scale: 0.6 }] }]} />
+            </Animated.View>
 
-            {/* Micro Pan & Adjust Controls */}
+            {/* Gesture Hint Badge */}
+            {!isMapPreviewMode && (
+              <View style={styles.dragHintBadge} pointerEvents="none">
+                <Icon name="move" size={12} color="#475569" style={{ marginRight: 5 }} />
+                <Typography style={{ fontSize: 10, color: '#475569', fontFamily: 'Montserrat-Medium' }}>
+                  Touch & drag map to move delivery pin
+                </Typography>
+              </View>
+            )}
+
+            {/* Micro Pan & Adjust D-Pad Controls */}
             {!isMapPreviewMode && (
               <View style={styles.panControlsBox}>
                 <TouchableOpacity
                   style={styles.panBtn}
-                  onPress={() => setSelectedLat((l) => Number((l + 0.005).toFixed(5)))}
+                  onPress={() => handleMicroPan(0.002, 0)}
                 >
                   <Icon name="chevron-up" size={18} color="#0F172A" />
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', gap: 14 }}>
                   <TouchableOpacity
                     style={styles.panBtn}
-                    onPress={() => setSelectedLng((l) => Number((l - 0.005).toFixed(5)))}
+                    onPress={() => handleMicroPan(0, -0.002)}
                   >
                     <Icon name="chevron-left" size={18} color="#0F172A" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.panBtn}
-                    onPress={() => setSelectedLng((l) => Number((l + 0.005).toFixed(5)))}
+                    onPress={() => handleMicroPan(0, 0.002)}
                   >
                     <Icon name="chevron-right" size={18} color="#0F172A" />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
                   style={styles.panBtn}
-                  onPress={() => setSelectedLat((l) => Number((l - 0.005).toFixed(5)))}
+                  onPress={() => handleMicroPan(-0.002, 0)}
                 >
                   <Icon name="chevron-down" size={18} color="#0F172A" />
+                </TouchableOpacity>
+
+                {/* Zoom +/- controls */}
+                <View style={styles.zoomDivider} />
+                <TouchableOpacity
+                  style={styles.zoomBtn}
+                  onPress={() => setZoomScale((z) => Math.min(2.0, z + 0.25))}
+                >
+                  <Icon name="plus" size={16} color="#0F172A" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.zoomBtn}
+                  onPress={() => setZoomScale((z) => Math.max(0.7, z - 0.25))}
+                >
+                  <Icon name="minus" size={16} color="#0F172A" />
                 </TouchableOpacity>
               </View>
             )}
@@ -827,17 +1089,19 @@ export const CheckoutScreen = ({ navigation }: any) => {
               <>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
                   {[
+                    { name: 'Noida Sec 70', lat: 28.5976, lng: 77.3842, area: 'Sector 70', city: 'Noida', state: 'Uttar Pradesh', pincode: '201301' },
                     { name: 'Noida Sec 62', lat: 28.6280, lng: 77.3649, area: 'Sector 62', city: 'Noida', state: 'Uttar Pradesh', pincode: '201301' },
                     { name: 'Greater Noida W', lat: 28.5921, lng: 77.4538, area: 'Techzone 4', city: 'Greater Noida', state: 'Uttar Pradesh', pincode: '201306' },
                     { name: 'Gurugram Cyber', lat: 28.4906, lng: 77.0900, area: 'DLF Cyber City', city: 'Gurugram', state: 'Haryana', pincode: '122002' },
-                    { name: 'Delhi Okhla', lat: 28.5284, lng: 77.2793, area: 'Okhla Phase 3', city: 'New Delhi', state: 'Delhi', pincode: '110020' },
-                    { name: 'Gwalior Hub', lat: 26.2183, lng: 78.1828, area: 'Govindpuri', city: 'Gwalior', state: 'Madhya Pradesh', pincode: '474011' },
+                    { name: 'Bhopal MP Nagar', lat: 23.2332, lng: 77.4343, area: 'Zone 1 MP Nagar', city: 'Bhopal', state: 'Madhya Pradesh', pincode: '462011' },
+                    { name: 'Indore Bypass', lat: 22.7196, lng: 75.8577, area: 'Vijay Nagar Industrial', city: 'Indore', state: 'Madhya Pradesh', pincode: '452010' },
                   ].map((preset) => (
                     <TouchableOpacity
                       key={preset.name}
                       onPress={() => {
                         setSelectedLat(preset.lat);
                         setSelectedLng(preset.lng);
+                        coordsRef.current = { lat: preset.lat, lng: preset.lng };
                         if (!area) setArea(preset.area);
                         if (!city) setCity(preset.city);
                         if (!state) setState(preset.state);
@@ -859,27 +1123,30 @@ export const CheckoutScreen = ({ navigation }: any) => {
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
                     style={styles.gpsAutoBtn}
-                    onPress={() => {
-                      setSelectedLat(28.5355);
-                      setSelectedLng(77.3910);
-                      Alert.alert('Live GPS Located', 'High-accuracy device coordinates synchronized.');
-                    }}
+                    onPress={handleMapUseCurrentGps}
+                    disabled={locatingMapGps}
                   >
-                    <Icon name="crosshair" size={16} color="#059669" style={{ marginRight: 6 }} />
-                    <Typography style={{ color: '#059669', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
-                      Use Current GPS
-                    </Typography>
+                    {locatingMapGps ? (
+                      <ActivityIndicator size="small" color="#059669" />
+                    ) : (
+                      <>
+                        <Icon name="crosshair" size={16} color="#059669" style={{ marginRight: 6 }} />
+                        <Typography style={{ color: '#059669', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
+                          Use Current GPS
+                        </Typography>
+                      </>
+                    )}
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.confirmPinBtn}
                     onPress={() => {
-                      if (!area) setArea('Industrial Logistic Site');
-                      if (!city) setCity('Noida');
-                      if (!state) setState('Uttar Pradesh');
-                      if (!pincode) setPincode('201301');
+                      if (!area) setArea('Industrial Construction Site');
+                      if (!city) setCity('Bhopal');
+                      if (!state) setState('Madhya Pradesh');
+                      if (!pincode) setPincode('462001');
                       setMapModalVisible(false);
-                      Alert.alert('Site Location Fixed', `Coordinates saved: ${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`);
+                      Alert.alert('Site Location Fixed', `Coordinates saved: ${selectedLat.toFixed(5)}, ${selectedLng.toFixed(5)}`);
                     }}
                   >
                     <Icon name="check" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -912,8 +1179,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   backButton: {
     width: 40,
@@ -1434,6 +1701,85 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 6,
+  },
+  mapSearchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    zIndex: 20,
+  },
+  mapSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  mapSearchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#0F172A',
+    padding: 0,
+    fontFamily: 'Montserrat-Regular',
+  },
+  mapSearchResultsCard: {
+    marginTop: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  mapSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  dragHintBadge: {
+    position: 'absolute',
+    top: 14,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+  },
+  zoomDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    width: '80%',
+    marginVertical: 6,
+  },
+  zoomBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    marginVertical: 2,
   },
   presetChip: {
     flexDirection: 'row',

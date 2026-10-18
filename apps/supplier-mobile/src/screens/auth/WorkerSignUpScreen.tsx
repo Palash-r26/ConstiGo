@@ -24,7 +24,7 @@ export interface SkillOption {
   description: string;
 }
 
-const DEFAULT_SKILL_OPTIONS: SkillOption[] = [
+export const DEFAULT_SKILL_OPTIONS: SkillOption[] = [
   { id: 'plumber', name: 'Plumber', icon: 'tool', description: 'Pipe fittings, leak repairs & sanitary installations' },
   { id: 'mistry', name: 'Mistry / Mason', icon: 'home', description: 'Brickwork, plastering, foundation & civil work' },
   { id: 'electrician', name: 'Electrician', icon: 'zap', description: 'Wiring, switches, MCBs, lighting & load setup' },
@@ -40,7 +40,7 @@ const DEFAULT_SKILL_OPTIONS: SkillOption[] = [
 export const WorkerSignUpScreen = ({ navigation }: any) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [category, setCategory] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [city, setCity] = useState('');
   const [serviceCharge, setServiceCharge] = useState('');
   const [visitingCharge, setVisitingCharge] = useState('');
@@ -78,10 +78,19 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
     loadCategories();
   }, []);
 
-  const handleSelectSkill = (skill: SkillOption) => {
-    setCategory(skill.name);
-    setShowSkillModal(false);
+  const handleToggleSkill = (skillName: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(skillName)) {
+        return prev.filter((s) => s !== skillName);
+      } else {
+        return [...prev, skillName];
+      }
+    });
     if (errors.category) setErrors({ ...errors, category: '' });
+  };
+
+  const handleRemoveSkill = (skillName: string) => {
+    setSelectedCategories((prev) => prev.filter((s) => s !== skillName));
   };
 
   const handleRegister = async () => {
@@ -91,8 +100,8 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
     if (!phone.trim() || !/^[6-9]\d{9}$/.test(phone.trim().replace(/\D/g, ''))) {
       newErrors.phone = 'Enter a valid 10-digit mobile number';
     }
-    if (!category.trim()) {
-      newErrors.category = 'Please select your Trade / Skill';
+    if (selectedCategories.length === 0) {
+      newErrors.category = 'Please select at least one Trade / Skill (Multi-select)';
     }
     if (!serviceCharge.trim()) {
       newErrors.serviceCharge = 'Service charge is required';
@@ -110,10 +119,11 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
     setIsLoading(true);
 
     try {
+      const skillsString = selectedCategories.join(', ');
       const response = await registerWorker({
         fullname: name.trim(),
         phone: phone.trim(),
-        skill: category.trim(),
+        skill: skillsString,
         location: city.trim() || 'Indore',
         service_charge: serviceCharge.trim(),
         visit_charge: visitingCharge.trim(),
@@ -125,7 +135,7 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
         const workerId = response.workerid ? ` (ID: ${response.workerid})` : '';
         Alert.alert(
           'Registration Submitted! 🎉',
-          `Welcome ${name}! Your worker profile (${category})${workerId} has been registered successfully. Contractors and suppliers can now connect with you directly.`,
+          `Welcome ${name}! Your worker profile with skills [${skillsString}]${workerId} has been registered successfully. Contractors and suppliers can now connect with you directly.`,
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
@@ -205,7 +215,7 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
             error={errors.phone}
           />
 
-          {/* 3. Trade / Skill Dropdown Selector */}
+          {/* 3. Trade / Skill Multi-Select Trigger */}
           <View>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -225,15 +235,53 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
                 <Typography
                   style={{
                     fontFamily: 'Montserrat-Regular',
-                    fontSize: 16,
-                    color: category ? '#111827' : '#8A8A8E',
+                    fontSize: 15,
+                    color: selectedCategories.length > 0 ? '#111827' : '#8A8A8E',
                   }}
                 >
-                  {category || 'Select Trade / Skill (Dropdown)'}
+                  {selectedCategories.length > 0
+                    ? `${selectedCategories.length} Trade(s) Selected`
+                    : 'Select Trades / Skills (Multi-select)'}
                 </Typography>
               </View>
-              <Icon name="chevron-down" size={20} color="#8A8A8E" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {selectedCategories.length > 0 && (
+                  <View style={styles.countBadge}>
+                    <Typography style={styles.countBadgeText}>
+                      {selectedCategories.length}
+                    </Typography>
+                  </View>
+                )}
+                <Icon name="chevron-down" size={20} color="#8A8A8E" />
+              </View>
             </TouchableOpacity>
+
+            {/* Selected Trade Chips Cloud */}
+            {selectedCategories.length > 0 && (
+              <View style={styles.skillChipsContainer}>
+                {selectedCategories.map((catName) => (
+                  <View key={catName} style={styles.skillChip}>
+                    <Icon name="check" size={12} color="#8B0000" style={{ marginRight: 4 }} />
+                    <Typography style={styles.skillChipText}>{catName}</Typography>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveSkill(catName)}
+                      style={styles.chipRemoveBtn}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Icon name="x" size={13} color="#8B0000" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  onPress={() => setShowSkillModal(true)}
+                  style={styles.addMoreChip}
+                >
+                  <Icon name="plus" size={13} color="#8B0000" style={{ marginRight: 3 }} />
+                  <Typography style={styles.addMoreChipText}>Add More</Typography>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {errors.category ? (
               <Typography variant="bodySmall" className="text-red-500 ml-2 mt-1">
                 {errors.category}
@@ -282,10 +330,26 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
           title="Submit Worker Registration"
           onPress={handleRegister}
           isLoading={isLoading}
-          className="mb-6 rounded-full shadow-md"
+          className="mb-4 rounded-full shadow-md"
         />
 
-        {/* Trade / Skill Selection Modal */}
+        {/* Already Registered as Worker? Sign In */}
+        <View className="flex-row justify-center items-center mb-8">
+          <Typography variant="bodyBold" className="text-[#111827] text-sm mr-1">
+            Already registered as a Worker?
+          </Typography>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('WorkerSignIn')}
+            className="py-1"
+            activeOpacity={0.7}
+          >
+            <Typography variant="bodyBold" className="text-primary text-sm underline">
+              Sign In
+            </Typography>
+          </TouchableOpacity>
+        </View>
+
+        {/* Trade / Skill Multi-Select Modal */}
         <Modal
           visible={showSkillModal}
           transparent={true}
@@ -295,12 +359,12 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Typography variant="h2" style={{ fontSize: 18, color: '#111827' }}>
-                    Select Your Trade / Skill
+                    Select Trades / Skills
                   </Typography>
                   <Typography variant="bodySmall" style={{ color: '#6B7280', marginTop: 2 }}>
-                    Choose the primary craft you offer
+                    Tap to select multiple skills you offer ({selectedCategories.length} selected)
                   </Typography>
                 </View>
                 <TouchableOpacity
@@ -309,6 +373,26 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
                 >
                   <Icon name="x" size={20} color="#374151" />
                 </TouchableOpacity>
+              </View>
+
+              {/* Action Toolbar */}
+              <View style={styles.modalSubHeader}>
+                <TouchableOpacity
+                  onPress={() => setSelectedCategories(skillOptions.map((s) => s.name))}
+                  style={styles.subActionBtn}
+                >
+                  <Typography style={styles.subActionText}>Select All</Typography>
+                </TouchableOpacity>
+                {selectedCategories.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedCategories([])}
+                    style={styles.subActionBtn}
+                  >
+                    <Typography style={[styles.subActionText, { color: '#EF4444' }]}>
+                      Clear All
+                    </Typography>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {loadingCategories ? (
@@ -323,13 +407,13 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
               <FlatList
                 data={skillOptions}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
                 renderItem={({ item }) => {
-                  const isSelected = category === item.name;
+                  const isSelected = selectedCategories.includes(item.name);
                   return (
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => handleSelectSkill(item)}
+                      onPress={() => handleToggleSkill(item.name)}
                       style={[
                         styles.skillItem,
                         isSelected ? styles.skillItemSelected : null,
@@ -364,15 +448,31 @@ export const WorkerSignUpScreen = ({ navigation }: any) => {
                           {item.description}
                         </Typography>
                       </View>
-                      {isSelected ? (
-                        <Icon name="check-circle" size={22} color="#8B0000" />
-                      ) : (
-                        <Icon name="chevron-right" size={18} color="#D1D5DB" />
-                      )}
+
+                      {/* Checkbox indicator */}
+                      <View style={[styles.checkboxBox, isSelected && styles.checkboxBoxSelected]}>
+                        {isSelected && <Icon name="check" size={15} color="#FFFFFF" />}
+                      </View>
                     </TouchableOpacity>
                   );
                 }}
               />
+
+              {/* Modal Bottom Confirm Button */}
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.doneBtn}
+                  activeOpacity={0.85}
+                  onPress={() => setShowSkillModal(false)}
+                >
+                  <Icon name="check-circle" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Typography style={styles.doneBtnText}>
+                    {selectedCategories.length > 0
+                      ? `Confirm Selection (${selectedCategories.length} Skills)`
+                      : 'Done'}
+                  </Typography>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -396,6 +496,62 @@ const styles = StyleSheet.create({
   dropdownError: {
     borderColor: '#EF4444',
   },
+  countBadge: {
+    backgroundColor: '#8B0000',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  countBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontFamily: 'Montserrat-Bold',
+  },
+  skillChipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+    paddingHorizontal: 4,
+  },
+  skillChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  skillChipText: {
+    fontSize: 12,
+    color: '#8B0000',
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  chipRemoveBtn: {
+    marginLeft: 6,
+    padding: 2,
+  },
+  addMoreChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderStyle: 'dashed',
+  },
+  addMoreChipText: {
+    fontSize: 12,
+    color: '#8B0000',
+    fontFamily: 'Montserrat-Bold',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -405,7 +561,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '75%',
+    maxHeight: '80%',
     paddingTop: 20,
   },
   modalHeader: {
@@ -413,9 +569,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 12,
+  },
+  modalSubHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+  },
+  subActionBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  subActionText: {
+    fontSize: 12,
+    color: '#8B0000',
+    fontFamily: 'Montserrat-Bold',
   },
   modalCloseBtn: {
     width: 36,
@@ -433,12 +604,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 8,
     backgroundColor: '#F8FAFC',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#F1F5F9',
   },
   skillItemSelected: {
     backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
+    borderColor: '#8B0000',
   },
   skillIconBox: {
     width: 42,
@@ -451,5 +622,45 @@ const styles = StyleSheet.create({
   },
   skillIconBoxSelected: {
     backgroundColor: '#8B0000',
+  },
+  checkboxBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  checkboxBoxSelected: {
+    backgroundColor: '#8B0000',
+    borderColor: '#8B0000',
+  },
+  modalFooter: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  doneBtn: {
+    flexDirection: 'row',
+    backgroundColor: '#8B0000',
+    borderRadius: 22,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  doneBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Montserrat-Bold',
   },
 });

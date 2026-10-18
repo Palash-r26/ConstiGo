@@ -4,12 +4,19 @@ export interface User {
   vendorId?: string;
   buyerid?: string;
   buyerId?: string;
+  workerid?: string;
+  workerId?: string;
   firstName?: string;
   lastName?: string;
+  fullname?: string;
   email?: string;
   phone?: string;
+  skill?: string;
+  location?: string;
+  service_charge?: string;
+  visit_charge?: string;
   hasCompany?: boolean;
-  role: 'BUYER' | 'SUPPLIER' | 'ADMIN';
+  role: 'BUYER' | 'SUPPLIER' | 'ADMIN' | 'WORKER';
   [key: string]: any;
 }
 

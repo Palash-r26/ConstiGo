@@ -12,6 +12,12 @@ const SIZES = {
   lg: { width: 260, height: 79 },
 };
 
+const UPWARD_OFFSETS = {
+  sm: -4,
+  md: -6,
+  lg: -8,
+};
+
 export const Logo = ({ variant = 'color', size = 'md', style, ...props }: LogoProps) => {
   const source =
     variant === 'white'
@@ -21,7 +27,11 @@ export const Logo = ({ variant = 'color', size = 'md', style, ...props }: LogoPr
   return (
     <Image
       source={source}
-      style={[SIZES[size], style]}
+      style={[
+        SIZES[size],
+        { transform: [{ translateY: UPWARD_OFFSETS[size] }] },
+        style,
+      ]}
       resizeMode="contain"
       {...props}
     />

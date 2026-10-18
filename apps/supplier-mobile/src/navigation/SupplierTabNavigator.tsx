@@ -59,6 +59,9 @@ export const SupplierTabNavigator = () => {
   );
 };
 
+import { WorkerProfileScreen } from '../screens/worker/WorkerProfileScreen';
+import { WorkerEditProfileScreen } from '../screens/worker/WorkerEditProfileScreen';
+
 export const SupplierStackNavigator = () => {
   const user = useAuthStore((state) => state.user);
   const initialRoute = user?.hasCompany === false ? 'EnterCompanyDetails' : 'SupplierTabs';
@@ -73,7 +76,20 @@ export const SupplierStackNavigator = () => {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Workers" component={WorkersScreen} />
       <Stack.Screen name="WorkerSignUp" component={WorkerSignUpScreen} />
+      <Stack.Screen name="WorkerProfile" component={WorkerProfileScreen} />
+      <Stack.Screen name="WorkerEditProfile" component={WorkerEditProfileScreen} />
     </Stack.Navigator>
+  );
+};
+
+const WorkerStack = createNativeStackNavigator();
+
+export const WorkerStackNavigator = () => {
+  return (
+    <WorkerStack.Navigator screenOptions={{ headerShown: false }}>
+      <WorkerStack.Screen name="WorkerProfile" component={WorkerProfileScreen} />
+      <WorkerStack.Screen name="WorkerEditProfile" component={WorkerEditProfileScreen} />
+    </WorkerStack.Navigator>
   );
 };
 

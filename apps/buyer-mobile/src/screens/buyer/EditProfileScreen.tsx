@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '@constigo/shared';
 import { ScreenWrapper } from '@constigo/shared';
@@ -17,6 +18,7 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import { useUserStore } from '../../store/userStore';
 import { apiClient } from '@constigo/shared';
 import { editProfileSchema } from '@constigo/shared';
+import { getCurrentDeviceLocation } from '../../services/locationService';
 
 export const EditProfileScreen = ({ navigation }: any) => {
   const { profile, fetchProfile, updateProfile } = useUserStore();
@@ -38,12 +40,36 @@ export const EditProfileScreen = ({ navigation }: any) => {
 
   // GPS Map Feature State
   const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [isLocatingGps, setIsLocatingGps] = useState(false);
   const [selectedLat, setSelectedLat] = useState(
-    Number((profile as any)?.latitude || (profile as any)?.maplatitude || (profile as any)?.location?.coordinates?.[1] || 28.5355)
+    Number((profile as any)?.latitude || (profile as any)?.maplatitude || (profile as any)?.location?.coordinates?.[1] || 28.5976)
   );
   const [selectedLng, setSelectedLng] = useState(
-    Number((profile as any)?.longitude || (profile as any)?.maplongitude || (profile as any)?.location?.coordinates?.[0] || 77.3910)
+    Number((profile as any)?.longitude || (profile as any)?.maplongitude || (profile as any)?.location?.coordinates?.[0] || 77.3842)
   );
+
+  const handleUseCurrentGps = async () => {
+    setIsLocatingGps(true);
+    try {
+      const loc = await getCurrentDeviceLocation();
+      const lat = parseFloat(loc.latitude);
+      const lng = parseFloat(loc.longitude);
+      setSelectedLat(lat);
+      setSelectedLng(lng);
+      if (loc.address) setAddress(loc.address);
+      if (loc.city) setCity(loc.city);
+      if (loc.state) setState(loc.state);
+      if (loc.pincode) setPincode(loc.pincode);
+      Alert.alert(
+        'Real GPS Synchronized 📍',
+        `Live device location locked:\n${loc.address || `${loc.city}, ${loc.state}`}`
+      );
+    } catch (e) {
+      Alert.alert('GPS Notice', 'Unable to detect device GPS. Please pick a preset or drag pin.');
+    } finally {
+      setIsLocatingGps(false);
+    }
+  };
 
   const handleSave = async () => {
     setFieldErrors({});
@@ -440,6 +466,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
               {[
+                { name: 'Noida Sec 70', lat: 28.5976, lng: 77.3842, area: 'Sector 70', city: 'Noida', state: 'Uttar Pradesh', pincode: '201301' },
                 { name: 'Noida Sec 62', lat: 28.6280, lng: 77.3649, area: 'Sector 62', city: 'Noida', state: 'Uttar Pradesh', pincode: '201301' },
                 { name: 'Greater Noida W', lat: 28.5921, lng: 77.4538, area: 'Techzone 4', city: 'Greater Noida', state: 'Uttar Pradesh', pincode: '201306' },
                 { name: 'Gurugram Cyber', lat: 28.4906, lng: 77.0900, area: 'DLF Cyber City', city: 'Gurugram', state: 'Haryana', pincode: '122002' },
@@ -472,16 +499,19 @@ export const EditProfileScreen = ({ navigation }: any) => {
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <TouchableOpacity
                 style={styles.gpsAutoBtn}
-                onPress={() => {
-                  setSelectedLat(28.5355);
-                  setSelectedLng(77.3910);
-                  Alert.alert('Live GPS Located', 'High-accuracy device coordinates synchronized.');
-                }}
+                onPress={handleUseCurrentGps}
+                disabled={isLocatingGps}
               >
-                <Icon name="crosshair" size={16} color="#059669" style={{ marginRight: 6 }} />
-                <Typography style={{ color: '#059669', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
-                  Use Current GPS
-                </Typography>
+                {isLocatingGps ? (
+                  <ActivityIndicator size="small" color="#059669" />
+                ) : (
+                  <>
+                    <Icon name="crosshair" size={16} color="#059669" style={{ marginRight: 6 }} />
+                    <Typography style={{ color: '#059669', fontSize: 13, fontFamily: 'Montserrat-Bold' }}>
+                      Use Current GPS
+                    </Typography>
+                  </>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -510,8 +540,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   avatarButton: {
     width: 44,
